@@ -5,7 +5,6 @@ import random
 import numpy as np
 import geatpy as ea
 from Nature_DQN import DQN
-from moead_utils import Tche
 
 """
 差分变异算子，一次只能变异一个个体

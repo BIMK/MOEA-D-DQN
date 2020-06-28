@@ -27,8 +27,8 @@ logging.info('Start----MOEAD_DRA_DE-----------------------------------')
 if __name__ == '__main__':
 
     # problems = ['UF1','UF2','UF3','UF4','UF5','UF6','UF7','UF8','UF9','UF10']
-    problems = ['UF1','UF2','UF3','UF4','UF5','UF6','UF7']
-    N = 5   # 独立运行N次，取中值
+    problems = ['UF9','UF10']
+    N = 1   # 独立运行N次，取中值
     for problemName in problems:
         """======================实例化问题对象========================="""
         logging.info('       Start ... %s'%problemName)
@@ -39,13 +39,13 @@ if __name__ == '__main__':
         PF = problem.getReferObjV() # 获取真实前沿，详见Problem.py中关于Problem类的定义
         """======================种群设置==============================="""
         Encoding = 'RI'             # 编码方式
-        NIND = 600                  # 种群规模
+        NIND = 200                  # 种群规模
         Field = ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders) # 创建区域描述器
         population = ea.Population(Encoding, Field, NIND) # 实例化种群对象（此时种群还没被初始化，仅仅是完成种群对象的实例化）
         """======================算法参数设置=========================="""
         # myAlgorithm = moea_MOEAD_DE_templet(problem, population)
         myAlgorithm = moea_MOEAD_DRA_DE_templet(problem, population)
-        myAlgorithm.MAXGEN = 500    # 最大进化代数
+        myAlgorithm.MAXGEN = 100    # 最大进化代数
         myAlgorithm.drawing = 0 # 设置绘图方式（0：不绘图；1：绘制结果图；2：绘制目标空间过程动画；3：绘制决策空间过程动画）
         igd = np.empty(N)
         hv  = np.empty(N)

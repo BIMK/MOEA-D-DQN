@@ -20,8 +20,8 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
         self.uniformPoint, self.NIND = ea.crtup(self.problem.M, population.sizes)  # 生成在单位目标维度上均匀分布的参考点集
         self.DQN = DQN(problem.Dim, 4)
         if population.Encoding == 'RI':
-            self.mutDE = [DE_rand_1(),DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
-            # self.mutDE = RL_mut_moea(problem, self.uniformPoint, self.DQN)
+            # self.mutDE = [DE_rand_1(),DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
+            self.mutDE = RL_mut_moea(problem, self.uniformPoint, self.DQN)
             self.mutPolyn = ea.Mutpolyn(Pm=1/self.problem.Dim, DisI=20, FixType=4)  # 生成多项式变异算子对象
         else:
             raise RuntimeError('编码方式必须为''RI''.')
@@ -121,8 +121,8 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
                     np.random.shuffle(indices)
                     # 实例化一个种群对象用于存储进化的后代（这里只进化生成一个后代）
                     offspring = ea.Population(population.Encoding, population.Field, 1)
-                    offspring.Chrom = self.mutDE[0].do(population.Chrom, population.Field, i, indices)
-                    # offspring.Chrom, self.a = self.mutDE.do(population.Encoding, population.Chrom, population.Field, i, indices, idealPoint)
+                    # offspring.Chrom = self.mutDE[0].do(population.Chrom, population.Field, i, indices)
+                    offspring.Chrom, self.a = self.mutDE.do(population.Encoding, population.Chrom, population.Field, i, indices, idealPoint)
                     offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 变异
                     self.call_aimFunc(offspring)  # 求进化后个体的目标函数值
                     # 更新理想点
