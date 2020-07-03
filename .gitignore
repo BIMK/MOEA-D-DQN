@@ -1,3 +1,5 @@
+__pycache__/
+.mypy_cache
 a.py
 testlog.py
 *.mat
@@ -5,4 +7,4 @@ testlog.py
 *.pyc
 *.csv
 *.xlsx
-__pycache__/
+*.m

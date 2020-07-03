@@ -30,8 +30,8 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
         else:
             self.decomposition = ea.pbi  # 采用pbi权重聚合法
         self.Ps = 0.9  # (Probability of Selection)表示进化时有多大的概率只从邻域中选择个体参与进化
-        self.neighborSize = max(population.sizes//10,30)
-        self.nr = max(population.sizes//100,6)
+        self.neighborSize = max(population.sizes//10,20)
+        self.nr = max(population.sizes//100,3)
         self.SW = np.zeros((2,self.NIND//2))  # 滑动窗口，可以记录算子的情况
         self.a = 0
 

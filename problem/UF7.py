@@ -28,16 +28,6 @@ class UF7(ea.Problem): # 继承Problem父类
         y     = Vars - np.sin(6*np.pi*x1 + (J*np.pi)/self.Dim)
         yJ1   = y[:, J1]
         yJ2   = y[:, J2]
-        # hy    = 2*y**2 - np.cos(4*np.pi*y) + 1
-        # print(hy)
-        # hy1   = hy[:, J1]
-        # hy2   = hy[:, J2]
-        # f1    = x1   + np.maximum(0, 2*(1/4+0.1)*np.sin(4*np.pi*x1)) + \
-        #         (2/len(J1))*(4*np.sum(yJ1**2,1,keepdims=True) - \
-        #         2*(np.prod(np.cos((20*yJ1*np.pi)/(np.sqrt(J1))),1,keepdims=True))+2) 
-        # f2    = 1-x1 + np.maximum(0, 2*(1/4+0.1)*np.sin(4*np.pi*x1)) + \
-        #         (2/len(J2))*(4*np.sum(yJ2**2,1,keepdims=True) - \
-        #         2*(np.prod(np.cos((20*yJ2*np.pi)/(np.sqrt(J2))),1,keepdims=True))+2) 
         f1 = x1**0.2   + 2*np.mean(yJ1**2,1,keepdims=True)
         f2 = 1-x1**0.2 + 2*np.mean(yJ2**2,1,keepdims=True)
         pop.ObjV = np.hstack([f1, f2])
