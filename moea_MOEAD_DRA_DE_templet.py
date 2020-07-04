@@ -29,9 +29,11 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
             self.decomposition = ea.tcheby  # 采用切比雪夫权重聚合法
         else:
             self.decomposition = ea.pbi  # 采用pbi权重聚合法
+       
+
         self.Ps = 0.9  # (Probability of Selection)表示进化时有多大的概率只从邻域中选择个体参与进化
-        self.neighborSize = max(population.sizes//10,20)
-        self.nr = max(population.sizes//100,3)
+        self.neighborSize = max(self.NIND//10,20)
+        self.nr = max(self.NIND//100,3)
         self.SW = np.zeros((2,self.NIND//2))  # 滑动窗口，可以记录算子的情况
         self.a = 0
 
@@ -90,7 +92,10 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
         # ==========================初始化配置===========================
         population = self.population
-        self.initialization()  # 初始化算法模板的一些动态参数
+        self.initialization()  
+        # NOTE: 在使用crtup生成单位目标维度均匀分布的参考点集时NIND可能不是种群大小。
+        # NOTE: 为了保证评价次数不变，要更改MAXGEN
+        self.MAXGEN = round((self.MAXGEN*population.sizes)/self.NIND+0.5)
         # ===========================准备进化============================
         uniformPoint, NIND = self.uniformPoint, self.NIND
         # 初始化种群染色体矩阵，此时种群规模将调整为uniformPoint点集的大小，initChrom函数会把种群规模给重置
