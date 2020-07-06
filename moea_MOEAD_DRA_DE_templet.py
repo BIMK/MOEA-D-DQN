@@ -4,6 +4,7 @@ import geatpy as ea  # 导入geatpy库
 from scipy.spatial.distance import cdist
 from sys import path as paths
 from os import path
+import matplotlib
 from matplotlib import pyplot as plt
 from Nature_DQN import DQN
 from mut_de import DE_rand_1, DE_rand_2, DE_current_to_rand_1, DE_current_to_rand_2, RL_mut_moea
@@ -143,15 +144,16 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
                 pi[idx] = (0.95+0.05*DELTA[idx]/0.001)*pi[idx]
                 oldz = newz
                 """统计不同进化阶段算子选择的结果"""
-                # PopCountOpers.append(self.mutDE.CountOpers)
-                # self.mutDE.CountOpers = np.zeros(self.mutDE.n) # 清空算子选择记录器
+                PopCountOpers.append(self.mutDE.CountOpers)
+                self.mutDE.CountOpers = np.zeros(self.mutDE.n) # 清空算子选择记录器
         
         # 画出不同进化阶段算子选择的结果
-        # BestSelection = np.array(PopCountOpers)
+        BestSelection = np.array(PopCountOpers)
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
-        # for i in range(self.mutDE.n):
-            # plt.plot(BestSelection[:,i],'.',label=self.mutDE.mutOper[i].name)
-        # plt.legend()
+        # matplotlib.use('agg')
+        for i in range(self.mutDE.n):
+            plt.plot(BestSelection[:,i],'.',label=self.mutDE.mutOper[i].name)
+        plt.legend()
         # plt.show()
-        return self.finishing(population), population  # 调用finishing完成后续工作并返回结果
+        return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果

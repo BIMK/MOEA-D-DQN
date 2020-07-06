@@ -63,16 +63,29 @@ class DQN(object):
         # if np.random.uniform() < EPSILON:   # greedy
         if np.random.uniform() < 2:   # greedy
             actions_value = self.eval_net.forward(x)  # shape=(1,action)
-            probability = [5,5,15,75]
-            idx = actions_value.argsort()[0]
+            actions_value[actions_value<=0] = 0.1
+            actions_value = actions_value/torch.sum(actions_value)*100
             # print(actions_value)
-            for i,v in enumerate(idx):
-                actions_value[0][v] = probability[i]
+            c = 0.6
+            for i in range(4):
+                actions_value[0][i] = actions_value[0][i]*c**i
+            actions_value = actions_value/torch.sum(actions_value)*100
+            # print(actions_value)
+
+                
+            # probability = [9,11,15,25]
+            # idx = actions_value.argsort()[0]
+            # print(actions_value)
+            # for i,v in enumerate(idx):
+                # actions_value[0][v] = probability[i]
             # print(actions_value)
             # 按照概率取样
             action = torch.multinomial(actions_value, 1)[0].data.numpy()
             # 取最大值
+            # print('========================')
+            # print(actions_value)
             # action = torch.max(actions_value, 1)[1].data.numpy()
+            # print(action)
 
             # print(actions_value, action)
             # action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)  # return the argmax index
