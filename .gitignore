@@ -6,5 +6,6 @@ testlog.py
 *.log
 *.pyc
 *.csv
+*.png
 *.xlsx
 *.m

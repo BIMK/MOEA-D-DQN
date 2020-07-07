@@ -66,19 +66,12 @@ class DQN(object):
             actions_value[actions_value<=0] = 0.1
             actions_value = actions_value/torch.sum(actions_value)*100
             # print(actions_value)
-            c = 0.6
+            c = 0.75
             for i in range(4):
                 actions_value[0][i] = actions_value[0][i]*c**i
             actions_value = actions_value/torch.sum(actions_value)*100
-            # print(actions_value)
+            print(actions_value)
 
-                
-            # probability = [9,11,15,25]
-            # idx = actions_value.argsort()[0]
-            # print(actions_value)
-            # for i,v in enumerate(idx):
-                # actions_value[0][v] = probability[i]
-            # print(actions_value)
             # 按照概率取样
             action = torch.multinomial(actions_value, 1)[0].data.numpy()
             # 取最大值
