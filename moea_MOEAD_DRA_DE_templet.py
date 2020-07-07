@@ -84,8 +84,8 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
         r = np.empty(n)
         for i in range(n):
             r[i] = np.sum(self.SW[1,self.SW[0,:]==i])
-            self.DQN.store_transition(state,i,r[i],state_)
-        # self.DQN.store_transition(state,self.a,r[self.a],state_)
+            # self.DQN.store_transition(state,i,r[i],state_)
+        self.DQN.store_transition(state,self.a,r[self.a],state_)
 
         if self.DQN.memory_counter > 100:  # 算子池里累积一定数量经验再学习
             self.DQN.learn()
