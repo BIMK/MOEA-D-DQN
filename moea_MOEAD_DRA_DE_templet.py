@@ -54,10 +54,12 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
             ind.append(maxind)
         return ind
 
-    def reinsertion(self, indices, population, offspring, idealPoint, referPoint):
+    def reinsertion(self, indices, population, offspring, idealPoint, referPoint, i):
         """
         描述:
             重插入更新种群个体。
+            indices: 父代池，里面的个体可以被替换
+            i: 父代，它的决策变量应该作为RL的state
         """
 
         weights = referPoint[indices, :]
@@ -70,7 +72,9 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
         if replace.size == 0:  # 没得替换
             return 
         # 被取代的父代的平均值作为状态
-        state = np.mean(population.Chrom[indices[replace]], axis=0)
+        # 直系父代的决策变量作为state
+        # state = np.mean(population.Chrom[indices[replace]], axis=0)
+        state = population.Chrom[i]
         state_ = offspring.Chrom[0]
         population[indices[replace]] = offspring                       # 更新子代
         if not isinstance(self.mutDE, RL_mut_moea):
@@ -134,7 +138,7 @@ class moea_MOEAD_DRA_DE_templet(ea.MoeaAlgorithm):
                     # 更新理想点
                     idealPoint = ea.crtidp(offspring.ObjV, offspring.CV, self.problem.maxormins, idealPoint)
                     # 重插入更新种群个体
-                    self.reinsertion(indices, population, offspring, idealPoint, uniformPoint)
+                    self.reinsertion(indices, population, offspring, idealPoint, uniformPoint, i)
             """每10代更新一次pi值"""
             if self.currentGen % 10 == 0:
                 newz = ea.tcheby(population.ObjV, uniformPoint, idealPoint)
