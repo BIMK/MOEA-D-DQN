@@ -1,6 +1,7 @@
 __pycache__/
+.idea
 .mypy_cache
-a.py
+dev.py
 testlog.py
 *.mat
 *.log

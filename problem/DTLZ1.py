@@ -3,7 +3,7 @@ import numpy as np
 import geatpy as ea
 
 class DTLZ1(ea.Problem): # 继承Problem父类
-    def __init__(self, M):
+    def __init__(self, M=3):
         name = 'DTLZ1' # 初始化name（函数名称，可以随意设置）
         maxormins = [1] * M # 初始化maxormins（目标最小最大化标记列表，1：最小化该目标；-1：最大化该目标）
         Dim = M + 4 # 初始化Dim（决策变量维数）

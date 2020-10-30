@@ -5,6 +5,7 @@ import random
 import numpy as np
 import geatpy as ea
 from Nature_DQN import DQN
+from mut import MutM2m
 
 """
 差分变异算子，一次只能变异一个个体
@@ -15,7 +16,7 @@ MEMORY_CAPACITY = 100  # 学习MEMORY_CAPCITY个transaction后开始决策
 
 
 # 将算子的输入输出由种群改成个体
-class Random_mut():
+class Random_mut:
     # 随机选择变异算子
     def __init__(self, F=0.5, K=0.6, CR=0.6, DN=1, Loop=False):
         self.name = "Random Selection"
@@ -37,7 +38,7 @@ class Random_mut():
         return NewChrom
 
 
-class Best_mut():
+class Best_mut:
     def __init__(self, Problem, lambda_,F=0.5, K=0.5, CR=1.0, DN=1, Loop=False):
         self.name = "Best Selection"
         self.Problem = Problem
@@ -79,7 +80,7 @@ class Best_mut():
         return chrom
 
 
-class RL_mut_moea():
+class RL_mut_moea:
     """
     进化算法模板只调用本类，本类负责依据RL，将个体分配给合适的变异算子
     """
@@ -179,7 +180,7 @@ class RL_mut_moea():
         # return NewChrom
 
 
-# class RL_mut():
+# class RL_mut:
 #     """
 #     进化算法模板只调用本类，本类负责依据RL，将个体分配给合适的变异算子
 #     """
@@ -226,7 +227,7 @@ class RL_mut_moea():
 #         return NewChrom
 
 
-class DE_rand_1():
+class DE_rand_1:
     """
     差分进化，
         # vi = xi + F × (xr1 − xr2);
@@ -262,7 +263,7 @@ class DE_rand_1():
         print("比如")
 
 
-class DE_rand_2():
+class DE_rand_2:
     """
     差分进化，
         # vi = xi + F × (xr1 − xr2 + xr3 - xr4);
@@ -291,7 +292,7 @@ class DE_rand_2():
         print("比如")
 
 
-class DE_current_to_rand_1():
+class DE_current_to_rand_1:
     # vi=xi+K(xi-xr1)+F(xr2-xr3)
     def __init__(self, F=0.5, K=0.6):
         self.F = F
@@ -317,7 +318,7 @@ class DE_current_to_rand_1():
         pass
 
 
-class DE_current_to_rand_2():
+class DE_current_to_rand_2:
     # v1=xi+K(xi-xr1)+F(xr2-xr3)+F(xr4-xr5)
     def __init__(self, F=0.5, K=0.6):
         self.F = F
