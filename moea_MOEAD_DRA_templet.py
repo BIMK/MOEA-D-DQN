@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import matplotlib
 import numpy as np
 import geatpy as ea  # 导入geatpy库
 from scipy.spatial.distance import cdist
@@ -7,22 +8,25 @@ from os import path
 from matplotlib import pyplot as plt
 from Nature_DQN import DQN
 from mut_de import DE_rand_1, DE_rand_2, DE_current_to_rand_1, DE_current_to_rand_2, RL_mut_moea
+from crossover import RecRL
 
 paths.append(path.split(path.split(path.realpath(__file__))[0])[0])
 
 
 class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
     
-    def __init__(self, problem, population):
+    def __init__(self, problem, population, MAXGEN):
         ea.MoeaAlgorithm.__init__(self, problem, population)  # 先调用父类构造方法
         if population.ChromNum != 1:
             raise RuntimeError('传入的种群对象必须是单染色体的种群类型。')
         self.name = 'MOEA/D-DRA-DE'
+        self.MAXGEN = MAXGEN
         self.uniformPoint, self.NIND = ea.crtup(self.problem.M, population.sizes)  # 生成在单位目标维度上均匀分布的参考点集
         self.DQN = DQN(problem.Dim, 4)
         if population.Encoding == 'RI':
             # self.mutDE = [DE_rand_1(),DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
-            self.mutDE = RL_mut_moea(problem, self.uniformPoint, self.DQN)
+            # self.mutOper = RL_mut_moea(problem, self.uniformPoint, self.DQN)
+            self.mutOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
             self.mutPolyn = ea.Mutpolyn(Pm=1 / self.problem.Dim, DisI=20, FixType=4)  # 生成多项式变异算子对象
         else:
             raise RuntimeError('编码方式必须为''RI''.')
@@ -34,8 +38,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         self.Ps = 0.9  # (Probability of Selection)表示进化时有多大的概率只从邻域中选择个体参与进化
         self.neighborSize = max(self.NIND // 10, 20)
         self.nr = max(self.NIND // 100, 3)
-        self.SW = np.zeros((2, self.NIND // 2))  # 滑动窗口，可以记录算子的情况
-        self.a = 0
+        # self.SW = np.zeros((2, self.NIND // 2))  # 滑动窗口，可以记录算子的情况
+        # self.a = 0
     
     def tournamentSelection(self, K, N, pi):
         """
@@ -70,32 +74,33 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         CombinObjV = self.decomposition(pop_ObjV, weights, idealPoint, pop_CV, self.problem.maxormins)
         off_CombinObjV = self.decomposition(offspring.ObjV, weights, idealPoint, offspring.CV, self.problem.maxormins)
         replace = np.where(off_CombinObjV <= CombinObjV)[0][:self.nr]  # 更新个体的索引
+        population[indices[replace]] = offspring  # 更新子代
         # if replace.size == 0:  # 没得替换
         # return
         # 被取代的父代的平均值作为状态
         # 直系父代的决策变量作为state
         # state = np.mean(population.Chrom[indices[replace]], axis=0)
-        state = population.Chrom[i]
-        state_ = offspring.Chrom[0]
-        population[indices[replace]] = offspring  # 更新子代
-        if not isinstance(self.mutDE, RL_mut_moea):
+        # state = population.Chrom[i]
+        # state_ = offspring.Chrom[0]
+        if not isinstance(self.mutOper, RecRL):
             return
         # 子代相比父代适应度提高的相对率
         FIR = (CombinObjV[replace] - off_CombinObjV[replace]) / CombinObjV[replace]
         r = FIR.sum()
-        # 插入滑动窗口的队列尾
-        self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
-        # 统计不同算子在滑动窗口里的reward sum
-        n = 4  # 算子池里的算子数量
-        r = np.empty(n)
-        for i in range(n):
-            r[i] = np.sum(self.SW[1, self.SW[0, :] == i])
-            # self.DQN.store_transition(state,i,r[i],state_)
-        self.DQN.store_transition(state, self.a, r[self.a], state_)
-        
-        if self.DQN.memory_counter > 100:  # 算子池里累积一定数量经验再学习
-            self.DQN.learn()
-    
+        self.mutOper.learn(r)
+        # # 插入滑动窗口的队列尾
+        # self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
+        # # 统计不同算子在滑动窗口里的reward sum
+        # n = 4  # 算子池里的算子数量
+        # r = np.empty(n)
+        # for i in range(n):
+        #     r[i] = np.sum(self.SW[1, self.SW[0, :] == i])
+        #     # self.DQN.store_transition(state,i,r[i],state_)
+        # self.DQN.store_transition(state, self.a, r[self.a], state_)
+        #
+        # if self.DQN.memory_counter > 100:  # 算子池里累积一定数量经验再学习
+        #     self.DQN.learn()
+        #
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
         # ==========================初始化配置===========================
         population = self.population
@@ -135,7 +140,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                     # 实例化一个种群对象用于存储进化的后代（这里只进化生成一个后代）
                     offspring = ea.Population(population.Encoding, population.Field, 1)
                     # offspring.Chrom = self.mutDE[0].do(population.Chrom, population.Field, i, indices)
-                    offspring.Chrom, self.a = self.mutDE.do(population.Encoding, population.Chrom, population.Field, i, indices, idealPoint)
+                    # offspring.Chrom, self.a = self.mutOper.do(population.Encoding, population.Chrom, population.Field, i, indices, idealPoint)
+                    offspring.Chrom = self.mutOper.do(population.Chrom, i, indices, self.currentGen)
                     offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 变异
                     self.call_aimFunc(offspring)  # 求进化后个体的目标函数值
                     # 更新理想点
@@ -151,16 +157,16 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 pi[idx] = (0.95 + 0.05 * DELTA[idx] / 0.001) * pi[idx]
                 oldz = newz
                 """统计不同进化阶段算子选择的结果"""
-                PopCountOpers.append(self.mutDE.CountOpers)
-                self.mutDE.CountOpers = np.zeros(self.mutDE.n)  # 清空算子选择记录器
+                PopCountOpers.append(self.mutOper.countOpers)
+                self.mutOper.countOpers = np.zeros(self.mutOper.n)  # 清空算子选择记录器
         
         # 画出不同进化阶段算子选择的结果
-        # BestSelection = np.array(PopCountOpers)
+        BestSelection = np.array(PopCountOpers)
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')
-        # for i in range(self.mutDE.n):
-        # plt.plot(BestSelection[:,i],'.',label=self.mutDE.mutOper[i].name)
+        # for i in range(self.mutOper.n):
+        #     plt.plot(BestSelection[:,i],'.',label=self.mutOper.recOpers[i].name)
         # plt.legend()
         # plt.show()
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果

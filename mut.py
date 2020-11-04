@@ -12,16 +12,27 @@ import numpy as np
 
 
 class mutRL:
+    """
+    使用强化学习做算子选择,需要有一个滑动窗口shape=(2,N//2)设计为种群的一半大小,存储应用的算子和得到的improvement.
+    
+    """
     def __init__(self) -> None:
         pass
     
     def do(self):
         pass
+    
+    def learn(self):
+        pass
 
 
 """
 多项式变异，geatpy已经提供
-class mutpolyn(Encoding, OldChrom, FieldDR, Pm=20, FixType=4, Parallel=False)
+class Mutpolyn:
+    def __init__(Pm=None, DisI=20, FixType=1, Parallel=False):
+        pass
+    def do(Encoding, OldChrom, FieldDR):
+        pass
 
 Encoding: 染色体编码方式-RI
 OldChrom: 种群染色体矩阵
@@ -29,11 +40,16 @@ FieldDR:  指明每个变量的上下界
 Pm:       变异算子所发生作用的最小片段发生变异的概率
 FixType:  用某种方式对超出范围的染色体进行修复
 
+do(
 """
 
 """
 高斯变异，geatpy已经提供
-class mutgau(Encoding, OldChrom, FieldDR, Pm, Sigma3, Middle, FixType, Parallel=False)
+class Mutgau:
+    def __init__(Pm=None, Sigma3=False, Middle=False, FixType=1, Parallel=False):
+        pass
+    def do(Encoding, OldChrom, FieldDR):
+        pass
 
 Encoding
 OldChrom
@@ -49,17 +65,17 @@ class MutM2m:
     """
     MOEA/D-M2M
     """
-    def __init__(self) -> None:
+    def __init__(self, maxgen) -> None:
         # self.D = None          # 决策变量维度
-        # self.MaxGen = None
+        self.MaxGen = maxgen
         pass
-    def do(self, Encoding, OldChrom, FieldDR, Parent1, currentGen:int, MaxGen:int):
+    def do(self, Encoding, OldChrom, FieldDR, Parent1, currentGen:int):
         """
         M2m里的变异，边界处理时需要父代Parent1
         """
         # 变异
         D = len(Parent1)
-        rm     = 0.25*(2*np.random.rand(D)-1)*(1-np.random.rand(D)**(-(1-currentGen/MaxGen)**0.7))
+        rm     = 0.25*(2*np.random.rand(D)-1)*(1-np.random.rand(D)**(-(1-currentGen/self.MaxGen)**0.7))
         Site   = np.random.rand(D) < 1/D
         Lower  = FieldDR[0]
         Upper  = FieldDR[1]

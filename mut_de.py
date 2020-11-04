@@ -94,12 +94,12 @@ class RL_mut_moea:
         self.CR = CR  # 交叉概率
         self.DN = DN  # 表示有多少组差分向量
         self.Loop = Loop  # 是否采用循环方式处理超出边界的变异结果，用不到
-        self.mutOper = [DE_rand_1(), DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
-        self.n = len(self.mutOper)
+        self.recOpers = [DE_rand_1(), DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
+        self.n = len(self.recOpers)
         # self.dqn = DQN(Problem.Dim+Problem.M, self.n)
         # self.dqn = DQN(Problem.Dim, self.n)
         self.dqn = dqn
-        self.CountOpers = np.zeros(self.n)
+        self.countOpers = np.zeros(self.n)
 
     def do(self, Encoding, OldChrom, FieldDR, r0, neighbourVector, z):
         """
@@ -112,8 +112,8 @@ class RL_mut_moea:
         # s = np.ones(30)
         # print(s.shape)
         a = self.dqn.choose_action(s)
-        s_ = self.mutOper[a].do(OldChrom, FieldDR, r0, neighbourVector)
-        self.CountOpers[a] += 1
+        s_ = self.recOpers[a].do(OldChrom, FieldDR, r0, neighbourVector)
+        self.countOpers[a] += 1
         return s_,a
 
 
