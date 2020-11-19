@@ -7,8 +7,9 @@ from sys import path as paths
 from os import path
 from matplotlib import pyplot as plt
 from Nature_DQN import DQN
-from mut_de import DE_rand_1, DE_rand_2, DE_current_to_rand_1, DE_current_to_rand_2, RL_mut_moea
+# from mut_de import DE_rand_1, DE_rand_2, DE_current_to_rand_1, DE_current_to_rand_2, RL_mut_moea
 from crossover import RecRL
+from mutation import MutRL
 
 paths.append(path.split(path.split(path.realpath(__file__))[0])[0])
 
@@ -26,8 +27,9 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         if population.Encoding == 'RI':
             # self.mutDE = [DE_rand_1(),DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
             # self.mutOper = RL_mut_moea(problem, self.uniformPoint, self.DQN)
-            self.mutOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
-            self.mutPolyn = ea.Mutpolyn(Pm=1 / self.problem.Dim, DisI=20, FixType=4)  # 生成多项式变异算子对象
+            self.xovOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
+            # self.mutPolyn = ea.Mutpolyn(Pm=1 / self.problem.Dim, DisI=20, FixType=4)  # 生成多项式变异算子对象
+            self.mutOper = MutRL(problem, self.uniformPoint, population.Encoding, population.Field, MAXGEN, self.NIND)
         else:
             raise RuntimeError('编码方式必须为''RI''.')
         if self.problem.M <= 2:
@@ -82,11 +84,12 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # state = np.mean(population.Chrom[indices[replace]], axis=0)
         # state = population.Chrom[i]
         # state_ = offspring.Chrom[0]
-        if not isinstance(self.mutOper, RecRL):
+        if not isinstance(self.xovOper, RecRL):
             return
         # 子代相比父代适应度提高的相对率
         FIR = (CombinObjV[replace] - off_CombinObjV[replace]) / CombinObjV[replace]
         r = FIR.sum()
+        self.xovOper.learn(r)
         self.mutOper.learn(r)
         # # 插入滑动窗口的队列尾
         # self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
@@ -103,8 +106,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         #
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
         # ==========================初始化配置===========================
-        population = self.population
         self.initialization()
+        population = self.population
         # NOTE: 在使用crtup生成单位目标维度均匀分布的参考点集时NIND可能不是种群大小。
         # NOTE: 为了保证评价次数不变，要更改MAXGEN
         self.MAXGEN = round((self.MAXGEN * population.sizes) / self.NIND + 0.5)
@@ -124,7 +127,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         PopCountOpers = []  # 统计不同进化阶段算子选择的结果
         # CountOpers = np.zeros((self.NIND,self.mutDE.n))  # 统计不同子问题算子选择结果
         # ===========================开始进化============================
-        while self.terminated(population) == False:
+        while not self.terminated(population):
             for _ in range(5):
                 # 这里的边界是指weight在M-1个方向上权重为0
                 Bounday = np.where(np.sum(self.uniformPoint < 0.0001, 1) == (self.problem.M - 1))[0].tolist()
@@ -141,8 +144,9 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                     offspring = ea.Population(population.Encoding, population.Field, 1)
                     # offspring.Chrom = self.mutDE[0].do(population.Chrom, population.Field, i, indices)
                     # offspring.Chrom, self.a = self.mutOper.do(population.Encoding, population.Chrom, population.Field, i, indices, idealPoint)
-                    offspring.Chrom = self.mutOper.do(population.Chrom, i, indices, self.currentGen)
-                    offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 变异
+                    offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, self.currentGen)
+                    # offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 变异
+                    offspring.Chrom = self.mutOper.do(population.Chrom, offspring.Chrom, i, self.currentGen)
                     self.call_aimFunc(offspring)  # 求进化后个体的目标函数值
                     # 更新理想点
                     idealPoint = ea.crtidp(offspring.ObjV, offspring.CV, self.problem.maxormins, idealPoint)
@@ -157,8 +161,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 pi[idx] = (0.95 + 0.05 * DELTA[idx] / 0.001) * pi[idx]
                 oldz = newz
                 """统计不同进化阶段算子选择的结果"""
-                PopCountOpers.append(self.mutOper.countOpers)
-                self.mutOper.countOpers = np.zeros(self.mutOper.n)  # 清空算子选择记录器
+                PopCountOpers.append(self.xovOper.countOpers)
+                self.xovOper.countOpers = np.zeros(self.xovOper.n)  # 清空算子选择记录器
         
         # 画出不同进化阶段算子选择的结果
         BestSelection = np.array(PopCountOpers)

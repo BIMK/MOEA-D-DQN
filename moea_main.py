@@ -13,7 +13,7 @@ if parent_path not in sys.path:
     sys.path.append(parent_path)
 # 配置日志信息
 logging.basicConfig(
-    handlers=[logging.FileHandler("./result/RL0_UF1-7.log", encoding="utf-8", mode='w')],
+    handlers=[logging.FileHandler("./result/RL_DTLZ1-7_2.log", encoding="utf-8", mode='w')],
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%m-%d %H:%M:%S')
@@ -36,7 +36,8 @@ if __name__ == '__main__':
     # problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
     # problems = ['UF8','UF9','UF10']
     problems = ['DTLZ1','DTLZ2','DTLZ3','DTLZ4','DTLZ5','DTLZ6','DTLZ7',]
-    N = 7   # 独立运行N次，取中值
+    N = 35   # 独立运行N次，取中值
+    results = list()
     for problemName in problems:
         """======================实例化问题对象========================="""
         logging.info('time: %s       Start ... %s' % (get_time(), problemName))
@@ -65,20 +66,19 @@ if __name__ == '__main__':
             IGD = ea.indicator.IGD(pop.ObjV, PF)     # 计算IGD指标
             HV = ea.indicator.HV(NDSet.ObjV, PF)       # 计算HV指标
             logging.info('time: %s,  round %d/%d, IGD = %.7f, HV = %.7f' % (get_time(), i+1, N, IGD, HV))
-            # print(IGD1)
-            # print('用时：%s 秒'%(myAlgorithm.passTime))
-            # print('评价次数：%d 次'%(myAlgorithm.evalsNum))
-            # print('非支配个体数：%d 个'%(NDSet.sizes))
             igd[i] = IGD
             hv[i] = HV
-            # title = "%s--%d" % (fileName, i)
-            # plt.title(title)
-            # plt.savefig('result/'+title+'.png')
-            # plt.show()
-            # plt.close()
-        logging.info('median ----- IDG = %.7f, IGD.std = %.7f, HV = %.7f, HV.std = %.7f' %
+        # 去除5个最差的实验数据
+        # igd = np.sort(igd)[:-5]
+        # hv = np.sort(hv)[5:]
+        res = ('median ----- IDG = %.7f, IGD.std = %.7f, HV = %.7f, HV.std = %.7f' %
                      (np.median(igd), np.std(igd), np.median(hv), np.std(hv)))
-
+        results.append(res)
+        logging.info(res)
+        # logging.info('median ----- IDG = %.7f, IGD.std = %.7f, HV = %.7f, HV.std = %.7f' %
+        #              (np.median(igd), np.std(igd), np.median(hv), np.std(hv)))
+    for x in results:
+        print(x)
     sys.exit(0)
 
 """

@@ -1,7 +1,7 @@
 """
 交叉算子池，交叉算子统一不处理边界信息
 1. 模拟二进制交叉
-2. 差分
+2. 差分算子
 3. MOEA/D-M2M里的交叉
 """
 import numpy as np
@@ -22,7 +22,7 @@ class RecRL:
         self.recOpers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(self.maxgen), DE_rand_1(), DE_rand_2(),
                          DE_current_to_rand_1(), DE_current_to_rand_2()]
         self.n = len(self.recOpers)
-        self.dqn = DQN(problem.Dim, self.n)
+        self.dqn = DQN(problem.Dim+problem.M, self.n)
         self.SW = np.zeros((2, NIND // 2))
         self.a = 0
         self.state = None
@@ -31,10 +31,11 @@ class RecRL:
     
     def do(self, OldChrom, r0, neighbourVector, currentGen):
         """
+        r0: 父代在OldChrom里的索引
         OldChrom: 变异前的原始矩阵
         return:  返回新种群的染色体矩阵
         """
-        self.state = OldChrom[r0]
+        self.state = np.hstack((OldChrom[r0], self.lambda_[r0]))
         self.a = self.dqn.choose_action(self.state)
         self.countOpers[self.a]+=1
         if self.a == 0:  # 使用模拟二进制交叉
@@ -43,23 +44,23 @@ class RecRL:
             offChrom = self.recOpers[1].do(OldChrom, r0, neighbourVector, currentGen)
         else:  # 使用差分算子
             offChrom = self.recOpers[self.a].do(OldChrom, r0, neighbourVector)
-        self.state_ = offChrom[0]
+        self.state_ = np.hstack((offChrom[0], self.lambda_[r0]))
         return offChrom
     
     def learn(self, r):
         """
         更新DQN
         :param r: 子代相对于父代适应度的提高率
-        子代和父代都是由上一步do得到的
         """
+        # 将上次进化加入滑动窗口
         self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
 
         # r = np.empty(self.n)
         # for i in range(n):
         #     r[i] = np.sum(self.SW[1, self.SW[0, :] == i])
             # self.DQN.store_transition(state,i,r[i],state_)
-        r = np.sum(self.SW[1, self.SW[0,:] == self.a])
-        self.dqn.store_transition(self.state, self.a, r, self.state_)
+        reward = np.sum(self.SW[1, self.SW[0,:] == self.a])
+        self.dqn.store_transition(self.state, self.a, reward, self.state_)
         # 学习,更新DQN
         if self.dqn.memory_counter > 100:
             self.dqn.learn()
@@ -68,11 +69,11 @@ class RecRL:
 
 """
 模拟二进制交叉 Simulated Binary Crossover  geatpy有实现
-class Recsbx:
-    def __init__(XOVR=0.7, Half=False, n=20, Parallel=False):
-        pass
-    def do(OldChrom):
-        pass
+
+NewChrom =  recsbx(OldChrom, XOVR, Half, n, Parallel)
+        该函数把输入的OldChrom种群染色体矩阵进行模拟二进制交叉，并返回新的种群染色体矩阵。
+        交配的一对是有序的，种群的前一半个体和后一半个体进行配对。
+        若个体数是奇数，则最后一个个体不参与配对。
 
 OldChrom: 待交叉种群染色体矩阵
 XOVR:     交叉概率，默认0.7
@@ -110,14 +111,15 @@ class RecM2m:
     def do(self, OldChrom, r0, neighbourVector, currentGen: int):
         # r1 = neighbourVector[0]
         # r2 = neighbourVector[1]
-        r1, r2 = np.random.choice(neighbourVector, 2, replace=False)  # 不放回的抽取2个
+        # r1, r2 = np.random.choice(neighbourVector, 2, replace=False)  # 不放回的抽取2个
+        r2 = np.random.choice(neighbourVector, 1, replace=False)  # 不放回的抽取2个
         p1 = OldChrom[r0]
         # p1 = OldChrom[r1]
         p2 = OldChrom[r2]
         # D  = len(p1)   #  决策变量维度
         rc = (2 * np.random.rand(1) - 1) * (1 - np.random.rand(1) ** (-(1 - currentGen / self.MaxGen) ** 0.7))
         OffDec = p1 + rc * (p1 - p2)
-        OffDec = OffDec[np.newaxis, :]
+        # OffDec = OffDec[np.newaxis, :]
         return OffDec
 
 
