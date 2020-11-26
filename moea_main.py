@@ -13,7 +13,7 @@ if parent_path not in sys.path:
     sys.path.append(parent_path)
 # 配置日志信息
 logging.basicConfig(
-    handlers=[logging.FileHandler("./result/RL_UF1-7_gammaSW_0.log", encoding="utf-8", mode='w')],
+    handlers=[logging.FileHandler("./result/RL_UF1-7_origin_0.log", encoding="utf-8", mode='w')],
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%m-%d %H:%M:%S')
@@ -25,7 +25,7 @@ formatter = logging.Formatter('%(levelname)-8s--> %(message)s')
 console.setFormatter(formatter)
 # 将定义好的console日志handler添加到root logger
 logging.getLogger('').addHandler(console)
-logging.info('Start----RL_UF1-7-----------------------------------')
+logging.info('Start----RL_UF1-7-origin----------------------------------')
 
 def get_time():
     ans = time.strftime("%m-%d %H:%M:%S", time.localtime())
