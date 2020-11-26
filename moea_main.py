@@ -13,7 +13,7 @@ if parent_path not in sys.path:
     sys.path.append(parent_path)
 # 配置日志信息
 logging.basicConfig(
-    handlers=[logging.FileHandler("./result/RL_DTLZ1-7_2.log", encoding="utf-8", mode='w')],
+    handlers=[logging.FileHandler("./result/RL_DTLZ_without_rw_0.log", encoding="utf-8", mode='w')],
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%m-%d %H:%M:%S')
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         fileName = problemName
         MyProblem = getattr(__import__('problem.'+problemName), problemName)  # 导入自定义问题类
         MyProblem = getattr(MyProblem, problemName)
-        problem = MyProblem(3)       # 生成问题对象--DTL设置为3目标
+        problem = MyProblem(3)       # 生成问题对象--DTLZ设置为3目标
         PF = problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
         """======================种群设置==============================="""
         Encoding = 'RI'             # 编码方式
@@ -54,7 +54,7 @@ if __name__ == '__main__':
         population = ea.Population(Encoding, Field, NIND)
         """======================算法参数设置=========================="""
         # myAlgorithm = moea_MOEAD_DE_templet(problem, population)
-        MAXGEN = 288
+        MAXGEN = 287
         myAlgorithm = moea_MOEAD_DRA_templet(problem, population, MAXGEN)
         myAlgorithm.MAXGEN = MAXGEN    # 最大进化代数
         myAlgorithm.drawing = 0  # 设置绘图方式（0：不绘图；1：绘制结果图；2：绘制目标空间过程动画；3：绘制决策空间过程动画）
@@ -69,16 +69,16 @@ if __name__ == '__main__':
             igd[i] = IGD
             hv[i] = HV
         # 去除5个最差的实验数据
-        # igd = np.sort(igd)[:-5]
-        # hv = np.sort(hv)[5:]
+        igd = np.sort(igd)[:-5]
+        hv = np.sort(hv)[5:]
         res = ('median ----- IDG = %.7f, IGD.std = %.7f, HV = %.7f, HV.std = %.7f' %
                      (np.median(igd), np.std(igd), np.median(hv), np.std(hv)))
         results.append(res)
         logging.info(res)
         # logging.info('median ----- IDG = %.7f, IGD.std = %.7f, HV = %.7f, HV.std = %.7f' %
         #              (np.median(igd), np.std(igd), np.median(hv), np.std(hv)))
-    for x in results:
-        print(x)
+    for i in range(len(problems)):
+        logging.info(problems[i], results[i])
     sys.exit(0)
 
 """
