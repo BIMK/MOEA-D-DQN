@@ -2,6 +2,7 @@ __pycache__/
 BackUP/
 result/
 referenceObjV/
+paper/
 .idea
 .mypy_cache
 dev.py
