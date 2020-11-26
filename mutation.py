@@ -33,10 +33,12 @@ class MutRL:
         self.state_ = None
         self.countOpers = np.zeros(self.n)
     
-    def do(self,OldChrom, Parent1, r0, currentGen):
+    def do(self, OldChrom, Parent1, r0, currentGen):
         self.state = np.hstack((Parent1[0], self.lambda_[r0]))
-        self.a = self.dqn.choose_action(self.state)
-        # self.a = 2
+        if self.dqn.memory_counter > 100:
+            self.a = self.dqn.choose_action(self.state)
+        else:
+            self.a = np.random.randint(0, self.n)
         self.countOpers[self.a] += 1
         if self.a == 0 or self.a == 1:
             OffChrom = self.mutOpers[self.a].do(Parent1)
@@ -54,12 +56,11 @@ class MutRL:
         :param r: 子代的适应度提高
         """
         self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
-        reward = np.sum(self.SW[1, self.SW[0,:] == self.a])
+        reward = np.sum(self.SW[1, self.SW[0, :] == self.a])
         self.dqn.store_transition(self.state, self.a, reward, self.state_)
         # 学习,更新DQN
         if self.dqn.memory_counter > 100:
             self.dqn.learn()
-
 
 
 """
@@ -143,8 +144,8 @@ class MutM2m:
         rm = 0.25 * (2 * np.random.rand(N, D) - 1) * (1 - np.random.rand(N, D) ** (-(1 - currentGen / self.MaxGen) ** 0.7))
         Site = np.random.rand(N, D) < 1 / D
         # print(Site)
-        Lower = np.tile(self.FieldDR[0], (N,1))
-        Upper = np.tile(self.FieldDR[1], (N,1))
+        Lower = np.tile(self.FieldDR[0], (N, 1))
+        Upper = np.tile(self.FieldDR[1], (N, 1))
         OffDec = Parent1.copy()
         OffDec[Site] = OffDec[Site] + rm[Site] * (Upper[Site] - Lower[Site])
         
@@ -152,8 +153,8 @@ class MutM2m:
         temp1 = OffDec < Lower
         temp2 = OffDec > Upper
         rnd = np.random.rand(N, D)
-        OffDec[temp1] = Lower[temp1] + 0.5 * rnd[temp1] * (OldChrom[r0:r0+1][temp1] - Lower[temp1])
-        OffDec[temp2] = Upper[temp2] - 0.5 * rnd[temp2] * (Upper[temp2] - OldChrom[r0:r0+1][temp2])
+        OffDec[temp1] = Lower[temp1] + 0.5 * rnd[temp1] * (OldChrom[r0:r0 + 1][temp1] - Lower[temp1])
+        OffDec[temp2] = Upper[temp2] - 0.5 * rnd[temp2] * (Upper[temp2] - OldChrom[r0:r0 + 1][temp2])
         return OffDec
 
 

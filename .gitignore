@@ -1,7 +1,11 @@
 __pycache__/
+BackUP/
+result/
+referenceObjV/
 .idea
 .mypy_cache
 dev.py
+dev.ipynb
 testlog.py
 *.mat
 *.log
@@ -10,3 +14,7 @@ testlog.py
 *.png
 *.xlsx
 *.m
+# /paper
+*.aux
+*.gz
+*.pdf

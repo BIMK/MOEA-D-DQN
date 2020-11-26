@@ -22,7 +22,7 @@ class RecRL:
         self.recOpers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(self.maxgen), DE_rand_1(), DE_rand_2(),
                          DE_current_to_rand_1(), DE_current_to_rand_2()]
         self.n = len(self.recOpers)
-        self.dqn = DQN(problem.Dim+problem.M, self.n)
+        self.dqn = DQN(problem.Dim + problem.M, self.n)
         self.SW = np.zeros((2, NIND // 2))
         self.a = 0
         self.state = None
@@ -36,8 +36,11 @@ class RecRL:
         return:  返回新种群的染色体矩阵
         """
         self.state = np.hstack((OldChrom[r0], self.lambda_[r0]))
-        self.a = self.dqn.choose_action(self.state)
-        self.countOpers[self.a]+=1
+        if self.dqn.memory_counter > 100:
+            self.a = self.dqn.choose_action(self.state)
+        else:
+            self.a = np.random.randint(0, self.n)
+        self.countOpers[self.a] += 1
         if self.a == 0:  # 使用模拟二进制交叉
             offChrom = self.recOpers[0].do(OldChrom, r0, neighbourVector)
         elif self.a == 1:  # 使用M2m里的交叉
@@ -54,17 +57,16 @@ class RecRL:
         """
         # 将上次进化加入滑动窗口
         self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
-
+        
         # r = np.empty(self.n)
         # for i in range(n):
         #     r[i] = np.sum(self.SW[1, self.SW[0, :] == i])
-            # self.DQN.store_transition(state,i,r[i],state_)
-        reward = np.sum(self.SW[1, self.SW[0,:] == self.a])
+        # self.DQN.store_transition(state,i,r[i],state_)
+        reward = np.sum(self.SW[1, self.SW[0, :] == self.a])
         self.dqn.store_transition(self.state, self.a, reward, self.state_)
         # 学习,更新DQN
         if self.dqn.memory_counter > 100:
             self.dqn.learn()
-
 
 
 """
