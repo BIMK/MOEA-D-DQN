@@ -15,7 +15,6 @@ testlog.py
 *.png
 *.xlsx
 *.m
-# /paper
 *.aux
 *.gz
 *.pdf

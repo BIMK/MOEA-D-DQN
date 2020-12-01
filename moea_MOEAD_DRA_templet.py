@@ -40,6 +40,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         self.Ps = 0.9  # (Probability of Selection)表示进化时有多大的概率只从邻域中选择个体参与进化
         self.neighborSize = max(self.NIND // 10, 20)
         self.nr = max(self.NIND // 100, 3)
+        self.learn_interval = 5  # 每5代更新DQN网络
         # self.SW = np.zeros((2, self.NIND // 2))  # 滑动窗口，可以记录算子的情况
         # self.a = 0
     
@@ -89,21 +90,10 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # 子代相比父代适应度提高的相对率
         FIR = (CombinObjV[replace] - off_CombinObjV[replace]) / CombinObjV[replace]
         r = FIR.sum()
-        self.xovOper.learn(r)
-        self.mutOper.learn(r)
-        # # 插入滑动窗口的队列尾
-        # self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
-        # # 统计不同算子在滑动窗口里的reward sum
-        # n = 4  # 算子池里的算子数量
-        # r = np.empty(n)
-        # for i in range(n):
-        #     r[i] = np.sum(self.SW[1, self.SW[0, :] == i])
-        #     # self.DQN.store_transition(state,i,r[i],state_)
-        # self.DQN.store_transition(state, self.a, r[self.a], state_)
-        #
-        # if self.DQN.memory_counter > 100:  # 算子池里累积一定数量经验再学习
-        #     self.DQN.learn()
-        #
+        if self.currentGen % self.learn_interval == 0:
+            self.xovOper.learn(r)
+            self.mutOper.learn(r)
+        
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
         # ==========================初始化配置===========================
         self.initialization()
