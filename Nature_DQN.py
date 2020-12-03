@@ -5,6 +5,8 @@ DQN步骤：
 - CartPole-v0的状态由4位实数编码表示，所以第一层网络是4->50
 """
 #%%
+from abc import ABC
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -28,18 +30,25 @@ use_gpu = torch.cuda.is_available()
 #%%
 
 
-class Net(nn.Module):
+class Net(nn.Module, ABC):
     def __init__(self, inDim, outDim):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(inDim, 256)
-        self.out = nn.Linear(256, outDim)
+        self.fc1 = nn.Linear(inDim, 128)
+        self.fc2 = nn.Linear(128, 256)
+        self.fc3 = nn.Linear(256, 128)
+        self.fc4 = nn.Linear(128, 64)
+        self.fc5 = nn.Linear(64, 32)
+        self.out = nn.Linear(32, outDim)
 
     def forward(self, x):
-        return self.out(F.relu(self.fc1(x)))
-        # x = self.fc1(x)
-        # x = F.relu(x)
-        # actions_value = self.out(x)
-        # return actions_value
+        # return self.out(F.relu(self.fc1(x)))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = F.relu(self.fc5(x))
+        action_value = self.out(x)
+        return action_value
 
 
 class DQN(object):
