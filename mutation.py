@@ -80,7 +80,7 @@ FixType:  用某种方式对超出范围的染色体进行修复
 
 
 class Mutpolyn:
-    def __init__(self, Encoding, FieldDR, Pm=None, DisI=20, FixType=1, Parallel=False):
+    def __init__(self, Encoding, FieldDR, Pm=None, DisI=20, FixType=3, Parallel=False):
         self.Encoding = Encoding
         self.FieldDR = FieldDR
         self.Pm = Pm
@@ -89,7 +89,7 @@ class Mutpolyn:
         self.Parallel = Parallel
     
     def do(self, Parent1):
-        Offspring = ea.mutpolyn(self.Encoding, Parent1, self.FieldDR)
+        Offspring = ea.mutpolyn(self.Encoding, Parent1, self.FieldDR, self.Pm, self.DisI, self.FixType)
         return Offspring
 
 
@@ -115,9 +115,14 @@ class Mutgau:
     def __init__(self, Encoding, FieldDR, Pm=None, Sigma3=None, Middle=None, FixType=None, Parallel=False):
         self.Encoding = Encoding
         self.FieldDR = FieldDR
+        self.Pm = Pm
+        self.Sigma3 = Sigma3
+        self.Middle = Middle
+        self.FixType = FixType
+        self.Parallel = Parallel
     
     def do(self, Parent1):
-        Offspring = ea.mutgau(self.Encoding, Parent1, self.FieldDR)
+        Offspring = ea.mutgau(self.Encoding, Parent1, self.FieldDR, self.Pm, self.Sigma3, self.Middle, self.FixType)
         return Offspring
 
 
@@ -155,6 +160,10 @@ class MutM2m:
         rnd = np.random.rand(N, D)
         OffDec[temp1] = Lower[temp1] + 0.5 * rnd[temp1] * (OldChrom[r0:r0 + 1][temp1] - Lower[temp1])
         OffDec[temp2] = Upper[temp2] - 0.5 * rnd[temp2] * (Upper[temp2] - OldChrom[r0:r0 + 1][temp2])
+        # 检查是否符合边界约束
+        if np.any(OffDec>Upper) or np.any(OffDec<Lower):
+            print("有解越界")
+            print(OffDec)
         return OffDec
 
 
