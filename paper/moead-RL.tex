@@ -80,9 +80,20 @@ Different from credit assignment, which only needs to evaluate operator performa
 % 写到related work里吧
 
 %%% 介绍RL
-% RL正适合用来解决环境的动态变化和面临的探索利用困境问题，
+% 根据状态做出动作的强化学习正适合用来解决探索和利用困境
 Reinforcement Learning (RL) that selects actions according to the state is good at solving Exploration vs Exploitation dilemma.
-% RL。。。。
+% 介绍强化学习
+A RL agent interacts with its environment in discrete time steps. At each time $t$, the agent receives the current state $s_t$ and reward $r_t$. It then chooses an action $a_t$ from the set of available actions, which is subsequently sent to the environment. The environment moves to a new state $s_{t+1}$ and the reward $r_{t+1}$ associated with the transition $(s_t, a_t, s_{t+1})$ is determined. The goal of a reinforcement learning agent is to learn a policy $\pi(a, s)=\operatorname{Pr}\left(a_{t}=a \mid s_{t}=s\right)$ which maximizes the expected cumulative reward.
+
+%%% 将RL应用到AOS
+% 在自适应算子选择问题中，我们可以将多目标优化问题和当前的种群作为环境，将算子作为动作，将应用算子后种群发生的变化作为奖励，
+In the AOS problems, we take MOPs and the current population as environment, take the population characteristics as states, take the operators as actions and the improvement of population fitness after the application of the operator is regarded as reward.
+% 我们会发现遗传算法和强化学习在概念和结构上有相似性
+Viewed in this light, RL can be regarded as similar to GA in its evolution/learning structure, which causes high conceptual and structural compatibility between RL and GA.
+
+%%% 介绍本文
+% 我们的算法可以根据不同的个体推荐不同的算子，做到更细粒度的控制，而且分别推荐交叉和变异(全局和局部？？)
+In this paper, we proposed an AOS method based on RL, which can
 
 
 
