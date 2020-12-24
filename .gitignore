@@ -19,5 +19,8 @@ testlog.py
 *.gz
 *.pdf
 !paper/moead-RL.tex
+!moead-RL.tex
+
 !paper/references.bib
+settings.json
 
