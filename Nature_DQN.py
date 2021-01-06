@@ -83,7 +83,7 @@ class DQN(object):
             actions_value[actions_value<=0] = 0.1
             actions_value = actions_value/torch.sum(actions_value)*100
             # print(actions_value)
-            c = 0.6
+            c = 0.5
             for i in range(N_ACTIONS):
                 actions_value[0][i] = actions_value[0][i]*c**i
             actions_value = actions_value/torch.sum(actions_value)*100

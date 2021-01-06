@@ -33,9 +33,9 @@ def get_time():
 
 if __name__ == '__main__':
 
-    problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
+    # problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
     # problems = ['UF8','UF9','UF10']
-    # problems = ['DTLZ1','DTLZ2','DTLZ3','DTLZ4','DTLZ5','DTLZ6','DTLZ7',]
+    problems = ['DTLZ1','DTLZ2','DTLZ3','DTLZ4','DTLZ5','DTLZ6','DTLZ7',]
     N = 35   # 独立运行N次，取中值
     results = list()
     for problemName in problems:
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         fileName = problemName
         MyProblem = getattr(__import__('problem.'+problemName), problemName)  # 导入自定义问题类
         MyProblem = getattr(MyProblem, problemName)
-        problem = MyProblem()       # 生成问题对象--DTLZ设置为3目标
+        problem = MyProblem(3)       # 生成问题对象--DTLZ设置为3目标
         PF = problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
         """======================种群设置==============================="""
         Encoding = 'RI'             # 编码方式
