@@ -55,16 +55,16 @@
 %%% 介绍下进化多目标优化
 % 由于多个目标间通常互相冲突，没有一个全局最优解，一般会有一个PF
 \IEEEPARstart{M}{ultl-object} optimization problems (MOPs) are characterized by multiple objectives that often conflict with each other\cite{zhang2014efficient}. In general, MOPs have no single optimal solution on all objectives; instead, a number of solutions are optimal for different objectives, known as Pareto-optimal solutions.
-% All the pareto optimal solutions constitute the Pareto set and the set of all pareto optimal objective vectors is the Pareto front \cite{deb2001multi}.
+% All the Pareto optimal solutions constitute the Pareto set and the set of all Pareto optimal objective vectors is the Pareto front \cite{deb2001multi}.
 
 %%% 介绍进化算法
 % 进化算法可以解决很多多目标优化问题，最近几十年有了很大的发展，
 Multi-object evolutionary algorithms have attracted great attention over the past few decades and achieved outstanding performance in solving various kinds of MOPs \cite{fialho2010adaptive},
 % 人们提出了很多新的算法，主要有3类，基于支配关系的，基于分解的和基于指标的算法
-a number of algorithms have been proposed, e.g., indicator-based evolutionary algorithm (IBEA) \cite{IBEA}, multi-objective evolutionary algorithm based on decomposition (MOEA/D) \cite{moead} and fast non-dominated sorting genetic algorithm (NSGA-II) \cite{nsga2}.
+a number of algorithms have been proposed, e.g., indicator-based evolutionary algorithm (IBEA) \cite{IBEA}, the multi-objective evolutionary algorithm based on decomposition (MOEA/D) \cite{moead} and fast non-dominated sorting genetic algorithm (NSGA-II) \cite{nsga2}.
 % 生成算子对进化算法的性能有很大的影响，有的算子注重探索能力，我们称为全局算子，有的注重局部的收敛，我们称为局部算子,那么如何平衡算法的探索和利用就成了人们研究的对象
-In these algorithms, the reproduction operators have great influence on the performance.
-Generally speaking, different operators have different applications, some operators tend to explore unknown regions to find global optimal solutions, called global operators; and the others tend to converge quickly with population's information, called local operators.
+In these algorithms, the reproduction operators have a great influence on the performance.
+Generally speaking, different operators have different applications, some operators tend to explore unknown regions to find global optimal solutions, called global operators; and the others tend to converge quickly with population information, called local operators.
 % 所以我们要平衡探索和利用算子
 In order to accelerate the process of evolution, balanced exploration and exploitation became an important topic.
 
@@ -83,7 +83,7 @@ Different from credit assignment, which only needs to evaluate operator performa
 % 根据状态做出动作的强化学习正适合用来解决探索和利用困境
 Reinforcement Learning (RL) that selects actions according to the state is good at solving Exploration vs Exploitation dilemma.
 % 介绍强化学习
-A RL agent interacts with its environment in discrete time steps. At each time $t$, the agent receives the current state $s_t$ and reward $r_t$. It then chooses an action $a_t$ from the set of available actions, which is subsequently sent to the environment. The environment moves to a new state $s_{t+1}$ and the reward $r_{t+1}$ associated with the transition $(s_t, a_t, s_{t+1})$ is determined. The goal of a reinforcement learning agent is to learn a policy $\pi(a, s)=\operatorname{Pr}\left(a_{t}=a \mid s_{t}=s\right)$ which maximizes the expected cumulative reward.
+An RL agent interacts with its environment in discrete time steps. At each time $t$, the agent receives the current state $s_t$ and reward $r_t$. It then chooses an action $a_t$ from the set of available actions, which is subsequently sent to the environment. The environment moves to a new state $s_{t+1}$ and the reward $r_{t+1}$ associated with the transition $(s_t, a_t, s_{t+1})$ is determined. The goal of a reinforcement learning agent is to learn a policy $\pi(a, s)=\operatorname{Pr}\left(a_{t}=a \mid s_{t}=s\right)$ which maximizes the expected cumulative reward.
 
 %%% 将RL应用到AOS
 % 在自适应算子选择问题中，我们可以将多目标优化问题和当前的种群作为环境，将算子作为动作，将应用算子后种群发生的变化作为奖励，
@@ -102,6 +102,27 @@ In this paper, we proposed an AOS method based on RL, which can recommend differ
 \section{Background and Related Work}
 %%% 进化算法的效果和产生子代的策略有关，为了充分利用不同算子，最近几年提出了很多自适应算子选择的策略。
 The performance of EAs mainly depends on its breeding Offspring strategy, to take full advantage of several effective operators, many adaptive operator selection strategies have been proposed in recent years.
+% 这一章节介绍AOS用到的概念和背景知识，和一些相关的工作。
+This section provides some basic concepts, background knowledge and some related work about AOS.
+
+%%% 介绍多目标优化和MOEAD
+\subsection{Multi-objective Optimization and MOEA/D}
+Multi-objective optimization problems are usually formulated as follows:
+
+$$
+  \begin{array}{ll}
+    \text { Minimize: }   & \mathrm{f}=\left\{f_{1}(\mathrm{x}), \ldots, f_{M}(\mathrm{x})\right\} \\
+    \text { Subject to: } & l_{d} \leq x_{d} \leq u_{d} \qquad d=1, \ldots, D
+  \end{array}
+$$
+
+%%% x是决策变量，f是一组互相冲突的目标函数，由于目标是冲突的，所以不存在一个解可以在所有目标上达到最优，
+Where $x = (x_1, \cdots , x_D)$ is a decision variable vector of length $D$, $l$ and $u$ are the lower and upper bounds of the decision variables. $f$ consists of $M$ conflicting objective functions. Since the objectives are conflicting, there is no one solution that is optimal for all objectives.
+% 所有可能的解构成决策空间，决策空间可以由目标函数对应到目标空间，在目标空间中，如果一个解在所有目标上都不比另一个差，且至少在一个目标上比另一个好，我们就称为一个解支配另一个解。
+All possible decision variables constitute the decision space and objective functions can be mapped from the objective space to the decision space\cite{gonccalves2017adaptive}. In the objective space, one solution is said to dominate the other solution if it is no worse than the other solution on all objectives and is better than the other solution on at least one objective. A
+
+
+
 
 \subsection{Adaptive Operator Selection}
 yihang
@@ -115,7 +136,7 @@ ling hang
 test
 \section{The Proposed Algorithm}
 test
-\subsection{Framework of MOEA/PSL}
+\subsection{Frassmework of MOEA/PSL}
 test
 \subsection{Pareto Optimal Subspace Learning and Offspring Generation in MOEA/PSL}
 
