@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import gym
+# import gym
 from matplotlib import pyplot as plt
 import sys
 
@@ -22,8 +22,8 @@ EPSILON = 0.9               # greedy policy
 GAMMA = 0.9                 # reward discount
 TARGET_REPLACE_ITER = 100   # target update frequency
 MEMORY_CAPACITY = 500
-env = gym.make('CartPole-v0')
-env = env.unwrapped
+# env = gym.make('CartPole-v0')
+# env = env.unwrapped
 N_ACTIONS = 4  # 4种候选的算子
 N_STATES = 30 # 30维决策变量
 use_gpu = torch.cuda.is_available()
