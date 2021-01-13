@@ -70,9 +70,9 @@ In order to accelerate the process of evolution, balanced exploration and exploi
 
 %%% 介绍AOS
 % AOS就是为个体推荐合适的算子，在线控制
-Adaptive operator selection (AOS) applies appropriate operators for individuals by online control, while solving the problem, based on recent performance of operators \cite{li2011multi}.
+Adaptive operator selection (AOS) applies appropriate operators for individuals by online control while solving the problem, based on the recent performance of operators \cite{li2011multi}.
 % 包含credit assignment和operator selection 两部分，
-An AOS algorithm usually consists of \textit{credit assignment} and \textit{operator selection}, credit assignment is to decide how much credit should be assigned to an operator based on its recent performance in the search process, operator selection is to select an operator to use at the next time point based on these current reward values \cite{frrmab}.
+An AOS algorithm usually consists of \textit{credit assignment} and \textit{operator selection} \cite{li2013evolving}, credit assignment is to decide how much credit should be assigned to an operator based on its recent performance in the search process, operator selection is to select an operator to use at the next time point based on these current reward values \cite{frrmab}.
 % 和credit assignment 尽量准确评价算子近期的效果不同，operator selection 需要平衡探索和利用，即既需要选择尽量表现好的算子来提高算法效果，又需要给表现不好的算子一些机会，因为它们在之后有可能变好。
 Different from credit assignment, which only needs to evaluate operator performance as accurately as possible, operator selection should balance exploration and exploitation: one hopes to give more chances to the best operators found so far in order to maximize the cumulative improvement (exploitation), but also needs to explore poor operators in the future search (exploration).
 % 通常有MAB，UCB，可以和MOEAD结合应用到多目标问题上。
@@ -87,7 +87,7 @@ An RL agent interacts with its environment in discrete time steps. At each time 
 
 %%% 将RL应用到AOS
 % 在自适应算子选择问题中，我们可以将多目标优化问题和当前的种群作为环境，将算子作为动作，将应用算子后种群发生的变化作为奖励，
-In the AOS problems, we take MOPs and the current population as environment, take the population characteristics as states, take the operators as actions and the improvement of population fitness after the application of the operator is regarded as reward.
+In the AOS problems, we take MOPs and the current population as environment, take the population characteristics as states, take the operators as actions and the improvement of population fitness after the application of the operator is regarded as the reward.
 % 我们会发现遗传算法和强化学习在概念和结构上有相似性
 Viewed in this light, RL can be regarded as similar to GA in its evolution/learning structure, which causes high conceptual and structural compatibility between RL and GA.
 
@@ -105,8 +105,8 @@ The performance of EAs mainly depends on its breeding Offspring strategy, to tak
 % 这一章节介绍AOS用到的概念和背景知识，和一些相关的工作。
 This section provides some basic concepts, background knowledge and some related work about AOS.
 
-%%% 介绍多目标优化和MOEAD
 \subsection{Multi-objective Optimization and MOEA/D}
+%%% 介绍多目标优化和MOEAD
 Multi-objective optimization problems are usually formulated as follows:
 
 $$
@@ -119,13 +119,21 @@ $$
 %%% x是决策变量，f是一组互相冲突的目标函数，由于目标是冲突的，所以不存在一个解可以在所有目标上达到最优，
 Where $x = (x_1, \cdots , x_D)$ is a decision variable vector of length $D$, $l$ and $u$ are the lower and upper bounds of the decision variables. $f$ consists of $M$ conflicting objective functions. Since the objectives are conflicting, there is no one solution that is optimal for all objectives.
 % 所有可能的解构成决策空间，决策空间可以由目标函数对应到目标空间，在目标空间中，如果一个解在所有目标上都不比另一个差，且至少在一个目标上比另一个好，我们就称为一个解支配另一个解。
-All possible decision variables constitute the decision space and objective functions can be mapped from the objective space to the decision space\cite{gonccalves2017adaptive}. In the objective space, one solution is said to dominate the other solution if it is no worse than the other solution on all objectives and is better than the other solution on at least one objective. A
+All possible decision variables constitute the decision space and objective functions can be mapped from the objective space to the decision space\cite{gonccalves2017adaptive}. In the objective space, one solution is said to dominate the other solution if it is no worse than the other solution on all objectives and is better than the other solution on at least one objective.
+% 当一个解不被支配时就是Pareto最优解
+A solution $x^*$ is said to be Pareto-optimal when no other solution can dominate $x^*$. All the Pareto-optimal solutions constitute the Pareto set, and the image of the Pareto set in objective space is called the Pareto front \cite{deb2001multi}.
 
-
-
+%%% 主要框架是MOEA/D，所以肯定要大略介绍下
+% 将AOS应用到多目标上的工作很少，因为多目标很难定量的描述子代相对于父代适应度的提高，
+Very little work has been done to apply AOS to multi-objective evolutionary algorithms since it is difficult to measure the increase in fitness of the offspring relative to the parent.
+% 在论文中，我们使用MOEA/D作为主要的多目标优化框架，MOEAD的基本思想是将多目标问题分解成多个单目标的子问题,因此将AOS与MOEA/D结合是适合的。
+In this paper, we use MOEA/D \cite{moead} as the evolutionary multi-objective optimization framework. The basic idea of MOEA/D is to decompose a multi-objective optimization problem into several scalar optimization subproblems and optimizes them together. Thus, it is appropriate to combine AOS with MOEA/D.
 
 \subsection{Adaptive Operator Selection}
-yihang
+%%% 介绍自适应算子选择
+% 自适应算子是通过在线控制的方式，在搜索过程中选择合适的算子。
+AOS selects the appropriate operator for the parent in the search process. The selection is based on the previous performance of the operator. AOS requires two tasks to be solved, the /textit{Credit Assignment} and the \textit{Operator Selection}.
+
 \subsubsection{Credit Assignment}
 
 \subsubsection{Operator Selection}
