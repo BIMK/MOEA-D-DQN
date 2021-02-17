@@ -131,10 +131,34 @@ In this paper, we use MOEA/D \cite{moead} as the evolutionary multi-objective op
 
 \subsection{Adaptive Operator Selection}
 %%% 介绍自适应算子选择
-% 自适应算子是通过在线控制的方式，在搜索过程中选择合适的算子。
-AOS selects the appropriate operator for the parent in the search process. The selection is based on the previous performance of the operator. AOS requires two tasks to be solved, the /textit{Credit Assignment} and the \textit{Operator Selection}.
+% 自适应算子选择是通过在线控制的方式，在搜索过程中选择合适的算子,选择的依据是算子在之前的表现.
+AOS selects the appropriate operator from a candidate set of recombination and mutation operators pool for the individual in the search process \cite{hitomi2016classification}. The selection is based on the previous performance of the operator.
+% --- TODO: 介绍MOEAD与AOS结合后的处理流程
+% AOS主要有两个任务，适应度赋值(评价算子)和算子选择(依据评价做出选择)。
+AOS requires two tasks to be solved, the \textit{Credit Assignment} strategy that defines how to evaluate an operator based on its performance in the search process and the \textit{Operator Selection} strategy that determines the next operator according to the quality of the operator.
 
 \subsubsection{Credit Assignment}
+% ---- 需要添加related work！！！！！！！！！！
+%%% 信誉分配
+% 最常用的信誉分配方法是根据子代相对于父代的适应度提高来确定
+The most common method of credit assignment rewards an operator for its performance to improve the fitness of an offspring over its parent, in \cite{lin2016adaptive} the fitness improvement rates (FIR) is obtained with the used operator, as defined in equation (\ref{eq: fir1}).
+
+\begin{equation}
+  \text{FIR}_{i}=\frac{pf_{i}-cf_{i}}{pf_{i}} \label{eq: fir1}
+\end{equation}
+
+where $pf_i$ and $cf_i$ are the fitness values corresponding to parent and offspring respectively.
+% 由于有写目标函数值的量级不同，如果我们知道真实最优值，一般用父代与真实最优值的差做分母。
+In order to track the dynamics of search process, ExAOS \cite{fialho2008extreme} use a sliding window to save recent fitness improvement rates produced by the operators,
+% 有观点认为稀少但巨大的改进比频繁但微小的改进更有用
+some people believe the operators that make rare but large improvements are more important than operators that make frequent and small improvements \cite{fialho2009dynamic},
+% 滑动窗口里存提高率，reward是滑动窗口里operator对应的最大值，
+the operator reward is set to the maximal fitness improvement in the time windows, credit assignment strategy rewards the operators that generate a high quality of offspring.
+% 除了上面的奖励方法，还有文章根据分布性奖励算子
+In addition there are some strategies reward operators that increase the fitness of the solution while maintaining the diversity of the solution set \cite{auer2002finite}.
+
+
+
 
 \subsubsection{Operator Selection}
 
