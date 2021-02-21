@@ -157,6 +157,17 @@ the operator reward is set to the maximal fitness improvement in the time window
 % 除了上面的奖励方法，还有文章根据分布性奖励算子
 In addition there are some strategies reward operators that increase the fitness of the solution while maintaining the diversity of the solution set \cite{auer2002finite}.
 
+% 大多数的AOS研究都是关于单目标的，因为多目标很难做信誉赋值，而且也不容易比较解
+Most of the studies on credit assignment in AOS are for single-objective problems, such as \cite{fialho2009dynamic,fialho2009dynamic,cowling2000hyperheuristic}, and there has been little work done on AOS in multi-objective evolutionary computation because it is very difficult to define the credit assignment and compare one solution to another.
+
+% 现有的多目标信誉赋值在比较个体和赋值方式上有所不同
+The existing multi-objective credit assignment is different in which individuals should be compared and assigning strategies, most of the AOS for MOPs is based on different evolution.
+% 有些工作是基于支配关系的，
+Some previous works reward operators based on the dominant relationships,
+% MOSaDE依据帕累托支配关系和拥挤距离来奖励算子。
+such as MOSaDE \cite{huang2007multi} rewards an operator if it is better than incumbent solution in terms of Pareto-dominance and crowding distance.
+In MCHH \cite{mcclymont2011markov}, the reward of operator is determined by the offspring it produces that dominate many solutions from the previous generation. Adap-MODE \cite{li2011multi} rewards an operator according to the fitness improvement of a solution, where fitness is the weighted sum of Pareto metric and density metric.
+% 最近的一些工作大多是基于分解的多目标算法。
 
 
 
