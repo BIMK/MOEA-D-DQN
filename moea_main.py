@@ -13,7 +13,7 @@ if parent_path not in sys.path:
     sys.path.append(parent_path)
 # 配置日志信息
 logging.basicConfig(
-    handlers=[logging.FileHandler("./result/RL_DTLZ_0.log", encoding="utf-8", mode='w')],
+    handlers=[logging.FileHandler("./result/RL_DTLZ_1.log", encoding="utf-8", mode='w')],
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%m-%d %H:%M:%S')
@@ -72,14 +72,11 @@ if __name__ == '__main__':
         # 去除5个最差的实验数据
         igd = np.sort(igd)[:-5]
         hv = np.sort(hv)[5:]
-        res = ('median ----- IDG = %.7f, IGD.std = %.7f, HV = %.7f, HV.std = %.7f' %
-                     (np.median(igd), np.std(igd), np.median(hv), np.std(hv)))
+        res = "median --- IGD={:.7f}, IGD.std={:.7f}, HV={:.7f}, HV.std={:.7f}".format(np.median(igd), np.std(igd), np.median(hv), np.std(hv))
         results.append(res)
         logging.info(res)
-        # logging.info('median ----- IDG = %.7f, IGD.std = %.7f, HV = %.7f, HV.std = %.7f' %
-        #              (np.median(igd), np.std(igd), np.median(hv), np.std(hv)))
     for i in range(len(problems)):
-        logging.info(problems[i], results[i])
+        logging.info("{}, {}".format(problems[i], results[i]))
     sys.exit(0)
 
 """
