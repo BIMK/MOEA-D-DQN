@@ -167,8 +167,11 @@ Some previous works reward operators based on the dominant relationships,
 % MOSaDE依据帕累托支配关系和拥挤距离来奖励算子。
 such as MOSaDE \cite{huang2007multi} rewards an operator if it is better than incumbent solution in terms of Pareto-dominance and crowding distance.
 In MCHH \cite{mcclymont2011markov}, the reward of operator is determined by the offspring it produces that dominate many solutions from the previous generation. Adap-MODE \cite{li2011multi} rewards an operator according to the fitness improvement of a solution, where fitness is the weighted sum of Pareto metric and density metric.
-% 最近的一些工作大多是基于分解的多目标算法。
-
+% 有一些基于支配关系奖励算子的工作。比如在AMALGAM中，
+% 最近的一些工作大多是基于分解的多目标算法,比如FRRMAB，根据基于分解的适应值函数评价算子对于目标函数值的提高能力
+Most of the recent work is based on decomposition of multi-objective algorithm, such as MOEA/D-FRRMAB \cite{frrmab}, which reward operator according to the improvement of decomposition-based fitness value compared with the neighboring subproblems.
+% B-AOS 双标准的辅助的AOS，一个指标是收敛性，另一个指标是分布性。
+B-AOS \cite{lin2021decomposition} proposed a bicriteria assisted adaptive operator selection strategy, in which one criterion reflecting the convergence according to the Pareto dominant relation and another criterion reflecting the diversity according to the crowding distance.
 
 
 \subsubsection{Operator Selection}
