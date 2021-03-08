@@ -135,6 +135,7 @@ In this paper, we use MOEA/D \cite{moead} as the evolutionary multi-objective op
 AOS selects the appropriate operator from a candidate set of recombination and mutation operators pool for the individual in the search process \cite{hitomi2016classification}. The selection is based on the previous performance of the operator.
 % --- TODO: 介绍MOEAD与AOS结合后的处理流程
 % AOS主要有两个任务，适应度赋值(评价算子)和算子选择(依据评价做出选择)。
+%%%%%%%%%%%%%%%%%% 补充图片，介绍适应度赋值和算子选择的联系
 AOS requires two tasks to be solved, the \textit{Credit Assignment} strategy that defines how to evaluate an operator based on its performance in the search process and the \textit{Operator Selection} strategy that determines the next operator according to the quality of the operator.
 
 \subsubsection{Credit Assignment}
@@ -172,9 +173,20 @@ In MCHH \cite{mcclymont2011markov}, the reward of operator is determined by the 
 Most of the recent work is based on decomposition of multi-objective algorithm, such as MOEA/D-FRRMAB \cite{frrmab}, which reward operator according to the improvement of decomposition-based fitness value compared with the neighboring subproblems.
 % B-AOS 双标准的辅助的AOS，一个指标是收敛性，另一个指标是分布性。
 B-AOS \cite{lin2021decomposition} proposed a bicriteria assisted adaptive operator selection strategy, in which one criterion reflecting the convergence according to the Pareto dominant relation and another criterion reflecting the diversity according to the crowding distance.
-
+% 算法在前期比较注重分布性，在后期更加注重收敛性。
+The algorithm keeps the distribution of the population in the early stage, and pays more attention to the convergence of the population in the later stage.
+% 也有一些基于支配关系的工作，
+On the other hand, AMALGAM \cite{vrugt2007improved} rewards the operator according to the number of solutions it contributes to the population.
+% 通常来讲，有三种基于支配关系的奖励方式。
+Generally speaking, there are three different credit assignments based on dominance, offspring-dominates-parent (ODP), Pareto front (PF), and Pareto rank (PR) \cite{hitomi2015effect}.
 
 \subsubsection{Operator Selection}
+% 和信誉赋值相比，
+% Compared with credit assignment, the operator selection 
+% 信誉赋值之后就可以根据算子的信誉为个体推荐合适的算子，
+After credit assignment, we can recommend appropriate operators for individuals according to the credit of operators, but we can't choose the operator with the highest credit directly, because it will make us lose diversity. On the one hand, we need to give more opportunities to operators with better track records, on the other hand, we need to explore poor operators, since an operator might perform significantly differently in the future search stages, we called this exploration versus exploitation (EvE) dilemma.
+
+
 
 ling hang
 
