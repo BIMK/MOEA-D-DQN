@@ -184,14 +184,25 @@ Generally speaking, there are three different credit assignments based on domina
 % 和信誉赋值相比，
 % Compared with credit assignment, the operator selection 
 % 信誉赋值之后就可以根据算子的信誉为个体推荐合适的算子，
-After credit assignment, we can recommend appropriate operators for individuals according to the credit of operators, but we can't choose the operator with the highest credit directly, because it will make us lose diversity. On the one hand, we need to give more opportunities to operators with better track records, on the other hand, we need to explore poor operators, since an operator might perform significantly differently in the future search stages, we called this exploration versus exploitation (EvE) dilemma.
+After credit assignment, we can recommend appropriate operators for individuals according to the credit of operators, but we can't choose the operator with the highest credit directly, because it will make us lose diversity. On the one hand, we need to give more opportunities to operators with better track records, on the other hand, we need to explore poor operators, since an operator might perform significantly differently in the future search stages, we called this difficult as exploration versus exploitation (EvE) dilemma.
 
+% 一个常用的方法是概率匹配算法
+A common method is probability matching (PM) algorithm \cite{thierens2007adaptive}, each operator $o_i$ in the operator pool $O$ has a corresponding probability value $p_{i,t}$ as generation $t$, $p$ is determined by the quality $q_{i,t}$, $q$ is updated according to the reward $r_{i,t}$ received during the credit assignment phase, and the formula is as follows:
 
+$$
+  q_{i,t+1} = q_{i,t} + \alpha(r_{i,t} - q_{i,t})
+$$
 
-ling hang
+% 这是利用时序差分法，根据算法的reward估计算子的质量。
+with the learning rate $\alpha \in (0,1]$, using the Temporal-Different method to estimate the quality of operator.
+% 为了避免有的算子概率太小以至于长时间不被选择，PM设定一个最小选择概率称为 Pmin,
+In order to avoid the operator probability is too small to be selected, PM designs a minimum probability, $P_{min} > 0$, for exploring currently underperforming operator.
+
 
 \subsection{Reinforcement Learning}
-test
+% EvE困境经常被建模为MAB问题，有很多的算法可以解决MAB问题，比如UCB，但AOS并不是vanilla的MAB，由于每个臂的收益分布会随着时间变化，所以它是一个动态MAB问题
+% li ke使用滑动窗口解决D-MAB问题，
+
 \section{The Proposed Algorithm}
 test
 \subsection{Frassmework of MOEA/PSL}
