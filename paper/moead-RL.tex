@@ -188,15 +188,21 @@ After credit assignment, we can recommend appropriate operators for individuals 
 
 % 一个常用的方法是概率匹配算法
 A common method is probability matching (PM) algorithm \cite{thierens2007adaptive}, each operator $o_i$ in the operator pool $O$ has a corresponding probability value $p_{i,t}$ as generation $t$, $p$ is determined by the quality $q_{i,t}$, $q$ is updated according to the reward $r_{i,t}$ received during the credit assignment phase, and the formula is as follows:
-
 $$
   q_{i,t+1} = q_{i,t} + \alpha(r_{i,t} - q_{i,t})
 $$
-
 % 这是利用时序差分法，根据算法的reward估计算子的质量。
 with the learning rate $\alpha \in (0,1]$, using the Temporal-Different method to estimate the quality of operator.
+% 然而，如果有算子在当前的概率=0，那么他在之后就永远不会被选中，quality也不会被更新
+Once a quality $a_{i,t}$ becomes equal to 0, the operator will never be selected in the future and its quality can no longer be updated.
+% 在非平稳的环境中，该算子可能在之后会有更好的表现，所以
+In a non-stationary environment, the operator might perform better in a future stage of the search process.
 % 为了避免有的算子概率太小以至于长时间不被选择，PM设定一个最小选择概率称为 Pmin,
-In order to avoid the operator probability is too small to be selected, PM designs a minimum probability, $P_{min} > 0$, for exploring currently underperforming operator.
+So in order to avoid the operator probability is too small to be selected, PM designs a minimum probability, $p_{min}: 1 > p_{min} > 0$, for exploring currently underperforming operator. Since the total probability is 1, then the maximum probability of an operator being selected is $p_{max} = 1-(k-1) P_{min}$ where $k$ is the number of operators, thus we can get the update rule of $p_{i,t}$:
+$$
+  p_{i,t+1} = p_{min} + (1-k \cdot p_{min}) \frac{q_{i,t+1}}{\sum_{i=1}^k q_{i,t+1}}
+$$
+
 
 
 \subsection{Reinforcement Learning}
