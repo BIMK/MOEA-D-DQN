@@ -198,11 +198,17 @@ Once a quality $a_{i,t}$ becomes equal to 0, the operator will never be selected
 % 在非平稳的环境中，该算子可能在之后会有更好的表现，所以
 In a non-stationary environment, the operator might perform better in a future stage of the search process.
 % 为了避免有的算子概率太小以至于长时间不被选择，PM设定一个最小选择概率称为 Pmin,
-So in order to avoid the operator probability is too small to be selected, PM designs a minimum probability, $p_{min}: 1 > p_{min} > 0$, for exploring currently underperforming operator. Since the total probability is 1, then the maximum probability of an operator being selected is $p_{max} = 1-(k-1) P_{min}$ where $k$ is the number of operators, thus we can get the update rule of $p_{i,t}$:
+So in order to avoid the operator probability is too small to be selected, PM designs a minimal probability, $p_{min}: 1 > p_{min} > 0$, for exploring currently underperforming operator. Since the total probability is 1, then the maximum probability of an operator being selected is $p_{max} = 1-(k-1) P_{min}$ where $k$ is the number of operators, thus we can get the update rule of $p_{i,t}$:
 $$
   p_{i,t+1} = p_{min} + (1-k \cdot p_{min}) \frac{q_{i,t+1}}{\sum_{i=1}^k q_{i,t+1}}
 $$
+% PM在很多差算子的情况下很难获得好的结果, 因为多个差的算子的和也是很大的。
+When there are many mediocre operators and only only one efficient operator, it is difficult for PM algorithm to achieve high performance, because the minimal selection probability for each operator is $p_{min}$, the sum of selection probabilities from many mediocre operators has a significant advantage over the high performance operator.
+% 引入AP方法，
 
+Another method based on probability is Adaptive pursuit (AP) \cite{thierens2007adaptive}, adopts the winner-take-all strategy to allocate the best operator with higher probability, the pursuit method increases the probability of the best operator $a^*$ being selected and reduces the probabilities of other operators.
+% AP的过程介绍
+Like PM, AP also designs the minimum probability $p_{min}$
 
 
 \subsection{Reinforcement Learning}
