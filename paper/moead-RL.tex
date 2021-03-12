@@ -109,12 +109,13 @@ This section provides some basic concepts, background knowledge and some related
 %%% 介绍多目标优化和MOEAD
 Multi-objective optimization problems are usually formulated as follows:
 
-$$
+\begin{equation}
   \begin{array}{ll}
     \text { Minimize: }   & \mathrm{f}=\left\{f_{1}(\mathrm{x}), \ldots, f_{M}(\mathrm{x})\right\} \\
-    \text { Subject to: } & l_{d} \leq x_{d} \leq u_{d} \qquad d=1, \ldots, D
+    \text { Subject to: } & l_{d} \leq x_{d} \leq u_{d} \quad d=1, \ldots, D
   \end{array}
-$$
+  \label{eq: moea}
+\end{equation}
 
 %%% x是决策变量，f是一组互相冲突的目标函数，由于目标是冲突的，所以不存在一个解可以在所有目标上达到最优，
 Where $x = (x_1, \cdots , x_D)$ is a decision variable vector of length $D$, $l$ and $u$ are the lower and upper bounds of the decision variables. $f$ consists of $M$ conflicting objective functions. Since the objectives are conflicting, there is no one solution that is optimal for all objectives.
@@ -188,9 +189,10 @@ After credit assignment, we can recommend appropriate operators for individuals 
 
 % 一个常用的方法是概率匹配算法
 A common method is probability matching (PM) algorithm \cite{thierens2007adaptive}, each operator $o_i$ in the operator pool $O$ has a corresponding probability value $p_{i,t}$ as generation $t$, $p$ is determined by the quality $q_{i,t}$, $q$ is updated according to the reward $r_{i,t}$ received during the credit assignment phase, and the formula is as follows:
-$$
+\begin{equation}
   q_{i,t+1} = q_{i,t} + \alpha(r_{i,t} - q_{i,t})
-$$
+  \label{eq: pm_q}
+\end{equation}
 % 这是利用时序差分法，根据算法的reward估计算子的质量。
 with the learning rate $\alpha \in (0,1]$, using the Temporal-Different method to estimate the quality of operator.
 % 然而，如果有算子在当前的概率=0，那么他在之后就永远不会被选中，quality也不会被更新
@@ -198,17 +200,28 @@ Once a quality $a_{i,t}$ becomes equal to 0, the operator will never be selected
 % 在非平稳的环境中，该算子可能在之后会有更好的表现，所以
 In a non-stationary environment, the operator might perform better in a future stage of the search process.
 % 为了避免有的算子概率太小以至于长时间不被选择，PM设定一个最小选择概率称为 Pmin,
-So in order to avoid the operator probability is too small to be selected, PM designs a minimal probability, $p_{min}: 1 > p_{min} > 0$, for exploring currently underperforming operator. Since the total probability is 1, then the maximum probability of an operator being selected is $p_{max} = 1-(k-1) P_{min}$ where $k$ is the number of operators, thus we can get the update rule of $p_{i,t}$:
-$$
+So in order to avoid the operator probability is too small to be selected, PM designs a minimal probability, $p_{min}: 1 > p_{min} > 0$, for exploring currently underperforming operator. Since the total probability is 1, thus we can get the update rule of $p_{i,t}$:
+\begin{equation}
   p_{i,t+1} = p_{min} + (1-k \cdot p_{min}) \frac{q_{i,t+1}}{\sum_{i=1}^k q_{i,t+1}}
-$$
+  \label{eq: pm_p}
+\end{equation}
+Where $k$ is the number of operators.
 % PM在很多差算子的情况下很难获得好的结果, 因为多个差的算子的和也是很大的。
 When there are many mediocre operators and only only one efficient operator, it is difficult for PM algorithm to achieve high performance, because the minimal selection probability for each operator is $p_{min}$, the sum of selection probabilities from many mediocre operators has a significant advantage over the high performance operator.
 % 引入AP方法，
 
 Another method based on probability is Adaptive pursuit (AP) \cite{thierens2007adaptive}, adopts the winner-take-all strategy to allocate the best operator with higher probability, the pursuit method increases the probability of the best operator $a^*$ being selected and reduces the probabilities of other operators.
 % AP的过程介绍
-Like PM, AP also designs the minimum probability $p_{min}$
+Like PM, AP also designs the minimum probability $p_{min}$, while an operator that works well can obtain the maximum selection probability $p_{max} = 1-(k-1)\times p_{min}$.
+AP pursues the operator $o^*$ with the maximal estimated reward as shown in \ref{eq: best_o}, to avoid the disadvantages of PM, AP increases the selection probability of the best operator $p_{o^*,t}$ and decreases the other probabilities $p_{o,t}, \forall o \neq o^*$.
+
+\begin{equation}
+  p_{i, t+1}=\left\{\begin{array}{ll}
+    p_{i, t}+\beta \cdot\left(p_{\max }-p_{o, t}\right) & \text { if } o=o^{*} \\
+    p_{i, t}+\beta \cdot\left(p_{\min }-p_{o, t}\right) & \text { otherwise }
+  \end{array}\right.
+  \label{eq: AP}
+\end{equation}
 
 
 \subsection{Reinforcement Learning}
