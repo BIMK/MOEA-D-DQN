@@ -52,6 +52,9 @@
 \end{IEEEkeywords}
 
 \section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%      需要在introduction里说明我的算法，包括主要的过程，实验部分，和其它RL的相关知识
+\TODO{ need to supplement the flow of algorithm}
+
 %%% 介绍下进化多目标优化
 % 由于多个目标间通常互相冲突，没有一个全局最优解，一般会有一个PF
 \IEEEPARstart{M}{ultl-object} optimization problems (MOPs) are characterized by multiple objectives that often conflict with each other\cite{zhang2014efficient}. In general, MOPs have no single optimal solution on all objectives; instead, a number of solutions are optimal for different objectives, known as Pareto-optimal solutions.
@@ -224,9 +227,6 @@ AP pursues the operator $o^*$ with the maximal estimated reward as shown in \ref
 Where $\beta \in (0,1]$ is the learning rate.
 % 搜索过程中，算子的性能可能是动态变化的，因此在算子选择中最困难的就是平衡探索和利用。
 % The performance of operators may be dynamic in the search process, so the most difficult problem in operator selection is to balance exploration and exploitation.
-
-
-\subsection{Reinforcement Learning}
 % 由于进化过程是动态的，算子的性能在不同阶段可能有很大的差异，AP和PM可能没有办法适应剧烈变化的环境
 Due to the dynamic nature of the evolution process, an operator might perform significantly differently in different stages, when credit changes rapidly, PM and AP may not be able to quickly adjust their selection strategies.
 
@@ -235,16 +235,29 @@ EvE dilemma is often modeled as a Multi-Armed Bandit problem, there are many eff
 % UCB 方法
 a common method is the upper confidence bound (UCB) \cite{auer2002finite} which guarantees asymptotic optimality with respect to the total cumulative reward. However, UCB solves MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
 % 基于dynamic MAB的算法
-Some effect methods have been proposed to solve the dynamic context based on the original UCB, dynamic multi-armed bandit (DMAB) \cite{dacosta2008adaptive} proceeds by coupling the original MAB technique with a statistical Page-Hinkley test, which enhances the efficient detection of changes in time series.
+Some effect methods have been proposed to solve the dynamic context based on the original UCB, dynamic multi-armed bandit \cite{dacosta2008adaptive} proceeds by coupling the original MAB technique with a statistical Page-Hinkley test, which enhances the efficient detection of changes in time series.
 % sliding mab 使用时间窗
 Other operator selectors such as sliding multi-armed bandit (SIMAB) \cite{fialho2010analyzing} using a sliding time window to balance both exploitation and exploration terms.
 
 
+\subsection{Reinforcement Learning}
+% 强化学习介绍
+Reinforcement Learning (RL) \cite{sutton2018reinforcement} is an area of machine learning concerned with how intelligent agents ought to take actions in an environment, and the goal of agents is to maximize the notion of cumulative reward \cite{van2012reinforcement}. Unlike supervised learning, RL learns by trial-and-error and does not require training samples. Therefore, RL pays more attention to find a balance between exploration (of uncharted territory) and exploitation (of current knowledge) \cite{kaelbling1996reinforcement}.
 
-% li ke使用滑动窗口解决D-MAB问题，
+% 基本的强化学习过程
+The typical model of RL can be described as: an agent takes actions according to the state given by environment, the environment accepts the action and returns the reward to the agent, and the goad of RL is to adjust the strategy to maximize the reward.
+
+% 由于强化学习具有平衡探索和利用的特性，它可以被用来解决D-mab问题
+Since RL has the feature of balance EvE, it can be used to solve dynamic MAB problem.
+% 当状态空间很小时，我们可以很容易的画出状态转移过程，此时强化学习的方法类似动态规划，
 
 
-\section{The Proposed Algorithm}
+
+
+% RL的环境通常被描述成马尔科夫决策过程
+The environment is typically stated in the form of a Markov decision process (MDP),
+
+\section{AOS via DDQN}
 test
 \subsection{Frassmework of MOEA/PSL}
 test
