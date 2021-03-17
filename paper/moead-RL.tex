@@ -231,6 +231,7 @@ Where $\beta \in (0,1]$ is the learning rate.
 Due to the dynamic nature of the evolution process, an operator might perform significantly differently in different stages, when credit changes rapidly, PM and AP may not be able to quickly adjust their selection strategies.
 
 % EvE困境经常被建模为MAB问题，有很多的算法可以解决MAB问题，比如UCB，但AOS并不是vanilla的MAB，由于每个臂的收益分布会随着时间变化，所以它是一个动态MAB问题
+%%%%%%%%%%%%%%%%%%%  补充MAB介绍
 EvE dilemma is often modeled as a Multi-Armed Bandit problem, there are many efficient methods to solve MAB problems,
 % UCB 方法
 a common method is the upper confidence bound (UCB) \cite{auer2002finite} which guarantees asymptotic optimality with respect to the total cumulative reward. However, UCB solves MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
@@ -242,14 +243,21 @@ Other operator selectors such as sliding multi-armed bandit (SIMAB) \cite{fialho
 
 \subsection{Reinforcement Learning}
 % 强化学习介绍
-Reinforcement Learning (RL) \cite{sutton2018reinforcement} is an area of machine learning concerned with how intelligent agents ought to take actions in an environment, and the goal of agents is to maximize the notion of cumulative reward \cite{van2012reinforcement}. Unlike supervised learning, RL learns by trial-and-error and does not require training samples. Therefore, RL pays more attention to find a balance between exploration (of uncharted territory) and exploitation (of current knowledge) \cite{kaelbling1996reinforcement}.
+Reinforcement Learning (RL) \cite{sutton2018reinforcement} is an area of machine learning concerned with how intelligent agents ought to take actions in an environment, and the goal of agents is to maximize the notion of cumulative reward \cite{van2012reinforcement}.
+% 基于评价性反馈显示了所采取的行动有多好，而不是它是最好的还是最坏的行动。
+Feedback based on evaluation shows how good the action is, but not whether it was the best or the worst action passible.
+% 强化学习与其他学习类型最重要的区别是，它使用的训练信息是评估所采取的行动，而不是通过给出正确的行动来指导。这就产生了积极探索的需要，明确寻找良好行为的需要。
+The most important difference between RL and supervised learning is that it uses training information to evaluate the actions, rather than instructs by giving best actions.
+% 因此RL更注重平衡探索和利用
+Therefore, RL pays more attention to find a balance between exploration (of uncharted territory) and exploitation (of current knowledge) \cite{kaelbling1996reinforcement}.
 
 % 基本的强化学习过程
 The typical model of RL can be described as: an agent takes actions according to the state given by environment, the environment accepts the action and returns the reward to the agent, and the goad of RL is to adjust the strategy to maximize the reward.
-
 % 由于强化学习具有平衡探索和利用的特性，它可以被用来解决D-mab问题
 Since RL has the feature of balance EvE, it can be used to solve dynamic MAB problem.
 % 当状态空间很小时，我们可以很容易的画出状态转移过程，此时强化学习的方法类似动态规划，
+% 强化学习的环境通常以马尔科夫解决过程的形式表示
+The environment of reinforcement learning is usually expressed in the form of Markov decision process (MDP) \cite{van2012reinforcement}
 
 
 
