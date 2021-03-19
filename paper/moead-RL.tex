@@ -250,14 +250,28 @@ Feedback based on evaluation shows how good the action is, but not whether it wa
 The most important difference between RL and supervised learning is that it uses training information to evaluate the actions, rather than instructs by giving best actions.
 % 因此RL更注重平衡探索和利用
 Therefore, RL pays more attention to find a balance between exploration (of uncharted territory) and exploitation (of current knowledge) \cite{kaelbling1996reinforcement}.
-
-% 基本的强化学习过程
-The typical model of RL can be described as: an agent takes actions according to the state given by environment, the environment accepts the action and returns the reward to the agent, and the goad of RL is to adjust the strategy to maximize the reward.
 % 由于强化学习具有平衡探索和利用的特性，它可以被用来解决D-mab问题
-Since RL has the feature of balance EvE, it can be used to solve dynamic MAB problem.
-% 当状态空间很小时，我们可以很容易的画出状态转移过程，此时强化学习的方法类似动态规划，
-% 强化学习的环境通常以马尔科夫解决过程的形式表示
+Since RL has the feature of balance EvE, it can be used to solve MAB problem.
+
+% 强化学习的环境通常以马尔科夫决策过程的形式表示
 The environment of reinforcement learning is usually expressed in the form of Markov decision process (MDP) \cite{van2012reinforcement}
+% MDP是在环境中模拟智能体的随机性策略（policy）与回报的数学模型，
+MDP is a mathematical model that simulates the agent's policy and return in the environment.
+% 按定义，MDP包含5个模型要素，状态（state）、动作（action）、策略（policy）、奖励（reward）和回报（return
+By definition, MDP includes five elements: state, action, policy, reward and return.
+% 强化学习把学习看作试探评价过程，Agent选择一个动作用于环境，环境接受该动作后状态发生变化，同时产生一个强化信号(奖或惩)反馈给Agent，Agent根据强化信号和环境当前状态再选择下一个动作，选择的原则是使受到正强化(奖)的概率增大。选择的动作不仅影响立即强化值，而且影响环境下一时刻的状态及最终的强化值。
+% 基本的强化学习过程
+The typical model of RL can be described as: an agent takes actions according to the state given by environment, the environment accepts the action and returns the reward to the agent, and the goad of RL is to adjust the strategy to maximize the return (the accumulation of rewards over time).
+%%%%% 当状态空间很小时，我们可以很容易的画出状态转移过程，此时强化学习的方法类似动态规划，
+% 从方法上来讲，强化学习可以分为两类，基于策略的方法和基于值的方法。
+RL can be divided into two categories, value-based methods and strategy-based methods.
+% 策略是一个条件概率分布，表明在某种状态下执行某个动作的概率。
+A policy $\pi$ is a conditional probability distribution $\pi = p(a_t\| s_t; \theta)$, which indicates the probability of taking action $a_t$ in state $s_t$ and $\theta$ is the parameter of policy \cite{sun2021learning}, policy map a state to an action or a distribution over actions, so it can be used in continuous action environment, and the policy optimization is to find an optimal mapping.
+% 动作值函数q是表示在状态s下执行动作a可以获得的期望回报，是强化学习的基本概念
+Action value function $q(s_t,a_t)$ is the expected reward that can be obtained by taking action $a_t$ in state $s_t$, which is the fundamental concept in RL. Q-learning \cite{watkins1992q} is a classical algorithm for learning state and action value fu
+% 基于值的方法通过估计给定状态下不同操作回报值的大小从而最大化期望回报，经典的方法有Q-learning
+The value-based method maximizes the expected return by estimating the rewards $Q(s,a)$ of different operations in a given state,
+
 
 
 
@@ -266,6 +280,7 @@ The environment of reinforcement learning is usually expressed in the form of Ma
 The environment is typically stated in the form of a Markov decision process (MDP),
 
 \section{AOS via DDQN}
+% 因为算子的性能在不同的搜索阶段有不同的效果，因此使用离线的方式，先训练后应用的方式是不可靠的。
 test
 \subsection{Frassmework of MOEA/PSL}
 test
