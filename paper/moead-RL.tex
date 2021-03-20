@@ -267,11 +267,13 @@ The typical model of RL can be described as: an agent takes actions according to
 RL can be divided into two categories, value-based methods and strategy-based methods.
 % 策略是一个条件概率分布，表明在某种状态下执行某个动作的概率。
 A policy $\pi$ is a conditional probability distribution $\pi = p(a_t\| s_t; \theta)$, which indicates the probability of taking action $a_t$ in state $s_t$ and $\theta$ is the parameter of policy \cite{sun2021learning}, policy map a state to an action or a distribution over actions, so it can be used in continuous action environment, and the policy optimization is to find an optimal mapping.
-% 动作值函数q是表示在状态s下执行动作a可以获得的期望回报，是强化学习的基本概念
-Action value function $q(s_t,a_t)$ is the expected reward that can be obtained by taking action $a_t$ in state $s_t$, which is the fundamental concept in RL. Q-learning \cite{watkins1992q} is a classical algorithm for learning state and action value fu
-% 基于值的方法通过估计给定状态下不同操作回报值的大小从而最大化期望回报，经典的方法有Q-learning
-The value-based method maximizes the expected return by estimating the rewards $Q(s,a)$ of different operations in a given state,
+% 动作值函数q是表示在状态s下执行动作a可以获得的期望回报，是强化学习的基本概念,Q-learning是经典的基于动作函数优化的方法，一旦我们知道值函数或是状态函数，就可以推导出选择动作的策略。
+Action value function $q(s_t,a_t)$ is the expected reward that can be obtained by taking action $a_t$ in state $s_t$, which is the fundamental concept in RL. Q-learning \cite{watkins1992q} is a classical algorithm for learning action value function and once we have optimal action value function, we can derive that the optimal strategy is to choose the action with the largest $q$ value in the current state,
+% 只有当动作值函数是有限的时候才能选出合适的动作，因此Q-learning的方法只能用于离散的动作空间
+the value-based RL methods can only be used in discrete action space.
 
+% 当状态空间特别巨大时，对值函数的估计是特别困难的，
+When state space is very large, it is difficult to estimate the action function, Deep Q-Network (DQN) \cite{mnih2015human} stabilizes the training of action value function approximation with deep neural networks.
 
 
 
