@@ -132,6 +132,8 @@ A solution $x^*$ is said to be Pareto-optimal when no other solution can dominat
 Very little work has been done to apply AOS to multi-objective evolutionary algorithms since it is difficult to measure the increase in fitness of the offspring relative to the parent.
 % 在论文中，我们使用MOEA/D作为主要的多目标优化框架，MOEAD的基本思想是将多目标问题分解成多个单目标的子问题,因此将AOS与MOEA/D结合是适合的。
 In this paper, we use MOEA/D \cite{moead} as the evolutionary multi-objective optimization framework. The basic idea of MOEA/D is to decompose a multi-objective optimization problem into several scalar optimization subproblems and optimizes them together. Thus, it is appropriate to combine AOS with MOEA/D.
+%%%%%%%%%%% moead-de
+\TODO{MOEAD-DE}
 
 \subsection{Adaptive Operator Selection}
 %%% 介绍自适应算子选择
@@ -272,9 +274,12 @@ Action value function $q(s_t,a_t)$ is the expected reward that can be obtained b
 % 只有当动作值函数是有限的时候才能选出合适的动作，因此Q-learning的方法只能用于离散的动作空间
 the value-based RL methods can only be used in discrete action space.
 
-% 当状态空间特别巨大时，对值函数的估计是特别困难的，
+% 当状态空间特别巨大时，对值函数的估计是特别困难的，DQN通过深度神经网络稳定训练的动作值函数
 When state space is very large, it is difficult to estimate the action function, Deep Q-Network (DQN) \cite{mnih2015human} stabilizes the training of action value function approximation with deep neural networks.
-
+% 但DQN会有过高估计的问题，因此我们采用Double DQN，他通过分离选择和评价
+DQN uses the same values to select and to evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection, futhermore, In Double Deep Q-Network (DDQN) \cite{ddqn}, two neural networks are learned by assigning each experience randomly to update one of the two networks, a target network is designed to select an action and a evaluatino network is designed to generate a Q-value for that action.
+% 在这份工作中，我们使用DDQN作为AOS的方法，并为DE算法选择合适的算子。
+In this work, we use DDQN as the AOS methos and integrate it into MOEA/D-DE.
 
 
 
