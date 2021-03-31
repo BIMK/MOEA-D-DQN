@@ -278,22 +278,36 @@ the value-based RL methods can only be used in discrete action space.
 When state space is very large, it is difficult to estimate the action function, Deep Q-Network (DQN) \cite{mnih2015human} stabilizes the training of action value function approximation with deep neural networks.
 % 但DQN会有过高估计的问题，因此我们采用Double DQN，他通过分离选择和评价
 DQN uses the same values to select and to evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection, futhermore, In Double Deep Q-Network (DDQN) \cite{ddqn}, two neural networks are learned by assigning each experience randomly to update one of the two networks, a target network is designed to select an action and a evaluatino network is designed to generate a Q-value for that action.
+
 % 在这份工作中，我们使用DDQN作为AOS的方法，并为DE算法选择合适的算子。
 In this work, we use DDQN as the AOS methos and integrate it into MOEA/D-DE.
-
+% 我们使用在线控制的方法，将强化学习的选择器嵌入到进化算法中，并根据进化的效果给强化学习适当的奖励，根据奖励我们可以更新强化学习的策略，使得在未来获得最高的期望奖励。
+We used online control method to embed RL selector into evolutionary algorithm,
+according to the effect of evolution, we can give appropriate reward to RL and update the strategy to get the highest expected reward in the future.
 
 
 % RL的环境通常被描述成马尔科夫决策过程
-The environment is typically stated in the form of a Markov decision process (MDP),
+% The environment is typically stated in the form of a Markov decision process (MDP),
 
 \section{AOS via DDQN}
+% 许多论文采用预训练的方式，比如。首先在训练问题上训练多伦，然后在测试问题上使用在线控制的方式，但我们认为不同的问题有不同的最佳算子，而且由于进化路径的不同，在相同的进化阶段也可能有不同的最佳算子，因此AOS难以有迁移性。
+% 
 % 因为算子的性能在不同的搜索阶段有不同的效果，因此使用离线的方式，先训练后应用的方式是不可靠的。
-test
-\subsection{Frassmework of MOEA/PSL}
-test
-\subsection{Pareto Optimal Subspace Learning and Offspring Generation in MOEA/PSL}
+% 根据问题的特点,不同的算子适合不同的问题，由于问题的特征不能全部包含在RL的状态中，因此在一个问题上表现好的AOS模型不一定在另一个问题上取得好的效果。
+According to the characteristics of problems, different operators are suitable for different problems, due to the characteristics can not be included in the RL state, so the AOS model that performs well on one problem may not achieveds good results on other problems.
+% 所以我们没有两阶段，先训练再应用的方式，而是直接使用端到端的在线控制，利用当前信息训练模型，预测之后的选择算子。
+so we don't adopt the two-stage method (train stage and control stage), but adopt the end-to-end online control method, use the current information to train neural network and the use the previous training model to select the operators.
 
-\subsection{Parameter Adaptation Strategy in MOEA/PSL}
+\subsection{differential evolution}
+%%% 先介绍下传统的差分进化，在moead框架下，使用tche分解
+
+\subsection{Markov decision process}
+%%% 建模成MDP
+
+\subsection{moead-rl}
+%%% 将强化学习嵌入到DE的框架
+
+\subsection{Double DQN}
 
 \subsection{Computational Complexity of MOEA/PSL}
 
