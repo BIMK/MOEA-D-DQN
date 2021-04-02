@@ -298,8 +298,24 @@ According to the characteristics of problems, different operators are suitable f
 % 所以我们没有两阶段，先训练再应用的方式，而是直接使用端到端的在线控制，利用当前信息训练模型，预测之后的选择算子。
 so we don't adopt the two-stage method (train stage and control stage), but adopt the end-to-end online control method, use the current information to train neural network and the use the previous training model to select the operators.
 
-\subsection{differential evolution}
+% \subsection{differential evolution}
 %%% 先介绍下传统的差分进化，在moead框架下，使用tche分解
+% 传统的DE的算子使用de/rand/1和二项式交叉
+% The traditional differential evolution algorithm \cite{storn1997differential} uses \textit{DE/rand/1} as the mutation strategy and in order to increase the diversity of vectors, binomial crossover is employed.
+\subsection{MOEA/D}
+%%%%  介绍MOEAD，介绍MOEAD-DRA，介绍DE的变体，说明算子池，
+% 为了将AOS应用到多目标问题上，我们需要一个多目标的框架，moea/d将多目标问题分解成单目标问题，可以
+% 大多数的AOS方法都是单目标的，比如DE_DQN and LDE,因为在 Credit Assignment阶段需要评价算子的效果，但是在多目标问题中很难评价两个解的好坏
+Most of the AOS methods are applied to single-objective problem, such as DE-DQN\cite{sharma2019deep} and LDE \cite{sun2021learning}, because the performance of operators should be estimated at the credit assignment stage, but it is difficult to define the quality difference between two non-dominated solutions and the improvement brought by the application of an operator.
+% 在基于支配的多目标框架中，比如NSGAII，SPEA2，随着目标数增大，非支配解也会快速增加。
+In some algorithmic frameworks which based on dominance relation, such as NSGA-II\cite{nsga2}, SPEA2 \cite{spea2}, with the number
+
+
+
+\begin{equation}
+  v^{i}=x^{i}+F \times\left(x^{r_{1}}-x^{r_{2}}\right)
+\end{equation}
+Where F
 
 \subsection{Markov decision process}
 %%% 建模成MDP
