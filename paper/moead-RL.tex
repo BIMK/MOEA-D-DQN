@@ -307,8 +307,17 @@ so we don't adopt the two-stage method (train stage and control stage), but adop
 % 为了将AOS应用到多目标问题上，我们需要一个多目标的框架，moea/d将多目标问题分解成单目标问题，可以
 % 大多数的AOS方法都是单目标的，比如DE_DQN and LDE,因为在 Credit Assignment阶段需要评价算子的效果，但是在多目标问题中很难评价两个解的好坏
 Most of the AOS methods are applied to single-objective problem, such as DE-DQN\cite{sharma2019deep} and LDE \cite{sun2021learning}, because the performance of operators should be estimated at the credit assignment stage, but it is difficult to define the quality difference between two non-dominated solutions and the improvement brought by the application of an operator.
-% 在基于支配的多目标框架中，比如NSGAII，SPEA2，随着目标数增大，非支配解也会快速增加。
-In some algorithmic frameworks which based on dominance relation, such as NSGA-II\cite{nsga2}, SPEA2 \cite{spea2}, with the number
+% 在基于支配的多目标框架中，比如NSGAII，SPEA2，随着目标数增加，非支配解的数量也会快速增加。
+In some algorithmic frameworks which based on dominance relation, such as NSGA-II\cite{nsga2}, SPEA2 \cite{spea2}, with the increase of the number of objectives, the number of non-dominated solutions will increase rapidly,
+% 如果一个父代生成了非支配的子代，我们很难衡量本次算子的效果
+if a parent generates a non-dominated offspring, it is difficult to measure the effect of this operator.
+
+% 这篇工作中我们使用基于分解的多目标优化算法，MOEAD，将多目标问题分解成多个单目标子问题，利用分解的策略，单目标的credit assignment技术可以应用到moead 
+In this paper, we applied the multi-objective evolutionary framework based on decomposition (MOEA/D) \cite{moead} which decompositions a multi-objective optimization problem into plenty of scalar optimization subproblem. Benefit from the decomposition, the credit assignment methods in single-objective can be applied to the MOEA/D framework.
+% 在mop中，一个Pareto最优解就是在某个问题上达到了最优解，而在所有问题上的加权集合构成了Pareto集合，
+In multi-objective problems, a Pareto optimal solution is to reach the optimal solution on a single-objective optimization problem, and the weighted aggregation on all objectives constitute the Pareto set.
+% 为了得到Pareto set， moead利用权重向量将不同的目标组合成多个单目标子问题，在单目标上的最优解构成了MOP的Pareto set。
+To obtain the Pareto set,
 
 
 
