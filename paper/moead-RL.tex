@@ -317,7 +317,37 @@ In this paper, we applied the multi-objective evolutionary framework based on de
 % 在mop中，一个Pareto最优解就是在某个问题上达到了最优解，而在所有问题上的加权集合构成了Pareto集合，
 In multi-objective problems, a Pareto optimal solution is to reach the optimal solution on a single-objective optimization problem, and the weighted aggregation on all objectives constitute the Pareto set.
 % 为了得到Pareto set， moead利用权重向量将不同的目标组合成多个单目标子问题，在单目标上的最优解构成了MOP的Pareto set。
-To obtain the Pareto set,
+To obtain the Pareto set, MOEA/D uses weight vector to combine different objectives into multiple single-objective subproblems, and the optimal solutions on the single-objective constitutes the optimal solutions of MOP.
+% 由于不同子问题间差异过大，moead将子问题按照权重向量分组，使用相邻的解优化当前子问题。
+Due to the great difference between different subproblems, MOEA/D groups the subproblems according to the weight vector and optimizes the current subproblems with neighboring subproblemss.
+% moead的tech分解法
+Three approaches are introduced in MOEA/D to transform the approximation problem of PF into multiple scalar optimization problems \cite{moead}, in this paper, we employ the Tchebycheff approache, the scalar optimization problem is in the form
+\begin{equation}
+  \begin{aligned}
+     & \text { minimize } g^{\text {te }}\left(x \lambda, z^{*}\right)=\max _{1 \leq i \leq m}\left\{\lambda_{i} f_{i}(x)-z_{i}^{*}\right\} \\
+     & \text { subject to } x \in \Omega
+  \end{aligned}
+\end{equation}
+% 介绍公式里的参数 z，lambda， 
+where $z^{*}=\left(z_{1}^{*}, \ldots, z_{m}^{*}\right)^{T}$ is the idea point, i.e. $z_{i}^{*}=\min \left\{f_{i}(x) \mid x \in \Omega\right\}$ for each $i = 1, \dots , m$. $\Lambda=\left\{\lambda^{1}, \ldots, \lambda^{N}\right\}$ is the set of weight vector satisfies $\sum{^m_{i=1} \lambda ^j_i=1}$ and $\lambda^j_i \geq 0$ for all $i \in \{1,\dots, m\}$.
+
+% 在moead中，所有的子问题会被同等的对待，并且被分配了同等的计算量
+In the original MOEA/D, all subproblems are treated equally and get the same computing resources,
+% 但这些子问题有不同的难度，因此在这篇论文里我们用moead-dra。
+but these subproblems may have different complexity, therefore, in this paper, we uses MOEA/D with dynamical resource allocation (MOEA/D-DRA) \cite{moead-dra} which won the CEC09 Uncomstrained MOP test.
+% 对每个子问题，定义一个pi衡量子问题的重要程度
+For each subproblem $i$, $\pi^i$ was defined to measure the improvement of $x^i$ in reducing the objective of this subproblem.
+
+During the search, MOEA/D-DRA works as follows:
+% moead-dra的工作流程
+\begin{enumerate}
+  % 
+  \item
+  \item b
+  \item c
+\end{enumerate}
+
+
 
 
 
