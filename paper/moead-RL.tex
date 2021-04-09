@@ -341,10 +341,33 @@ For each subproblem $i$, $\pi^i$ was defined to measure the improvement of $x^i$
 During the search, MOEA/D-DRA works as follows:
 % moead-dra的工作流程
 \begin{enumerate}
-  % 
-  \item
-  \item b
-  \item c
+  % 计算权重向量之间的欧氏距离，记录每个向量最近的T个向量
+  \item The Euclidean distance between weight vectors is calculated, and the index of the nearest $t$ weight vectors of each vector is recorded, $T$-neighborhoods of $x_i$ are $B(i) = \{i_i,\dots , i_T\}$ where $\lambda^{i_1},\dots,\lambda^{i_T}$ are the $T$ closest weight vectors to $\lambda^i$.
+        % 使用pi衡量xi在减少子问题上的效用。
+  \item $\pi^i$ is defined to measure the effect of $x^i$ on the optimization subproblem, the indicator is defined as
+        \begin{equation}
+          \pi^{i}=\left\{\begin{array}{ll}
+            1,                                                                     & \text { if } \Delta^{i}>0.001 \\
+            \left(0.95+0.05 \times \frac{\Delta^{i}}{0.001}\right) \times \pi^{i}, & \text { otherwise }
+          \end{array}\right.
+          \label{eq: delta}
+        \end{equation}
+        % 根据pi使用10-tournament selection选择N/5-m个索引加入I
+        By using 10-tournament selection based on $\pi$, select $\frac{N}{5}-m$ indexes other than $i$ and add them to set $I$.
+        % 随机生成rand，确定父代范围
+  \item Uniformly randomly generate a number \textit{rand} to determine parent range
+        \begin{equation}
+          P=\left\{\begin{array}{ll}
+            B(i)             & \text { if } \text { rand }<\delta \\
+            \{1, \ldots, N\} & \text { otherwise }
+          \end{array}\right.
+        \end{equation}
+        % 从P中选择两个index，r2和r3作为父代，利用当前解i作为r1,根据DE算子生成子代y,根据y更新z
+  \item Randomly select two indexes $r_2$, $r_3$ from $P$ and set $r_1=i$, apply DE operator on the above selected indexes to generate the offspring $y$ and update the best value $z^*$ found so far, for each $i=1,\dots,m$, if $z_i^* > f_i(y)$, then set $z_i=f_i(y)$.
+        % 随机从P中选择一个index j，如果生成的解y比j好，就替换j，重复直到P为空或是替换个体到达上限nr
+  \item Replace at most $n_r$ solutions in $P$ by $y$ if $g\left(y \mid \lambda^{j}, z\right) \leq g\left(x^{j} \mid \lambda^{j}, z\right), x \in P$ and then set $x^j=y$.
+        % 每50代更新一次delta^i，在过去50代中子问题目标的相对减少
+  \item The indicator $\pi^i$ was updated every 50 generations according to the formula \ref{eq: delta} and compute the relative decrease $\delta^i$ of the objective for each subproblem $i$ during the last 50 generations.
 \end{enumerate}
 
 
