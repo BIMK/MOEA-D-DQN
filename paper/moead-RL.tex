@@ -370,14 +370,38 @@ During the search, MOEA/D-DRA works as follows:
   \item The indicator $\pi^i$ was updated every 50 generations according to the formula \ref{eq: delta} and compute the relative decrease $\delta^i$ of the objective for each subproblem $i$ during the last 50 generations.
 \end{enumerate}
 
+\subsection{AOS with RL}
+%%% 利用强化学习做算子选择，需要介绍算法流程
+% 强化学习解决EvE困境的特性可以用来解决算子选择问题，所以我们将RL作为进化算法的算子选择器， 用来从算子池中选择合适的算子
+The feature of RL to solve EvE dilemma can be used to solve the AOS problem, so we apply RL as the operator selector of evolutionary algorithm to select the appropriate operator from the operator pool  and DDQN is used to optimize the network model.
+% 为了更好的发挥AOS的优势，并且适应不同的问题，我们设计了两个算子池(交叉和变异)
+In order to get better results and adapt to different problems, we design two operator pools (crossover pool and mutation pool).
+\textit{Crossover Pool}
+\begin{enumerate}
+  \item Simulated binary crossover
+  \item DE/rand/1
+        \begin{equation}
+          v^{i}=x^{i}+F \times\left(x^{r_{1}}-x^{r_{2}}\right)
+        \end{equation}
+  \item DE/rand/2
+        \begin{equation}
+          v^{i}=x^{i}+F \times\left(x^{r_1}-x^{r_2}\right)+F \times\left(x^{r_3}-x^{r_4}\right)
+        \end{equation}
+  \item DE/current-to-rand/1
+        \begin{equation}
+          v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)
+        \end{equation}
+  \item DE/current-to-rand/2
+        \begin{equation}
+          v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)+F \times\left(x^{r_{4}}-x^{r_{5}}\right)
+        \end{equation}
+  \item MOEA/D-M2M
+\end{enumerate}
+\begin{enumerate}
+  \item Polynomial mutation
+\end{enumerate}
 
 
-
-
-\begin{equation}
-  v^{i}=x^{i}+F \times\left(x^{r_{1}}-x^{r_{2}}\right)
-\end{equation}
-Where F
 
 \subsection{Markov decision process}
 %%% 建模成MDP
