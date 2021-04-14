@@ -395,10 +395,38 @@ In order to get better results and adapt to different problems, we design two op
         \begin{equation}
           v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)+F \times\left(x^{r_{4}}-x^{r_{5}}\right)
         \end{equation}
-  \item MOEA/D-M2M
+  \item MOEA/D-M2M crossover
+        \begin{align}
+           & v^{i}=x^{i}+rc \cdot\left(x^{i}-x^{j}\right)                                     \\
+           & rc={rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Max-gen}\right)^{0.7}}\right)
+        \end{align}
 \end{enumerate}
+Where $x^i$ is the target vector and $v^i$ is the mutant vector. The variables $x^j, j \in \{r_1,r_2,r_3,r_4,r_5\}$ are different solutions chosen randomly from $P$, which are also different from original vector $x^i$. The scaling factor $F > 0$ is a real and constant factor which controls the amplification of the differential vector $x^a-x^b$ and $K \in [0,1]$ is analogous to $F$.
+% $\(x^{r_a}-x^{r_b}\)$
 \begin{enumerate}
+  \item Binomial crossover
+        \begin{equation}
+          u_{j}^{i}=\left\{\begin{array}{ll}
+            v_{j}^{i}, & \text { if }  { rand } \leq C R \text { or } j=j_{ {rand }} \\
+            x_{j}^{i}, & \text { otherwise }
+          \end{array}\right.
+        \end{equation}
   \item Polynomial mutation
+        \begin{equation}
+          \begin{array}{l}
+            v^{i} = x^{i} + \delta \cdot (u_k - l_k) \\
+            \delta=\left\{\begin{array}{l}
+              {\left[2 \mu+(1-2 \mu)\left(1-\delta_{1}\right)^{\eta_{m}+1}\right]^{\frac{1}{\eta_{m}+1}}-1, \text { if } \mu \leq 0.5} \\
+              1-\left[2(1-\mu)+2(\mu-0.5)\left(1-\eta_{2}\right)^{\eta_{m}+1}\right]^{\frac{1}{\eta_{m}+1}}, \text { if } \mu>0.55     \\
+              \delta_1 = (v_k-l_k)/(u_k-l_k)
+            \end{array}\right.
+          \end{array}
+        \end{equation}
+  \item MOEA/D-M2M mutation
+        \begin{align}
+           & v^{i}_{k} = x^{i}_{k} + rm \cdot (ub(k)-lb(k))                                                     \\
+           & r m=0.15 \cdot {rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Max \cdot gen}\right)^{0.7}}\right)
+        \end{align}
 \end{enumerate}
 
 
