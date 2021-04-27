@@ -376,16 +376,19 @@ During the search, MOEA/D-DRA works as follows:
 The feature of RL to solve EvE dilemma can be used to solve the AOS problem, so we apply RL as the operator selector of evolutionary algorithm to select the appropriate operator from the operator pool  and DDQN is used to optimize the network model.
 % 为了更好的发挥AOS的优势，并且适应不同的问题，我们设计了两个算子池(交叉和变异)
 In order to get better results and adapt to different problems, we design two operator pools (crossover pool and mutation pool).
+
 \textit{Crossover Pool}
 \begin{enumerate}
-  \item Simulated binary crossover
+  % \item Simulated binary crossover
   \item DE/rand/1
         \begin{equation}
           v^{i}=x^{i}+F \times\left(x^{r_{1}}-x^{r_{2}}\right)
+          \label{de1}
         \end{equation}
   \item DE/rand/2
         \begin{equation}
           v^{i}=x^{i}+F \times\left(x^{r_1}-x^{r_2}\right)+F \times\left(x^{r_3}-x^{r_4}\right)
+          \label{de2}
         \end{equation}
   \item DE/current-to-rand/1
         \begin{equation}
@@ -397,24 +400,30 @@ In order to get better results and adapt to different problems, we design two op
         \end{equation}
   \item MOEA/D-M2M crossover
         \begin{align}
-           & v^{i}=x^{i}+rc \cdot\left(x^{i}-x^{j}\right)                                     \\
-           & rc={rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Max-gen}\right)^{0.7}}\right)
+           & v^{i}=x^{i}+rc \cdot\left(x^{i}-x^{j}\right)                                    \\
+           & rc={rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Maxgen}\right)^{0.7}}\right)
+          \label{m2m:cro}
         \end{align}
 \end{enumerate}
-Where $x^i$ is the target vector and $v^i$ is the mutant vector. The variables $x^j, j \in \{r_1,r_2,r_3,r_4,r_5\}$ are different solutions chosen randomly from $P$, which are also different from original vector $x^i$. The scaling factor $F > 0$ is a real and constant factor which controls the amplification of the differential vector $x^a-x^b$ and $K \in [0,1]$ is analogous to $F$.
-% $\(x^{r_a}-x^{r_b}\)$
+Where $x^i$ is the target vector and $v^i$ is the mutant vector. The variables $x^j, j \in \{r_1,r_2,r_3,r_4,r_5\}$ are different solutions chosen randomly from $P$, which are also different from original vector $x^i$. The scaling factor $F > 0$ is a real and constant factor which controls the amplification of the differential vector $x^a-x^b$ and $K \in [0,1]$ is analogous to $F$. For the crossover operator \ref{de1} and \ref{de2}, the binomial crossover operator \cite{storn1997differential} is applied to generate the offspring, it works as
+\begin{equation}
+  u_{j}^{i}=\left\{\begin{array}{ll}
+    v_{j}^{i}, & \text { if }  { rand_j } \leq C R \text { or } j=j_{ {rn^i }} \\
+    x_{j}^{i}, & \text { otherwise }
+  \end{array}\right.
+\end{equation}
+where $rand_j \in [0,1]$ is the $j^{th}$ uniformly random, $CR \in [0,1]$ is the crossover rate which has to determined by user, $rn^i$ is a randomly selected index from $\{1,2,\dots,D\}$ which ensures that at least one parameter of $u^i$ comes from $v^i$.
+For operator \ref{m2m:cro}, $x^j$ is a solution randomly chosen from $P$ and different from $x^i$, $rand$ is a uniformly random number in $[-1,1]$, $gen$ is the currnet generation and $Maxgen$ is the maximum generation user designed.
+% RC的设计参考了模拟退火的思想，随着进化代数的增加逐渐趋近0
+% The design of $RC$ is based on the idea 
+
+\textit{Mutation Pool}
 \begin{enumerate}
-  \item Binomial crossover
-        \begin{equation}
-          u_{j}^{i}=\left\{\begin{array}{ll}
-            v_{j}^{i}, & \text { if }  { rand } \leq C R \text { or } j=j_{ {rand }} \\
-            x_{j}^{i}, & \text { otherwise }
-          \end{array}\right.
-        \end{equation}
+  \item Gaussian mutation
   \item Polynomial mutation
         \begin{equation}
           \begin{array}{l}
-            v^{i} = x^{i} + \delta \cdot (u_k - l_k) \\
+            y^{i} = x^{i} + \delta \cdot (ub_k - lb_k) \\
             \delta=\left\{\begin{array}{l}
               {\left[2 \mu+(1-2 \mu)\left(1-\delta_{1}\right)^{\eta_{m}+1}\right]^{\frac{1}{\eta_{m}+1}}-1, \text { if } \mu \leq 0.5} \\
               1-\left[2(1-\mu)+2(\mu-0.5)\left(1-\eta_{2}\right)^{\eta_{m}+1}\right]^{\frac{1}{\eta_{m}+1}}, \text { if } \mu>0.55     \\
@@ -424,11 +433,16 @@ Where $x^i$ is the target vector and $v^i$ is the mutant vector. The variables $
         \end{equation}
   \item MOEA/D-M2M mutation
         \begin{align}
-           & v^{i}_{k} = x^{i}_{k} + rm \cdot (ub(k)-lb(k))                                                     \\
+           & y^{i}_{k} = x^{i}_{k} + rm \cdot (ub(k)-lb(k))                                                     \\
            & r m=0.15 \cdot {rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Max \cdot gen}\right)^{0.7}}\right)
         \end{align}
 \end{enumerate}
+where in polynomial mutation, $\mu$ is a random number between 0 and 1, $\eta_m$ is the distribution index of polynomial mutation, $ub_k$ and $lb_k$ are the upper and lower bounds of decision variables at the $k^{th}$ position. In MOEA/D-M2M mutation, $rand$ is a random number between -1 and 1, $y^i$ is the new individual of $x^i$ after crossover and mutation.
 
+\subsection{Credit Assignment}
+%%% 说明本文的适应度赋值部分
+% 适应度赋值通常需要分为两个步骤，首先需要根据算子的应用评价算子的影响，其次根据前一步中算子的影响为算子确定适应度值。
+The credit assignment is to estimate the quality of operators based on the impact of their most recent applications
 
 
 \subsection{Markov decision process}
