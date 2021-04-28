@@ -441,9 +441,31 @@ where in polynomial mutation, $\mu$ is a random number between 0 and 1, $\eta_m$
 
 \subsection{Credit Assignment}
 %%% 说明本文的适应度赋值部分
-% 适应度赋值通常需要分为两个步骤，首先需要根据算子的应用评价算子的影响，其次根据前一步中算子的影响为算子确定适应度值。
-The credit assignment is to estimate the quality of operators based on the impact of their most recent applications
+% 信誉赋值通常可以分为两个部分，首先根据算子对本次进化的影响确定算子的适应度改进，然后根据近期的适应度改进估计算子的质量。
+Generally speaking, credit assignment can be divided into two parts. Firstly, the fitness improvement of the operator is determined according to the influence on the recent application, and then the quality of the operator is estimated according to the fitness improvement of the operator over a period of time.
 
+% 由于目标函数值在前期有较大的改进，在后期变化较小，我们使用适应度提高率来评价子代相对父代的改进，
+Since the objective function value has a great improvement in the early stage and a small change in the later stage, in MOEA/D-DDQN we use the fitness improvement rate to measure the improvement of offspring to their parents.
+The FIR value of $i^{th}$ individual can be calculated as follows
+
+\begin{equation}
+  FIR_t=\left\{
+  \begin{array}{ll}
+    \frac{pf_{i}-cf_{i}}{pf_{i}} & \text{if }pf_{i}-cf_{i}>0 \\
+
+    0                            & \text{otherwise}
+  \end{array}
+  \right.
+\end{equation}
+
+where $pf_{i}$ and $cf_{i}$ are the fitness values of parent and its offspring, if the offspring is worse than parent, then set FIR to 0.
+
+% 为了更准确的衡量算子的性能，我们设计一个队列来存储算子最近的效果
+
+% 由于
+
+\subsection{Operator Selection}
+%%% 说明算法的算子选择策略
 
 \subsection{Markov decision process}
 %%% 建模成MDP
