@@ -439,7 +439,7 @@ For operator \ref{m2m:cro}, $x^j$ is a solution randomly chosen from $P$ and dif
 \end{enumerate}
 where in polynomial mutation, $\mu$ is a random number between 0 and 1, $\eta_m$ is the distribution index of polynomial mutation, $ub_k$ and $lb_k$ are the upper and lower bounds of decision variables at the $k^{th}$ position. In MOEA/D-M2M mutation, $rand$ is a random number between -1 and 1, $y^i$ is the new individual of $x^i$ after crossover and mutation.
 
-\subsection{Credit Assignment}
+\subsection{Credit Assignment \label{credit_ass}}
 %%% 说明本文的适应度赋值部分
 % 信誉赋值通常可以分为两个部分，首先根据算子对本次进化的影响确定算子的适应度改进，然后根据近期的适应度改进估计算子的质量。
 Generally speaking, credit assignment can be divided into two parts. Firstly, the fitness improvement of the operator is determined according to the influence on the recent application, and then the quality of the operator is estimated according to the fitness improvement of the operator over a period of time.
@@ -490,36 +490,37 @@ The performance of operators are stable for a period of time, so we can take $re
 % 为了保证reward_k存在，队列中每个算子至少被应用一次，也就是说，如果唯一的A(op_i,fir)被移出队列，那么下一次一定会选择算子i
 In order to ensure the existence of $reward_k$, each operator is applied at least once, that is, if the last $k$ is removed from the queue, then operator $k$ will be selected next time.
 
-
 \subsection{Operator Selection}
 %%% 说明算法的算子选择策略
+% 在上一节的credit assignment中确定了算子的质量，接下来的任务就是确定那个算子将被应用，operator selection定义了如何根据算子的质量确定接下来要应用的算子。
+In section \ref{credit_ass}, we determined the quality of operators by credit assignment, and the next task is to determine which operator will be applied. \textit{Operator Selection} defines which operator will be applied according to its known empirical quality.
+% 算子选择要考虑
+
+% 我们使用一个神经网络拟合算子的质量，神经网络的输出是分别应用不同的算子后得到的期望reward，之后使用轮盘赌机制选择接下来要应用的算子。
+We use a neural network to fit the quality of the operator, the output of neural network is the expected reward obtained by applying different operators, then we use roulette mechanism to select the next operator to be applied.
+
+\subsection{MOEA/D}
+%%% 稍微介绍一个多目标的框架
+% 我们使用基于分解的多目标算法来解决多目标问题，
 
 
-\subsection{Markov decision process}
-%%% 建模成MDP
+\section{Adaptive Operator Selection with Reinforcement Learning}
+%%% 本文提出的方法，利用强化学习做算子选择。
 
-\subsection{moead-rl}
-%%% 将强化学习嵌入到DE的框架
+\subsection{Credit Assignment}
+%%% 说明本文使用的适应度赋值的方法
+
+\subsection{Operator Selection}
+%%% 说明本文使用的算子选择的方法
+
+\subsection{MOEA/D}
+%%% 说明使用的多目标框架
 
 \subsection{Double DQN}
+%%% 说明使用的强化学习框架
 
-\subsection{Computational Complexity of MOEA/PSL}
-
-
-\section{Empirical Studies}
-
-
-\subsection{Comparative Algorithms}
-
-\subsection{Test Problems}
-
-\subsection{Results on Benchmark Problems}
-
-\subsection{Results on Real-World Problems}
-
-\subsection{Effectiveness of the Two Neural Networks in MOEA/PSL}\label{sec:twoNNs}
-
-\subsection{Effectiveness of the Parameter Adaptation Strategy in MOEA/PSL}
+\subsection{Embed DDQN within MOEA/D}
+%%% 说明具体的DDQN的状态，回报，
 
 \section{Conclusions}
 
@@ -533,13 +534,6 @@ In order to ensure the existence of $reward_k$, each operator is applied at leas
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
-% \iffalse
-%   \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{XingyiZhang.eps}}]{Xingyi Zhang}
-%     received the B.Sc. from Fuyang Normal College in 2003, and the M.Sc. in 2006 and Ph.D. in 2009
-%     both from Huazhong University of Science and Technology. Currently, he is
-%     an associate professor in the School of Computer Science and Technology, Anhui University. His main research interests
-%     include unconventional models and algorithms of computation, multi-objective optimization and membrane computing.
-%   \end{IEEEbiography}
-% \fi
+
 
 \end{document}
