@@ -488,39 +488,58 @@ The performance of operators are stable for a period of time, so we can take $re
 
 %%%% 为了使得每个算子都能得到应用，队列中每个算子至少有一条记录，也即是说，如果算子没有在队列中，那么下次一定会应用哪个算子。
 % 为了保证reward_k存在，队列中每个算子至少被应用一次，也就是说，如果唯一的A(op_i,fir)被移出队列，那么下一次一定会选择算子i
-In order to ensure the existence of $reward_k$, each operator is applied at least once, that is, if the last $k$ is removed from the queue, then operator $k$ will be selected next time.
+% In order to ensure the existence of $reward_k$, each operator is applied at least once, that is, if the last $k$ is removed from the queue, then operator $k$ will be selected next time.
 
 \subsection{Operator Selection}
 %%% 说明算法的算子选择策略
 % 在上一节的credit assignment中确定了算子的质量，接下来的任务就是确定那个算子将被应用，operator selection定义了如何根据算子的质量确定接下来要应用的算子。
 In section \ref{credit_ass}, we determined the quality of operators by credit assignment, and the next task is to determine which operator will be applied. \textit{Operator Selection} defines which operator will be applied according to its known empirical quality.
-% 算子选择要考虑
+% 算子选择要考虑平衡探索和利用，一方面我们希望尽可能选择最佳算子，以最大限度的提高累积效益。另一方面也要给其它算子应用的机会，因为他们有可能在之后又好的表现。
+Operator selection should balance exploration and exploitation, on the one hand, we hope to choose the best operator as far as possible to maximize the cumulative benefits, on the other hand, we should also give opportunities to poor operators, because they may perform well in the future search.
 
-% 我们使用一个神经网络拟合算子的质量，神经网络的输出是分别应用不同的算子后得到的期望reward，之后使用轮盘赌机制选择接下来要应用的算子。
-We use a neural network to fit the quality of the operator, the output of neural network is the expected reward obtained by applying different operators, then we use roulette mechanism to select the next operator to be applied.
+% 我们使用一个神经网络拟合算子的质量，神经网络的输出是分别应用不同的算子后得到的期望reward，之后使用轮盘赌机制选择接下来要应用的算子, 轮盘赌可以保证reward大的算子有更大的概率被选中。
+We use a neural network to fit the quality of the operator, the output of neural network is the expected reward obtained by applying different operators, then we use roulette mechanism to select the next operator to be applied, the roulette mechanism based on probability can ensure that the operator with large reward has a higher probability to be selected.
+% 由于我们选择队列中存储的最大FIR作为算子的reward，因此即使是poor operators在多次应用中也可以获得较大的reward。为了保证每个算子的reward都存在，在w次进化中，每个算子至少应用一次，其中常数w是队列的长度，人为设置。
+Since we take the maximum $FIR$ stored in the queue as the reward of operators, even the poor operators can get a large reward in multiple applications. In order to ensure that every operator has a reward, each operator is applied at least once in the $w$ times, where the constant $w$ is the length of the queue, which is set artificially.
 
-\subsection{MOEA/D}
-%%% 稍微介绍一个多目标的框架
-% 我们使用基于分解的多目标算法来解决多目标问题，
-
-
-\section{Adaptive Operator Selection with Reinforcement Learning}
-%%% 本文提出的方法，利用强化学习做算子选择。
-
-\subsection{Credit Assignment}
-%%% 说明本文使用的适应度赋值的方法
-
-\subsection{Operator Selection}
-%%% 说明本文使用的算子选择的方法
-
-\subsection{MOEA/D}
-%%% 说明使用的多目标框架
-
-\subsection{Double DQN}
-%%% 说明使用的强化学习框架
 
 \subsection{Embed DDQN within MOEA/D}
-%%% 说明具体的DDQN的状态，回报，
+%%%% 结合DDQN和算子选择，应用到moead的框架下
+%%% 先说明强化学习的功能，来解释为什么可以做AOS
+% 自适应算子选择问题的本质是根据算子以往的表现估计算子的性能，然后根据算子的性能为之后的个体选择合适的算子。
+The essence of AOS is to estimate the performance of the operator according to the previous applications of the operator, and then select the appropriate operator from the operators pool for the current individual according to the credit of the operators.
+% 强化学习主要由agent environment state action reward 组成，agent根据环境的状态执行某个动作，之后环境会转换到一个新的状态，并且根据新的状态环境会给出奖励信号，agent根据奖励调整策略，agent的目标是得到最大的累积奖励。
+RL is composed of agent, environment, state, action and reward, agent takes action according to the state of the environment, and then the environment will change to a new state and give a reward value, the agent will adjust its strategy according to the reward and agent's goal is to get the maximum cumulative reward.
+
+%%% 再说明如何建模成MDP使得RL应用到AOS问题
+% 可以看到AOS和强化学习面临相同的问题，1. 根据当前的状态做出决策，并得到反馈。2. 根据反馈调整策略
+AOS and RL face the same issues:
+\begin{enumerate}
+  \item Make decisions based on current state and get feedback.
+  \item Adjust the strategy according to the feedback.
+\end{enumerate}
+%%% 将AOS建模成MDP问题。
+% 基于这些相似的问题，我们可以利用RL做AOS，
+Based on these similar issues, we can use RL to solve AOS problems.
+% 首先需要将进化过程建模为MDP，具有如下定义
+First, we model the evolution procedure as an MDP,
+% MDP是agent与environment交互，以最大化累计reward的数学模型, 在AOS问题中，agent作为controller，负责选择算子，并根据应用算子后的反馈调整选择策略。environment是整个进化算法框架，本文使用MOEA/D框架，负责利用agent给出的算子生成子代，并计算子代的适应度值，向agent返回reward。
+MDP is a mathematical model in which agent interacts with environment to maximize cumulative reward, in AOS problems, agent, as the controller, is responsible for selecting the operator and adjusting the selection strategy according to the feedback after the operator is applied.
+Environment is the whole framework of evolutionary algorithm, this paper uses the MOEA/D framework, which is responsible for using the operator given by agent to generate the offspring, calculating the fitness value of the offspring, and returning the reward to agent.
+% 为了应用MDP，我们还需要给出状态、动作、奖励的定义
+To apply the MDP, we also need to give the definition of state, action, policy and reward.
+\begin{enumerate}
+  % 状态对当前环境的描述，也是agent做出决策的依据，因此
+  \item \textit{State:}
+  \item \textit{Action:}
+  \item \textit{Policy:}
+  \item \textit{Reward:}
+\end{enumerate}
+
+
+
+%%% 应用的是DDQN的强化学习方法
+
 
 \section{Conclusions}
 
