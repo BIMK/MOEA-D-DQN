@@ -490,7 +490,7 @@ The performance of operators are stable for a period of time, so we can take $re
 % 为了保证reward_k存在，队列中每个算子至少被应用一次，也就是说，如果唯一的A(op_i,fir)被移出队列，那么下一次一定会选择算子i
 % In order to ensure the existence of $reward_k$, each operator is applied at least once, that is, if the last $k$ is removed from the queue, then operator $k$ will be selected next time.
 
-\subsection{Operator Selection}
+\subsection{Operator Selection \label{operator_selection}}
 %%% 说明算法的算子选择策略
 % 在上一节的credit assignment中确定了算子的质量，接下来的任务就是确定那个算子将被应用，operator selection定义了如何根据算子的质量确定接下来要应用的算子。
 In section \ref{credit_ass}, we determined the quality of operators by credit assignment, and the next task is to determine which operator will be applied. \textit{Operator Selection} defines which operator will be applied according to its known empirical quality.
@@ -527,18 +527,33 @@ First, we model the evolution procedure as an MDP,
 MDP is a mathematical model in which agent interacts with environment to maximize cumulative reward, in AOS problems, agent, as the controller, is responsible for selecting the operator and adjusting the selection strategy according to the feedback after the operator is applied.
 Environment is the whole framework of evolutionary algorithm, this paper uses the MOEA/D framework, which is responsible for using the operator given by agent to generate the offspring, calculating the fitness value of the offspring, and returning the reward to agent.
 % 为了应用MDP，我们还需要给出状态、动作、奖励的定义
-To apply the MDP, we also need to give the definition of state, action, policy and reward.
+To apply the MDP, we also need to give the definition of state, action and reward.
 \begin{enumerate}
-  % 状态对当前环境的描述，也是agent做出决策的依据，因此
   \item \textit{State:}
+        % 状态是对当前环境的描述，也是agent做出决策的依据，我们把父代的决策变量x_i, 分解向量w_i作为状态S_i
+        The state is the description of the current environment and the basis for the agent to make decisions. We take the decision variable $x$ of the parent, decomposition vector $W$ as the state $s_t$.
+        \begin{equation}
+          s_{t}=\left\{x_{1,t}^i, x_{2,t}^i, \ldots, x_{D,t}^i, W_{1}^{i}, \ldots, W_{m}^{i}\right\}
+        \end{equation}
+        % x是t时刻第i个个体的D维决策变量，w是第i个个体的权重向量。
+        % 由于不同的个体有不同的最佳算子，因此父代的决策变量是必须的。在MOEA/D框架下，多目标被分解成多个单目标，不同的权重组合构成不同的目标，因此分解向量对最佳算子的选择也有影响。
+        Since different individuals have different optimal operator, the decision variables are necessary. In the framework of MOEA/D, multi-objective are decomposed into a set of single-objective, and different weight combinations constitute different objectives, so the decomposition vector also has an impact on the selection of the best operator.
   \item \textit{Action:}
-  \item \textit{Policy:}
+        % 在MDP中，agent根据环境的状态做出动作，具体来说，深度神经网络输出在当前状态下每个动作质量，之后使用operator selection的方法给出具体的算子。
+        In MDP, the agent makes an action $a_t$ based on the state $s^i$, specifically, the deep neural network outputs the quality of each action in the current state, and then uses the operator selection \ref{operator_selection} method to give the recommended operator.
+        \TODO{action space}
+        \TODO{add equation}
+        % \item \textit{Policy:}
   \item \textit{Reward:}
+        % 执行动作a^i后，状态会从S^i转移到S^i+1，并且环境会通过比较两个状态给出reward，表示动作的好坏。奖励越大，说明算子的效果越好，通过调整策略，在下次类似的状态时有更大的概率应用相同的算子。
+        State will be transferred from $s_{t}$ to $s_{t+1}$ with action $a_t$, and the environment will give a reward $r_{t+1}$ by comparing the two states, indicating the quality of the action $a_t$. A larger reward indicates that the operator has a better performance, by adjusting strategy, the agent is more likely to apply the same operator in the next similar state.
+        \TODO{add equation}
 \end{enumerate}
 
-
-
 %%% 应用的是DDQN的强化学习方法
+% 由于算子选择问题具有离散的动作空间，因此我们使用RL的variant，Double DQN
+Since the AOS problems have discrete action space, a variant of the RL algorithm, double deep Q learning (DDQN) is applied.
+
 
 
 \section{Conclusions}
