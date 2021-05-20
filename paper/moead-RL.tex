@@ -550,9 +550,27 @@ To apply the MDP, we also need to give the definition of state, action and rewar
         \TODO{add equation}
 \end{enumerate}
 
+%%% 说明用的MOEA/D框架
+% 由于在多目标中很难量化子代和父代的性能差异，因此大多数AOS methods被设计应用到单目标问题上。
+Most AOS methods were designed for single-objective problems, because it is difficult to measure the performance difference between a offspring and a parent.
+% 比如基于支配的多目标算法 NSGAII，SPEA2，大多数解都是非支配的。
+For example, in domination relation based multi-objective algorithms, such as NSGA-II \cite{nsga2} and SPEA2 \cite{spea2}, most of the solutions are non-dominated, so it is difficult to determine the fitness improvement rate.
+% 我们使用MOEAD算法，which可以将多目标问题分解成多个单目标子问题,所以单目标中适应度赋值的方法可以应用moead框架上。
+In this paper, MOEA/D is applied, which can decompose MOP into several single-objective subproblems, so the methods of credit assignment in single-objective can be applied to MOEA/D framework.
+
 %%% 应用的是DDQN的强化学习方法
-% 由于算子选择问题具有离散的动作空间，因此我们使用RL的variant，Double DQN
-Since the AOS problems have discrete action space, a variant of the RL algorithm, double deep Q learning (DDQN) is applied.
+% 由于算子选择问题具有离散的动作空间，因此我们使用RL的variant，Double DQN 
+Since the AOS problems have discrete action space, a variant of the RL, double deep Q learning (DDQN) is applied.
+% 将MOEA/D框架作为环境,与DDQN交互。
+The MOEA/D framework is used as the environment to interacts with DDQN,
+% 在时刻t，个体的决策变量和权重向量共同组成state s，作为神经网络的输入，神经网络的输出是一个n维向量 out，表示应用算子后可以得到的期望累计回报，根据输出向量基于轮盘赌选择一个算子op，应用算子产生子代off，在基于分解的多目标框架中，我们可以很容易的计算子代相对于父代的适应度值提高率FIR，将应用的算子和得到的FIR放入滑动窗口中，之后从滑动窗口中取出算子op对应的最大FIR作为reward r，使用DDQN算法更新RL的策略以最大化累积奖励。
+At time $t$, state $s_t$ is composed of individual decision variables and weight vector as the input of the neural network. The output of the neural network is an n-dim vector $out_t$, which represents the expected cumulative reward after the application of the operator.
+According to the $out_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $off_t$. In multi-objective framework based on decomposition, we can easily calculate the $FIR_t$, put the $op_i$ and $FIR_t$ into the sliding window, then take the maximum $FIR$ corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DDQN algorithm to update the RL strategy to maximize the cumulative reward.
+
+
+
+\section{Experimental studies}
+%%% 实验研究
 
 
 
