@@ -41,10 +41,18 @@
 \maketitle
 
 \begin{abstract}
-  Evolutionary Algorithms (EAs) are stochastic optimization algorithms which are greatly influenced by operators, different reproduction operators have various search range.
-  Adaptive operator selection (AOS) provides the on-line control of the evolutionary algorithms that which operator should be chosen for the current individual.
-  This paper proposes an AOS strategy based on Double Q-learning (DDQN), a deep Reinforcement Learning (RL) algorithm in discrete action spaces, to detect the operator should be applied.
-  The two main components of AOS, Credit Assignment and Operator Selection, correspond to Reward and Action of Markov Decision Process (MDP) and the State of MDP can be represented by the features of the current individual. According to the above rules, the operator selection problem is modeled as MDP and can be solved by reinforcement learning. In the evolutionary process, RL will select an operator for each individual and update the behavioral strategy according to the effect of this selection. Experimental results on \TODO{supplement experimental instructions}.
+  % 进化算法是一种受算子影响较大的随机优化算法，不同的复制算子具有不同的搜索范围。
+  Evolutionary Algorithms (EAs) are stochastic optimization algorithms which are greatly influenced by operators, different operators have various search range.
+  % AOS提供对进化算法的在线控制，即为当前个体选择合适的算子。
+  Adaptive operator selection (AOS) provides the on-line control of the evolutionary algorithms that is to choose the appropriate operator for the current individual.
+  % 本文提出了一种基于DDQN的算子选择策略，来确定哪个算子将被应用
+  This paper proposed a new AOS approach based on Doubel Deep Q Network, a Deep Reinforcement Learning (RL) algorithm in discrete action spaces, to determine which operator will be applied.
+  % AOS的两部分信誉赋值和算子选择，分别对应MDP中的reward和action，当前个体的特征可以作为MDP的state，
+  The two main components of AOS,Credit Assignment and Operator Selection, correspond toReward and Action of Markov Decision Process (MDP) andthe State of MDP can be represented by the  features ofthe current individual.
+  % 根据之前的规则，算子选择问题可以被建模成MDP，并且用强化学习解决。 
+  According to the above rules, the operator selection problem is modeled as MDP and can be solved by reinforcement learning.
+  % 在进化过程中，
+  In the evolutionary process, RL will select an operator for each individual and update the behavioral strategy according to the effect of this selection. Experimental results on \TODO{supplement experimental instructions}.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -277,7 +285,7 @@ the value-based RL methods can only be used in discrete action space.
 % 当状态空间特别巨大时，对值函数的估计是特别困难的，DQN通过深度神经网络稳定训练的动作值函数
 When state space is very large, it is difficult to estimate the action function, Deep Q-Network (DQN) \cite{mnih2015human} stabilizes the training of action value function approximation with deep neural networks.
 % 但DQN会有过高估计的问题，因此我们采用Double DQN，他通过分离选择和评价
-DQN uses the same values to select and to evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection, futhermore, In Double Deep Q-Network (DDQN) \cite{ddqn}, two neural networks are learned by assigning each experience randomly to update one of the two networks, a target network is designed to select an action and a evaluatino network is designed to generate a Q-value for that action.
+DQN uses the same values to select and to evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection, futhermore, In Double Deep Q-Network (DDQN) \cite{ddqn}, two neural networks are learned by assigning each experience randomly to update one of the two networks, a target network is designed to select an action and a evaluation network is designed to generate a Q-value for that action.
 
 % 在这份工作中，我们使用DDQN作为AOS的方法，并为DE算法选择合适的算子。
 In this work, we use DDQN as the AOS methos and integrate it into MOEA/D-DE.
@@ -321,7 +329,7 @@ To obtain the Pareto set, MOEA/D uses weight vector to combine different objecti
 % 由于不同子问题间差异过大，moead将子问题按照权重向量分组，使用相邻的解优化当前子问题。
 Due to the great difference between different subproblems, MOEA/D groups the subproblems according to the weight vector and optimizes the current subproblems with neighboring subproblemss.
 % moead的tech分解法
-Three approaches are introduced in MOEA/D to transform the approximation problem of PF into multiple scalar optimization problems \cite{moead}, in this paper, we employ the Tchebycheff approache, the scalar optimization problem is in the form
+Three approachs are introduced in MOEA/D to transform the approximation problem of PF into multiple scalar optimization problems \cite{moead}, in this paper, we employ the Tchebycheff approach, the scalar optimization problem is in the form
 \begin{equation}
   \begin{aligned}
      & \text { minimize } g^{\text {te }}\left(x \lambda, z^{*}\right)=\max _{1 \leq i \leq m}\left\{\lambda_{i} f_{i}(x)-z_{i}^{*}\right\} \\
@@ -571,8 +579,8 @@ According to the $out_t$, an operator $op_i$ is selected based on roulette, and 
 
 \section{Experimental studies}
 %%% 实验研究
-% 为了证明算法MOEA/D-DDQN的有效性，我们在ZDT，WFG，DTLZ，LSMOP数据集进行了测试，并且和MOEA/D-DE,MOEA/D-DRA,MOEA/D-FRRMAB,MOEA/D-IR比较了结果。
-To prove the effectivenness of MOEA/D-DDQN, we test it on ZDT, WFG, DTLZ datasets, and compare the results with those obtained by MOEA/D-DE, MOEA/D-DRA, MOEA/D-FRRMAB, MOEA/D-IR.
+% 为了证明算法MOEA/D-DDQN的有效性，我们在 xxx 数据集进行了测试，并且和MOEA/D-DE,MOEA/D-DRA,MOEA/D-FRRMAB,MOEA/D-IR比较了结果。
+To prove the effectivenness of MOEA/D-DDQN, we test it on ZDT, DTLZ datasets, and compare the results with those obtained by MOEA/D-DE, MOEA/D-DRA, MOEA/D-FRRMAB, MOEA/D-IR.
 
 % 我们分别使用两个神经网络推荐交叉算子和变异算子，除了输入层的维度，两个网络具有相同的结构。
 We use two neural networks to recommend crossover operator and mutation operator respectively. Except for the dimension of input layer, the two networks have the same structure.
@@ -581,11 +589,28 @@ We use two neural networks to recommend crossover operator and mutation operator
 % 对比算法的参数设置参考原论文的实现，结果来自PlatEMO platform
 All the parameters in the comparison algorithm are the same as those in the original paper, and the experimental results are collected from PlatEMO platform \cite{PlatEMO}.
 % 算法的参数设置如下
-The parameter settings of MOEA/D-DDQN are as follows.
+The parameters of MOEA/D-DDQN are set as follows.
 \begin{enumerate}
-  \item
+  \item Parameters in operators: $CR=1$, $F=0.5$, $K=0.5$, $\eta=20$;
+  \item Population size $N$ is set 100 for ZDT and 300 for DTLZ;
+  \item Maximum number of solutions replaced by each offspring $n_r$ is 2;
+  \item Neighbor size: $T=20$;
+  \item $\epsilon$-greedy policy: $\epsilon=0.01$;
 \end{enumerate}
 
+% 算法跑30次，评价次数
+% 对于每个test instances， 算法独立运行30次，
+For each test instances, all algorithms run 30 times independently, in order to ensure the fairness of the comparison, all algorithms use the same number of function evaluations,
+the algorithm stops running when the number of evaluations is reached.
+% 评价次数设置
+We set the number of function evaluations for the ZDT test instances as 25000 and the DTLZ test instances as 60000.
+% 秩和检验
+To obtain a statistically comprehensive Conclusions, we conducted the Wilcoxon rank sum test between the data obtained by the comparison algorithms, and the significance difference was 0.05.
+% "+-="
+"+","-","=" denote the results of the compared algorithms are better than, worse than, and similar to those obtained by proposed MOEA/D-DDQN.
+
+% 使用dark和light gray指示最佳和次优的结果 
+% Dark/light gray emphasizes the best/second-best results.
 
 
 \section{Conclusions}

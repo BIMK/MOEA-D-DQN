@@ -15,7 +15,7 @@ paths.append(path.split(path.split(path.realpath(__file__))[0])[0])
 
 
 class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
-    
+
     def __init__(self, problem, population, MAXGEN):
         ea.MoeaAlgorithm.__init__(self, problem, population)  # 先调用父类构造方法
         if population.ChromNum != 1:
@@ -36,14 +36,14 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
             self.decomposition = ea.tcheby  # 采用切比雪夫权重聚合法
         else:
             self.decomposition = ea.pbi  # 采用pbi权重聚合法
-        
+
         self.Ps = 0.9  # (Probability of Selection)表示进化时有多大的概率只从邻域中选择个体参与进化
         self.neighborSize = max(self.NIND // 10, 20)
         self.nr = max(self.NIND // 100, 3)
         self.learn_interval = 5  # 每5代更新DQN网络
         # self.SW = np.zeros((2, self.NIND // 2))  # 滑动窗口，可以记录算子的情况
         # self.a = 0
-    
+
     def tournamentSelection(self, K, N, pi):
         """
         竞赛选择
@@ -59,7 +59,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
             maxind = parent[np.argmax(pi[parent])]
             ind.append(maxind)
         return ind
-    
+
     def reinsertion(self, indices, population, offspring, idealPoint, referPoint, i):
         """
         描述:
@@ -69,7 +69,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
             idealPoint: 理想点，每个目标上的最优点
             referPoint: 参考点，权重向量
         """
-        
+
         weights = referPoint[indices, :]
         pop_ObjV = population.ObjV[indices, :]  # 获取邻居个体的目标函数值
         # 获取邻居个体的违反约束程度矩阵
@@ -93,7 +93,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         if self.currentGen % self.learn_interval == 0:
             self.xovOper.learn(r)
             self.mutOper.learn(r)
-        
+
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
         # ==========================初始化配置===========================
         self.initialization()
@@ -153,14 +153,14 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 """统计不同进化阶段算子选择的结果"""
                 PopCountOpers.append(self.xovOper.countOpers)
                 self.xovOper.countOpers = np.zeros(self.xovOper.n)  # 清空算子选择记录器
-        
+
         # 画出不同进化阶段算子选择的结果
         BestSelection = np.array(PopCountOpers)
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')
-        # for i in range(self.mutOper.n):
-        #     plt.plot(BestSelection[:,i],'.',label=self.mutOper.recOpers[i].name)
+        # for i in range(self.xovOper.n):
+        # plt.plot(BestSelection[:, i], '.', label=self.xovOper.recOpers[i].name)
         # plt.legend()
         # plt.show()
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果

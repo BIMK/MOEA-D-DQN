@@ -17,7 +17,7 @@ class MutRL:
     """
     使用强化学习做算子选择,需要有一个滑动窗口shape=(2,N//2)设计为种群的一半大小,存储应用的算子和得到的improvement.
     """
-    
+
     def __init__(self, problem, lambda_, Encoding, FieldDR, maxgen, NIND) -> None:
         self.name = "MutRL"
         self.problem = problem
@@ -32,11 +32,16 @@ class MutRL:
         self.state = None
         self.state_ = None
         self.countOpers = np.zeros(self.n)
-    
+
     def do(self, OldChrom, Parent1, r0, currentGen):
         self.state = np.hstack((Parent1[0], self.lambda_[r0]))
         if self.dqn.memory_counter > 100:
             self.a = self.dqn.choose_action(self.state)
+            # 优先选择在SW中没有记录的算子
+            for i in range(self.n):
+                if np.sum(self.SW[0] == i) == 0:
+                    self.a = i
+                    break
         else:
             self.a = np.random.randint(0, self.n)
         self.countOpers[self.a] += 1
@@ -49,7 +54,7 @@ class MutRL:
         self.state_ = np.hstack((OffChrom[0], self.lambda_[r0]))
         # print(self.a, OffChrom.shape)
         return OffChrom
-    
+
     def learn(self, r):
         """
         更新DQN
@@ -87,7 +92,7 @@ class Mutpolyn:
         self.DisI = DisI
         self.FixType = FixType
         self.Parallel = Parallel
-    
+
     def do(self, Parent1):
         Offspring = ea.mutpolyn(self.Encoding, Parent1, self.FieldDR, self.Pm, self.DisI, self.FixType)
         return Offspring
@@ -120,7 +125,7 @@ class Mutgau:
         self.Middle = Middle
         self.FixType = FixType
         self.Parallel = Parallel
-    
+
     def do(self, Parent1):
         Offspring = ea.mutgau(self.Encoding, Parent1, self.FieldDR, self.Pm, self.Sigma3, self.Middle, self.FixType)
         return Offspring
@@ -130,13 +135,13 @@ class MutM2m:
     """
     MOEA/D-M2M
     """
-    
+
     def __init__(self, FieldDR, maxgen) -> None:
         # self.D = None          # 决策变量维度
         self.FieldDR = FieldDR
         self.MaxGen = maxgen
         pass
-    
+
     def do(self, OldChrom, r0, Parent1, currentGen: int):
         """
         M2m里的变异
@@ -153,7 +158,7 @@ class MutM2m:
         Upper = np.tile(self.FieldDR[1], (N, 1))
         OffDec = Parent1.copy()
         OffDec[Site] = OffDec[Site] + rm[Site] * (Upper[Site] - Lower[Site])
-        
+
         # 边界处理
         temp1 = OffDec < Lower
         temp2 = OffDec > Upper
@@ -161,7 +166,7 @@ class MutM2m:
         OffDec[temp1] = Lower[temp1] + 0.5 * rnd[temp1] * (OldChrom[r0:r0 + 1][temp1] - Lower[temp1])
         OffDec[temp2] = Upper[temp2] - 0.5 * rnd[temp2] * (Upper[temp2] - OldChrom[r0:r0 + 1][temp2])
         # 检查是否符合边界约束
-        if np.any(OffDec>Upper) or np.any(OffDec<Lower):
+        if np.any(OffDec > Upper) or np.any(OffDec < Lower):
             print("有解越界")
             print(OffDec)
         return OffDec
@@ -171,7 +176,7 @@ class ProcessBound:
     """
     空操作，仅处理边界信息
     """
-    
+
     def do(self, OldChrom, FieldDR):
         lb = FieldDR[0]
         ub = FieldDR[1]

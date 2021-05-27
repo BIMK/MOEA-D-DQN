@@ -13,7 +13,7 @@ class RecRL:
     """
     用强化学习选择交叉算子
     """
-    
+
     def __init__(self, problem, lambda_, maxgen, NIND) -> None:
         self.name = "RecRL"
         self.problem = problem
@@ -28,7 +28,7 @@ class RecRL:
         self.state = None
         self.state_ = None
         self.countOpers = np.zeros(self.n)  # 统计不同算子的选择频率
-    
+
     def do(self, OldChrom, r0, neighbourVector, currentGen):
         """
         r0: 父代在OldChrom里的索引
@@ -38,6 +38,11 @@ class RecRL:
         self.state = np.hstack((OldChrom[r0], self.lambda_[r0]))
         if self.dqn.memory_counter > 100:
             self.a = self.dqn.choose_action(self.state)
+            # 如果有算子在滑动窗口里没有记录，那么就选它
+            for i in range(self.n):
+                if np.sum(self.SW[0] == i) == 0:
+                    self.a = i
+                    break
         else:
             self.a = np.random.randint(0, self.n)
         self.countOpers[self.a] += 1
@@ -49,7 +54,7 @@ class RecRL:
             offChrom = self.recOpers[self.a].do(OldChrom, r0, neighbourVector)
         self.state_ = np.hstack((offChrom[0], self.lambda_[r0]))
         return offChrom
-    
+
     def learn(self, r):
         """
         更新DQN
@@ -57,12 +62,12 @@ class RecRL:
         """
         # 将上次进化加入滑动窗口
         self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
-        
+
         # r = np.empty(self.n)
         # for i in range(n):
         #     r[i] = np.sum(self.SW[1, self.SW[0, :] == i])
         # self.DQN.store_transition(state,i,r[i],state_)
-        reward = np.sum(self.SW[1, self.SW[0, :] == self.a])
+        reward = np.max(self.SW[1, self.SW[0, :] == self.a])
         self.dqn.store_transition(self.state, self.a, reward, self.state_)
         # 学习,更新DQN
         if self.dqn.memory_counter > 100:
@@ -86,13 +91,13 @@ Parallel: False
 
 
 class Recsbx:
-    def __init__(self, XOVR=0.7, Half=True, n=20, Parallel=False):
+    def __init__(self, XOVR=0.9, Half=True, n=20, Parallel=False):
         self.name = "Recsbx"
         self.XOVR = XOVR
         self.Half = Half
         self.n = n
         self.Parallel = Parallel
-    
+
     def do(self, OldChrom, r0, neighbourVector):
         # pop[r0]作为父代,还需要另外一个父代才能做交叉,所以需要从neighbourVector里随机选一个
         r1 = np.random.choice(neighbourVector)
@@ -105,11 +110,11 @@ class RecM2m:
     """
     MOEA/D-M2M里的交叉
     """
-    
+
     def __init__(self, maxgen: int) -> None:
         self.name = 'RecM2m'
         self.MaxGen = maxgen
-    
+
     def do(self, OldChrom, r0, neighbourVector, currentGen: int):
         # r1 = neighbourVector[0]
         # r2 = neighbourVector[1]
@@ -130,11 +135,11 @@ class DE_rand_1:
     差分进化，
         # vi = xi + F × (xr1 − xr2);
     """
-    
+
     def __init__(self, F=0.5):
         self.name = "DE_rand_1"
         self.F = F  # 差分变异缩放因子
-    
+
     def do(self, OldChrom, r0, neighbourVector):  # 执行变异
         """
         对OldChrom中第r0个个体进行变异
@@ -154,11 +159,11 @@ class DE_rand_2:
     差分进化，
         # vi = xi + F × (xr1 − xr2 + xr3 - xr4);
     """
-    
+
     def __init__(self, F=0.5):
         self.name = 'DE_rand_2'
         self.F = F  # 差分变异缩放因子
-    
+
     def do(self, OldChrom, r0, neighbourVector):  # 执行变异
         # vi = xi + F × (xr1 − xr2 +xr3 -xr4);
         # xi基向量索引由传入的r0_or_Xr0确定，差分向量索引r1 r2按照随机方式确定,并尽可能保证互不相等
@@ -172,12 +177,12 @@ class DE_current_to_rand_1():
     """
     vi=xi+K(xi-xr1)+F(xr2-xr3)
     """
-    
+
     def __init__(self, F=0.5, K=0.6):
         self.F = F
         self.K = K
         self.name = 'DE_current_rand_1'
-    
+
     def do(self, OldChrom, r0, neighbourVector):  # 执行变异
         # vi=xi+K(xi-xr1)+F(xr2-xr3)
         r1, r2, r3 = neighbourVector[0], neighbourVector[1], neighbourVector[2]
@@ -191,12 +196,12 @@ class DE_current_to_rand_2():
     """
     # v1=xi+K(xi-xr1)+F(xr2-xr3)+F(xr4-xr5)
     """
-    
+
     def __init__(self, F=0.5, K=0.6):
         self.F = F
         self.K = K
         self.name = 'DE_current_rand_2'
-    
+
     def do(self, OldChrom, r0, neighbourVector):  # 执行变异
         r1, r2, r3, r4, r5 = neighbourVector[0], neighbourVector[1], neighbourVector[2], neighbourVector[3], neighbourVector[4]
         # xi基向量索引由传入的r0_or_Xr0确定，差分向量索引r1 r2按照随机方式确定,并尽可能保证互不相等
@@ -215,7 +220,7 @@ class RecDirect:
     交叉和变异各有一个空操作，变异的空操作会处理边界，交叉的空操作直接返回原种群信息
     但是我怀疑空操作会降低算法的性能
     """
-    
+
     def do(self, OldChrom):
         return OldChrom
 
@@ -230,7 +235,7 @@ if __name__ == '__main__':
     # rc = (2*randd-1) * (1-randd ** (-(1-currentGen/MaxGen)**0.7))
     # OffDec = p1 + rc*(p1-p2)
     # print(OffDec)
-    
+
     Chrom = np.array([[1, 2, 3], [4, 5, 6]])
     rec = ea.Recsbx(Half=True)
     off = rec.do(Chrom)

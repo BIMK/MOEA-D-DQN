@@ -13,7 +13,7 @@ if parent_path not in sys.path:
     sys.path.append(parent_path)
 # 配置日志信息
 logging.basicConfig(
-    handlers=[logging.FileHandler("./result/RL_DTLZ_1.log", encoding="utf-8", mode='w')],
+    handlers=[logging.FileHandler("./result/RL_DTLZ_0.log", encoding="utf-8", mode='a')],
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%m-%d %H:%M:%S')
@@ -27,34 +27,37 @@ console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 logging.info('Start----RL_DTLZ-origin----------------------------------')
 
+
 def get_time():
     ans = time.strftime("%m-%d %H:%M:%S", time.localtime())
     return ans
+
 
 if __name__ == '__main__':
 
     # problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
     # problems = ['UF8','UF9','UF10']
-    problems = ['DTLZ1','DTLZ2','DTLZ3','DTLZ4','DTLZ5','DTLZ6','DTLZ7',]
-    N = 35   # 独立运行N次，取中值
+    # problems = ['DTLZ1', 'DTLZ2', 'DTLZ3', 'DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7', ]
+    problems = ['DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7']
+    N = 25   # 独立运行N次，取中值
     results = list()
     for problemName in problems:
         """======================实例化问题对象========================="""
         logging.info('time: %s       Start ... %s' % (get_time(), problemName))
         fileName = problemName
-        MyProblem = getattr(__import__('problem.'+problemName), problemName)  # 导入自定义问题类
+        MyProblem = getattr(__import__('problem.' + problemName), problemName)  # 导入自定义问题类
         MyProblem = getattr(MyProblem, problemName)
         problem = MyProblem(3)       # 生成问题对象--DTLZ设置为3目标
         PF = problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
         """======================种群设置==============================="""
         Encoding = 'RI'             # 编码方式
-        NIND = 105                  # 种群规模
+        NIND = 305                  # 种群规模
         Field = ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)  # 创建区域描述器
         # 实例化种群对象（此时种群还没被初始化，仅仅是完成种群对象的实例化）
         population = ea.Population(Encoding, Field, NIND)
         """======================算法参数设置=========================="""
         # myAlgorithm = moea_MOEAD_DE_templet(problem, population)
-        MAXGEN = 287
+        MAXGEN = 210
         myAlgorithm = moea_MOEAD_DRA_templet(problem, population, MAXGEN)
         myAlgorithm.MAXGEN = MAXGEN    # 最大进化代数
         myAlgorithm.drawing = 0  # 设置绘图方式（0：不绘图；1：绘制结果图；2：绘制目标空间过程动画；3：绘制决策空间过程动画）
@@ -66,12 +69,12 @@ if __name__ == '__main__':
             NDSet, pop, plt = myAlgorithm.run()  # 每次run都是独立的，会重新初始化模版的一些动态参数
             IGD = ea.indicator.IGD(pop.ObjV, PF)     # 计算IGD指标
             HV = ea.indicator.HV(NDSet.ObjV, PF)       # 计算HV指标
-            logging.info('time: %s,  round %d/%d, IGD = %.7f, HV = %.7f' % (get_time(), i+1, N, IGD, HV))
+            logging.info('time: %s,  round %d/%d, IGD = %.7f, HV = %.7f' % (get_time(), i + 1, N, IGD, HV))
             igd[i] = IGD
             hv[i] = HV
-        # 去除5个最差的实验数据
-        igd = np.sort(igd)[:-5]
-        hv = np.sort(hv)[5:]
+        # 去除25个最差的实验数据
+        # igd = np.sort(igd)[:-25]
+        # hv = np.sort(hv)[25:]
         res = "median --- IGD={:.7f}, IGD.std={:.7f}, HV={:.7f}, HV.std={:.7f}".format(np.median(igd), np.std(igd), np.median(hv), np.std(hv))
         results.append(res)
         logging.info(res)
