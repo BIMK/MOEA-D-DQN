@@ -52,25 +52,25 @@
   % 根据之前的规则，算子选择问题可以被建模成MDP，并且用强化学习解决。 
   According to the above rules, the operator selection problem is modeled as MDP and can be solved by reinforcement learning.
   % 在进化过程中，
-  In the evolutionary process, RL will select an operator for each individual and update the behavioral strategy according to the effect of this selection. Experimental results on \TODO{supplement experimental instructions}.
+  In the evolutionary process, RL will select an operator for each individual and update the behavioral strategy according to the effect of this selection.
+  Experimental results on \TODO{supplement experimental instructions}.
 \end{abstract}
 
 \begin{IEEEkeywords}
-  Multi-objective optimization, Reinforcement Learning, Credit assignment
+  Multi-objective optimization, Reinforcement Learning, Adaptive operator selection
 \end{IEEEkeywords}
 
 \section{Introduction}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%      需要在introduction里说明我的算法，包括主要的过程，实验部分，和其它RL的相关知识
-\TODO{ need to supplement the flow of algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%      需要在introduction里说明我的算法，包括主要的过程，实验部分，和其它RL的相关知识
 
 %%% 介绍下进化多目标优化
 % 由于多个目标间通常互相冲突，没有一个全局最优解，一般会有一个PF
 \IEEEPARstart{M}{ultl-object} optimization problems (MOPs) are characterized by multiple objectives that often conflict with each other\cite{zhang2014efficient}. In general, MOPs have no single optimal solution on all objectives; instead, a number of solutions are optimal for different objectives, known as Pareto-optimal solutions.
 % All the Pareto optimal solutions constitute the Pareto set and the set of all Pareto optimal objective vectors is the Pareto front \cite{deb2001multi}.
 
-%%% 介绍进化算法
+%%%%%%%%%%%%% 介绍进化算法
 % 进化算法可以解决很多多目标优化问题，最近几十年有了很大的发展，
-Multi-object evolutionary algorithms have attracted great attention over the past few decades and achieved outstanding performance in solving various kinds of MOPs \cite{fialho2010adaptive},
+Multi-object evolutionary algorithms (MOEAs) have attracted great attention over the past few decades and achieved outstanding performance in solving various kinds of MOPs \cite{fialho2010adaptive},
 % 人们提出了很多新的算法，主要有3类，基于支配关系的，基于分解的和基于指标的算法
 a number of algorithms have been proposed, e.g., indicator-based evolutionary algorithm (IBEA) \cite{IBEA}, the multi-objective evolutionary algorithm based on decomposition (MOEA/D) \cite{moead} and fast non-dominated sorting genetic algorithm (NSGA-II) \cite{nsga2}.
 % 生成算子对进化算法的性能有很大的影响，有的算子注重探索能力，我们称为全局算子，有的注重局部的收敛，我们称为局部算子,那么如何平衡算法的探索和利用就成了人们研究的对象
@@ -80,8 +80,12 @@ Generally speaking, different operators have different applications, some operat
 In order to accelerate the process of evolution, balanced exploration and exploitation became an important topic.
 
 %%% 介绍AOS
+% 在进化算法中，有多个变异策略可以用来从父代产生子代解
+In evolutionary algorithm, there are multiple operators that can be applied at each generation to produce new solutions from parent solutions.
+% AOS是确定应用哪个算子的方法，衡量应用的效果，并且更新算子的credit并且adapt选择策略
+AOS is an approach that decides which operator should be applied, measure the effect of this application, update the credit of operators and adapt selection strategy \cite{li2011multi}.
 % AOS就是为个体推荐合适的算子，在线控制
-Adaptive operator selection (AOS) applies appropriate operators for individuals by online control while solving the problem, based on the recent performance of operators \cite{li2011multi}.
+% Adaptive operator selection (AOS) applies appropriate operators for individuals by online control while solving the problem, based on the recent performance of operators \cite{li2011multi}.
 % 包含credit assignment和operator selection 两部分，
 An AOS algorithm usually consists of \textit{credit assignment} and \textit{operator selection} \cite{li2013evolving}, credit assignment is to decide how much credit should be assigned to an operator based on its recent performance in the search process, operator selection is to select an operator to use at the next time point based on these current reward values \cite{frrmab}.
 % 和credit assignment 尽量准确评价算子近期的效果不同，operator selection 需要平衡探索和利用，即既需要选择尽量表现好的算子来提高算法效果，又需要给表现不好的算子一些机会，因为它们在之后有可能变好。
@@ -90,13 +94,13 @@ Different from credit assignment, which only needs to evaluate operator performa
 % 但是由于环境是不稳定的，一开始好的算子不一定在最后好，所以就有动态MAB或者动态汤普森采样等。
 % 写到related work里吧
 
-%%% 介绍RL
+%%%%%%% 介绍RL
 % 根据状态做出动作的强化学习正适合用来解决探索和利用困境
 Reinforcement Learning (RL) that selects actions according to the state is good at solving Exploration vs Exploitation dilemma.
 % 介绍强化学习
-An RL agent interacts with its environment in discrete time steps. At each time $t$, the agent receives the current state $s_t$ and reward $r_t$. It then chooses an action $a_t$ from the set of available actions, which is subsequently sent to the environment. The environment moves to a new state $s_{t+1}$ and the reward $r_{t+1}$ associated with the transition $(s_t, a_t, s_{t+1})$ is determined. The goal of a reinforcement learning agent is to learn a policy $\pi(a, s)=\operatorname{Pr}\left(a_{t}=a \mid s_{t}=s\right)$ which maximizes the expected cumulative reward.
+An RL agent interacts with its environment in discrete time steps, at each time $t$, the agent receives the current state $s_t$ and reward $r_t$. It then chooses an action $a_t$ from the set of available actions, which is subsequently sent to the environment. The environment moves to a new state $s_{t+1}$ and the reward $r_{t+1}$ associated with the transition $(s_t, a_t, s_{t+1})$ is determined. The goal of a reinforcement learning agent is to learn a policy $\pi(a, s)=\operatorname{Pr}\left(a_{t}=a \mid s_{t}=s\right)$ which maximizes the expected cumulative reward.
 
-%%% 将RL应用到AOS
+%%%%%%%%%% 将RL应用到AOS
 % 在自适应算子选择问题中，我们可以将多目标优化问题和当前的种群作为环境，将算子作为动作，将应用算子后种群发生的变化作为奖励，
 In the AOS problems, we take MOPs and the current population as environment, take the population characteristics as states, take the operators as actions and the improvement of population fitness after the application of the operator is regarded as the reward.
 % 我们会发现遗传算法和强化学习在概念和结构上有相似性
