@@ -100,17 +100,25 @@ Reinforcement Learning (RL) that selects actions according to the state is good 
 % 介绍强化学习
 An RL agent interacts with its environment in discrete time steps, at each time $t$, the agent receives the current state $s_t$ and reward $r_t$. It then chooses an action $a_t$ from the set of available actions, which is subsequently sent to the environment. The environment moves to a new state $s_{t+1}$ and the reward $r_{t+1}$ associated with the transition $(s_t, a_t, s_{t+1})$ is determined. The goal of a reinforcement learning agent is to learn a policy $\pi(a, s)=\operatorname{Pr}\left(a_{t}=a \mid s_{t}=s\right)$ which maximizes the expected cumulative reward.
 
-%%%%%%%%%% 将RL应用到AOS
-% 在自适应算子选择问题中，我们可以将多目标优化问题和当前的种群作为环境，将算子作为动作，将应用算子后种群发生的变化作为奖励，
-In the AOS problems, we take MOPs and the current population as environment, take the population characteristics as states, take the operators as actions and the improvement of population fitness after the application of the operator is regarded as the reward.
+%%%%%%%%% 将RL应用到AOS
+% 在自适应算子选择问题中，我们可以将多目标优化问题和当前的种群作为环境，将选择算子作为动作，应用所选算子后环境负责给出下一个状态并且评价动作的reward，
+In the AOS problems, we take MOPs and the current population as environment, take the selection operator as action, after the application of the operator, the environment will give the next state and evaluate the reward of the action.
+% 将算子作为动作，将应用算子后种群发生的变化作为奖励，
+% In the AOS problems, we take MOPs and the current population as environment, take the population characteristics as states, take the operators as actions and the improvement of population fitness after the application of the operator is regarded as the reward.
 % 我们会发现遗传算法和强化学习在概念和结构上有相似性
-Viewed in this light, RL can be regarded as similar to GA in its evolution/learning structure, which causes high conceptual and structural compatibility between RL and GA.
+Viewed in this light, GA can be regarded as similar to RL in its evolution/learning structure, which causes high conceptual and structural compatibility between RL and GA.
 
 %%% 介绍本文
-% 我们的算法可以根据不同的个体推荐不同的算子，做到更细粒度的控制，而且分别推荐交叉和变异实现更彻底的控制。
+% 现有的AOS方法，比如moead-frrmab和FAME,根据算子近期的表现选择算子，当算法运行到不同阶段时，会及时替换算子以满足问题的需要，
+Existing AOS methods, such as MOEA/D-FRRMAB \cite{frrmab} and FAME \cite{fame}, select an operator from the recent operator performance, when the algorithm runs to different states, it will replace the operator in time to meet the needs of the problem.
+% 但是即使在同一阶段，针对不同的个体，不同的子问题，最佳的算子也是不同的，因此算子选择策略不应该只考虑阶段性的差异，也应该考虑不同个体间的差异
+But even at the same state, the best operator is different for different individuals and different subproblems. Therefore, the AOS strategy should not only consider the differences of stages, but also consider the individual differences.
+% 本文提出了一种基于RL的AOS方法，该方法可以根据个体推荐不同的算子来实现更细粒度的控制，并分别推荐交叉算子和变异算子来达到更好的控制效果
 In this paper, we proposed an AOS method based on RL, which can recommend different operators according to the individual to achieve more fine-grained control and recommend crossover operators and mutation operators respectively to achieve better results.
 
-\TODO{The remainder of this paper is organized as follows.}
+% 本文组织结构
+% 在第二章，我们介绍了多目标优化，强化学习的和AOS的相关工作. 在第三章，我们提出了MOEA/D-DDQN，并详细介绍了实现细节。实验结果
+The rest of this paper is organized as follows. In Section II, we introduced the background of AOS and some related works. We proposed AOS methods MOEA/D-DDQN and introduced the details of tis implementation in Section III. In Section IV, the experimental results are presented and analyzed. At last, we give the main conclusions and lines for future research in Section V.
 
 \IEEEpubidadjcol
 
@@ -132,23 +140,34 @@ Multi-objective optimization problems are usually formulated as follows:
   \label{eq: moea}
 \end{equation}
 
-%%% x是决策变量，f是一组互相冲突的目标函数，由于目标是冲突的，所以不存在一个解可以在所有目标上达到最优，
+%============ 介绍多目标优化
+% x是决策变量，f是一组互相冲突的目标函数，由于目标是冲突的，所以不存在一个解可以在所有目标上达到最优，
 Where $x = (x_1, \cdots , x_D)$ is a decision variable vector of length $D$, $l$ and $u$ are the lower and upper bounds of the decision variables. $f$ consists of $M$ conflicting objective functions. Since the objectives are conflicting, there is no one solution that is optimal for all objectives.
 % 所有可能的解构成决策空间，决策空间可以由目标函数对应到目标空间，在目标空间中，如果一个解在所有目标上都不比另一个差，且至少在一个目标上比另一个好，我们就称为一个解支配另一个解。
 All possible decision variables constitute the decision space and objective functions can be mapped from the objective space to the decision space\cite{gonccalves2017adaptive}. In the objective space, one solution is said to dominate the other solution if it is no worse than the other solution on all objectives and is better than the other solution on at least one objective.
 % 当一个解不被支配时就是Pareto最优解
 A solution $x^*$ is said to be Pareto-optimal when no other solution can dominate $x^*$. All the Pareto-optimal solutions constitute the Pareto set, and the image of the Pareto set in objective space is called the Pareto front \cite{deb2001multi}.
 
-%%% 主要框架是MOEA/D，所以肯定要大略介绍下
+%=========== 主要框架是MOEA/D，所以肯定要大略介绍下
 % 将AOS应用到多目标上的工作很少，因为多目标很难定量的描述子代相对于父代适应度的提高，
 Very little work has been done to apply AOS to multi-objective evolutionary algorithms since it is difficult to measure the increase in fitness of the offspring relative to the parent.
-% 在论文中，我们使用MOEA/D作为主要的多目标优化框架，MOEAD的基本思想是将多目标问题分解成多个单目标的子问题,因此将AOS与MOEA/D结合是适合的。
-In this paper, we use MOEA/D \cite{moead} as the evolutionary multi-objective optimization framework. The basic idea of MOEA/D is to decompose a multi-objective optimization problem into several scalar optimization subproblems and optimizes them together. Thus, it is appropriate to combine AOS with MOEA/D.
-%%%%%%%%%%% moead-de
-\TODO{MOEAD-DE}
+% 
+% 在论文中，我们使用MOEA/D作为主要的多目标优化框架，MOEAD的基本思想是将多目标问题分解成多个单目标的子问题,将AOS与MOEA/D结合是合适的，因为单目标的AOS方法可以transfer to MOEAD
+In this paper, we use MOEA/D-DRA \cite{moead-dra} as the evolutionary multi-objective optimization framework. The basic idea of MOEA/D-DRA is to decompose a multi-objective optimization problem into several scalar optimization subproblems and optimizes them together.
+It is appropriate to combine AOS with MOEA/D-DRA, because the single objective AOS method can be easily transferred to MOEA/D-DRA.
+
+% 在传统的MOEA中，算法的性能取决于变异算子的质量。一个好的变异算子可以大大提高算法的搜索能力，从而获得更好的收敛和收敛速度。
+The performance of MOEAs are closely related to the quality of operators, A high quality operator can greatly improve the search ability of the algorithm, so as to obtain better comvergence and comvergence speed.
+% 在过去的二十年里，人们提出了许多非常好的算子，包括经典的突变算子 模拟二进制交叉(SBX)[6]和差分进化(DE)[15]SBX操作符在本地搜索中表现更好，而DE操作符以其强大的全局搜索能力而闻名,
+In the past two decades, many excellent operators have been proposed, including the Simulated Binary Crossover \cite{deb2006reference} and Differential Evolution \cite{storn1997differential}, The SBX operator is good at local search and the DE operator is famous for its powerful global search ability.
+% 然而,不同的实验向量生产策略和参数选择对moea的性能有很大的影响，通常没有一个单独的算子可以在所有问题上都表现良好。
+However, different experimental vector selection strategies and parameter settings have a great impact on the performance of MOEA, generally, there is no single operator that can perform well on all problems.
+% 所以我们需要针对不同的问题选择不同的算子和参数， 然而，在现实生活中，问题是事先未知的。因此，当一个复杂的MOP出现时，为其选择参数是困难的
+So we need to select operators and parameters for different problems. However, in real world, the problem is unknown in advance. Therefore, when a complex MOP appears, it is difficult to select operator to solve the problem.
 
 \subsection{Adaptive Operator Selection}
 %%% 介绍自适应算子选择
+
 % 自适应算子选择是通过在线控制的方式，在搜索过程中选择合适的算子,选择的依据是算子在之前的表现.
 AOS selects the appropriate operator from a candidate set of recombination and mutation operators pool for the individual in the search process \cite{hitomi2016classification}. The selection is based on the previous performance of the operator.
 % --- TODO: 介绍MOEAD与AOS结合后的处理流程
