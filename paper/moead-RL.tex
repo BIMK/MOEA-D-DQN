@@ -167,17 +167,17 @@ So we need to select operators and parameters for different problems. However, i
 
 \subsection{Adaptive Operator Selection}
 %%% 介绍自适应算子选择
-
-% 自适应算子选择是通过在线控制的方式，在搜索过程中选择合适的算子,选择的依据是算子在之前的表现.
-AOS selects the appropriate operator from a candidate set of recombination and mutation operators pool for the individual in the search process \cite{hitomi2016classification}. The selection is based on the previous performance of the operator.
+% 自适应算子选择是控制变异算子在线应用的一种方,选择的依据是算子在之前的表现.法
+AOS is a approach for controlling on-line the application of the variation operators \cite{hitomi2016classification}, the selection is based on the previous performance of the operator.
 % --- TODO: 介绍MOEAD与AOS结合后的处理流程
 % AOS主要有两个任务，适应度赋值(评价算子)和算子选择(依据评价做出选择)。
 %%%%%%%%%%%%%%%%%% 补充图片，介绍适应度赋值和算子选择的联系
 AOS requires two tasks to be solved, the \textit{Credit Assignment} strategy that defines how to evaluate an operator based on its performance in the search process and the \textit{Operator Selection} strategy that determines the next operator according to the quality of the operator.
 
 \subsubsection{Credit Assignment}
-% ---- 需要添加related work！！！！！！！！！！
-%%% 信誉分配
+%%%%%%%%%%% 信誉分配
+% 信誉赋值定义如何基于算子最近的应用带来的影响评估算子的质量
+Credit assignment defines how to estimate the quality of operators based on the impact of their recent applications.
 % 最常用的信誉分配方法是根据子代相对于父代的适应度提高来确定
 The most common method of credit assignment rewards an operator for its performance to improve the fitness of an offspring over its parent, in \cite{lin2016adaptive} the fitness improvement rates (FIR) is obtained with the used operator, as defined in equation (\ref{eq: fir1}).
 
@@ -220,8 +220,10 @@ Generally speaking, there are three different credit assignments based on domina
 \subsubsection{Operator Selection}
 % 和信誉赋值相比，
 % Compared with credit assignment, the operator selection 
-% 信誉赋值之后就可以根据算子的信誉为个体推荐合适的算子，
-After credit assignment, we can recommend appropriate operators for individuals according to the credit of operators, but we can't choose the operator with the highest credit directly, because it will make us lose diversity. On the one hand, we need to give more opportunities to operators with better track records, on the other hand, we need to explore poor operators, since an operator might perform significantly differently in the future search stages, we called this difficult as exploration versus exploitation (EvE) dilemma.
+% 信誉赋值之后就可以根据算子的信誉为个体推荐合适的算子，但不能直接选择credit最高的算子，因为这会使我们丢失多样性
+After credit assignment, we can recommend appropriate operators for individuals according to the credit of operators, but we can't choose the operator with the highest credit directly, because it will make us lose diversity.
+% 一方面，我们需要给好的算子更多机会，另一方面我们需要探索较差的算子，因为它们可能在未来表现出显著的不同,我们称之为探索利用困境。
+On the one hand, we need to give more opportunities to operators with better track records, on the other hand, we need to explore poor operators, since an operator might perform significantly differently in the future search stages, we called this difficult as exploration versus exploitation (EvE) dilemma.
 
 % 一个常用的方法是概率匹配算法
 A common method is probability matching (PM) algorithm \cite{thierens2007adaptive}, each operator $o_i$ in the operator pool $O$ has a corresponding probability value $p_{i,t}$ as generation $t$, $p$ is determined by the quality $q_{i,t}$, $q$ is updated according to the reward $r_{i,t}$ received during the credit assignment phase, and the formula is as follows:
@@ -244,12 +246,13 @@ So in order to avoid the operator probability is too small to be selected, PM de
 Where $k$ is the number of operators.
 % PM在很多差算子的情况下很难获得好的结果, 因为多个差的算子的和也是很大的。
 When there are many mediocre operators and only only one efficient operator, it is difficult for PM algorithm to achieve high performance, because the minimal selection probability for each operator is $p_{min}$, the sum of selection probabilities from many mediocre operators has a significant advantage over the high performance operator.
-% 引入AP方法，
 
-Another method based on probability is Adaptive pursuit (AP) \cite{thierens2007adaptive}, adopts the winner-take-all strategy to allocate the best operator with higher probability, the pursuit method increases the probability of the best operator $a^*$ being selected and reduces the probabilities of other operators.
-% AP的过程介绍
+% 引入AP方法，赢家通吃的策略，提高最佳算子被选中的概率，降低其它算子的概率。
+Another method based on probability is Adaptive Pursuit (AP) \cite{thierens2007adaptive}, adopts the winner-take-all strategy to allocate the best operator with higher probability, the pursuit method increases the probability of the best operator $a^*$ being selected and reduces the probabilities of other operators.
+% AP的过程介绍,根据Pmin算出Pmax
 Like PM, AP also designs the minimum probability $p_{min}$, while an operator that works well can obtain the maximum selection probability $p_{max} = 1-(k-1)\times p_{min}$.
-AP pursues the operator $o^*$ with the maximal estimated reward as shown in \ref{eq: best_o}, to avoid the disadvantages of PM, AP increases the selection probability of the best operator $p_{o^*,t}$ and decreases the other probabilities $p_{o,t}, \forall o \neq o^*$.
+% AP 追踪当前最佳的算子o^*，
+AP pursues the best operator $o^*$ with the maximal quality, to avoid the disadvantages of PM, AP increases the selection probability of the best operator $p_{o^*,t}$ and decreases the other probabilities $p_{o,t}, \forall o \neq o^*$ by the following formula.
 \begin{equation}
   p_{i, t+1}=\left\{\begin{array}{ll}
     p_{i, t}+\beta \cdot\left(p_{\max }-p_{o, t}\right) & \text { if } o=o^{*} \\
@@ -258,21 +261,21 @@ AP pursues the operator $o^*$ with the maximal estimated reward as shown in \ref
   \label{eq: AP}
 \end{equation}
 Where $\beta \in (0,1]$ is the learning rate.
+% 
 % 搜索过程中，算子的性能可能是动态变化的，因此在算子选择中最困难的就是平衡探索和利用。
 % The performance of operators may be dynamic in the search process, so the most difficult problem in operator selection is to balance exploration and exploitation.
+% 
 % 由于进化过程是动态的，算子的性能在不同阶段可能有很大的差异，AP和PM可能没有办法适应剧烈变化的环境
 Due to the dynamic nature of the evolution process, an operator might perform significantly differently in different stages, when credit changes rapidly, PM and AP may not be able to quickly adjust their selection strategies.
 
-% EvE困境经常被建模为MAB问题，有很多的算法可以解决MAB问题，比如UCB，但AOS并不是vanilla的MAB，由于每个臂的收益分布会随着时间变化，所以它是一个动态MAB问题
-%%%%%%%%%%%%%%%%%%%  补充MAB介绍
-EvE dilemma is often modeled as a Multi-Armed Bandit problem, there are many efficient methods to solve MAB problems,
-% UCB 方法
-a common method is the upper confidence bound (UCB) \cite{auer2002finite} which guarantees asymptotic optimality with respect to the total cumulative reward. However, UCB solves MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
-% 基于dynamic MAB的算法
-Some effect methods have been proposed to solve the dynamic context based on the original UCB, dynamic multi-armed bandit \cite{dacosta2008adaptive} proceeds by coupling the original MAB technique with a statistical Page-Hinkley test, which enhances the efficient detection of changes in time series.
+% 在多臂赌博机的框架下 EvE困境已经被深入研究
+In the Multi-Armed Bandit (MAB) framework, the EvE trade-off has been intensively studied.
+% 原始的MAB框架使用UCB的方法, 然而UCB只能解决固定报酬分配的MAB问题，但是进化过程是动态的。
+The original MAB framework used the Upper Confidence Bound (UCB) \cite{auer2002finite} method, which guarantees asymptotic optimality with respect to the total cumulative reward. However, UCB solves MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
+% 为了适应动态变化的环境，DMAB算法通过将原始的MAB技术和统计变点测试结合，一旦检测到算子质量分布发生变化就重新启动MAB的流程, 增强了对时间序列变化的有效检测
+In order to adapt to the dynamic environment, the Dynamic Multi-Armed Bandit (DMAB) \cite{dacosta2008adaptive} algorithm combines the original MAB technology with the statistical Page-Hinkley test, which enforces the efficient detection of changes in time series.
 % sliding mab 使用时间窗
-Other operator selectors such as sliding multi-armed bandit (SIMAB) \cite{fialho2010analyzing} using a sliding time window to balance both exploitation and exploration terms.
-
+Other operator selectors such as sliding multi-armed bandit (SLMAB) \cite{fialho2010analyzing} using a sliding time window to balance both exploitation and exploration terms.
 
 \subsection{Reinforcement Learning}
 % 强化学习介绍
