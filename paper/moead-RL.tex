@@ -128,7 +128,7 @@ The performance of EAs mainly depends on its breeding Offspring strategy, to tak
 % 这一章节介绍AOS用到的概念和背景知识，和一些相关的工作。
 This section provides some basic concepts, background knowledge and some related work about AOS.
 
-\subsection{Multi-objective Optimization and MOEA/D}
+\subsection{Multi-objective Optimization}
 %%% 介绍多目标优化和MOEAD
 Multi-objective optimization problems are usually formulated as follows:
 
@@ -278,8 +278,9 @@ In order to adapt to the dynamic environment, the Dynamic Multi-Armed Bandit (DM
 Other operator selectors such as sliding multi-armed bandit (SLMAB) \cite{fialho2010analyzing} using a sliding time window to balance both exploitation and exploration terms.
 
 \subsection{Reinforcement Learning}
-% 强化学习介绍
-Reinforcement Learning (RL) \cite{sutton2018reinforcement} is an area of machine learning concerned with how intelligent agents ought to take actions in an environment, and the goal of agents is to maximize the notion of cumulative reward \cite{van2012reinforcement}.
+%%%%%%%%%%%%% 强化学习介绍
+% 强化学习是机器学习的一个领域，研究智能体如何在环境中采取行动，智能体的目标是最大化期望累计回报
+Reinforcement Learning (RL) \cite{sutton2018reinforcement} is an area of machine learning concerned with how intelligence agents ought to take actions in an environment, and the goal of agents is to learn a policy $\pi$ which maximizes the expected cumulative reward \cite{van2012reinforcement}.
 % 基于评价性反馈显示了所采取的行动有多好，而不是它是最好的还是最坏的行动。
 Feedback based on evaluation shows how good the action is, but not whether it was the best or the worst action passible.
 % 强化学习与其他学习类型最重要的区别是，它使用的训练信息是评估所采取的行动，而不是通过给出正确的行动来指导。这就产生了积极探索的需要，明确寻找良好行为的需要。
@@ -290,47 +291,58 @@ Therefore, RL pays more attention to find a balance between exploration (of unch
 Since RL has the feature of balance EvE, it can be used to solve MAB problem.
 
 % 强化学习的环境通常以马尔科夫决策过程的形式表示
-The environment of reinforcement learning is usually expressed in the form of Markov decision process (MDP) \cite{van2012reinforcement}
+The environment of RL is usually expressed in the form of Markov decision process (MDP) \cite{van2012reinforcement},
 % MDP是在环境中模拟智能体的随机性策略（policy）与回报的数学模型，
 MDP is a mathematical model that simulates the agent's policy and return in the environment.
 % 按定义，MDP包含5个模型要素，状态（state）、动作（action）、策略（policy）、奖励（reward）和回报（return
 By definition, MDP includes five elements: state, action, policy, reward and return.
 % 强化学习把学习看作试探评价过程，Agent选择一个动作用于环境，环境接受该动作后状态发生变化，同时产生一个强化信号(奖或惩)反馈给Agent，Agent根据强化信号和环境当前状态再选择下一个动作，选择的原则是使受到正强化(奖)的概率增大。选择的动作不仅影响立即强化值，而且影响环境下一时刻的状态及最终的强化值。
-% 基本的强化学习过程
+% 
+% RL的典型模型可以描述为：agent根据环境给定的状态采取行动，环境接受行动并将报酬返回给agent，RL的目标是调整策略使报酬最大化（报酬随时间的累积）。
 The typical model of RL can be described as: an agent takes actions according to the state given by environment, the environment accepts the action and returns the reward to the agent, and the goad of RL is to adjust the strategy to maximize the return (the accumulation of rewards over time).
-%%%%% 当状态空间很小时，我们可以很容易的画出状态转移过程，此时强化学习的方法类似动态规划，
 % 从方法上来讲，强化学习可以分为两类，基于策略的方法和基于值的方法。
 RL can be divided into two categories, value-based methods and strategy-based methods.
-% 策略是一个条件概率分布，表明在某种状态下执行某个动作的概率。
-A policy $\pi$ is a conditional probability distribution $\pi = p(a_t\| s_t; \theta)$, which indicates the probability of taking action $a_t$ in state $s_t$ and $\theta$ is the parameter of policy \cite{sun2021learning}, policy map a state to an action or a distribution over actions, so it can be used in continuous action environment, and the policy optimization is to find an optimal mapping.
+% 基于策略的RL方法直接使用具有自己参数的函数优化器来优化一个随机策略。
+The strategy-based RL method appropriates a stochastic policy directly using an independent function approximator with its own parameters \cite{sutton1999policy}.
+% 策略是一个条件概率分布，表明在某种状态下执行某个动作的概率,策略将状态映射到一个动作或多个动作的分布，因此可以应用到连续动作环境中，策略优化就是寻找一个最优的映射使得动作获得的累计奖励最大
+A policy $\pi$ is a conditional probability distribution $\pi = p(a_t\| s_t; \theta)$, which indicates the probability of taking action $a_t$ in state $s_t$ and $\theta$ is the parameter of policy \cite{sun2021learning}, policy map a state to an action or a distribution over actions, so it can be used in continuous action environment, and the policy optimization is to find an optimal mapping that maximizes the cumulative reward.
+% 基于值的RL方法使用函数优化器逼近动作值函数，不需要建立映射
+The value-based RL method appropriates the action value function through the function approximator, without require to build maps of the domains \cite{dearden1998bayesian}.
 % 动作值函数q是表示在状态s下执行动作a可以获得的期望回报，是强化学习的基本概念,Q-learning是经典的基于动作函数优化的方法，一旦我们知道值函数或是状态函数，就可以推导出选择动作的策略。
 Action value function $q(s_t,a_t)$ is the expected reward that can be obtained by taking action $a_t$ in state $s_t$, which is the fundamental concept in RL. Q-learning \cite{watkins1992q} is a classical algorithm for learning action value function and once we have optimal action value function, we can derive that the optimal strategy is to choose the action with the largest $q$ value in the current state,
-% 只有当动作值函数是有限的时候才能选出合适的动作，因此Q-learning的方法只能用于离散的动作空间
-the value-based RL methods can only be used in discrete action space.
+% 基于值的方法依赖于寻找使得action-value function最大化的动作，因此只能处理离散的低维的动作空间。
+the value-based method relies on finding the action that maximizes the action value function, so it can only deal with discrete and low-dimensional action spaces.
 
-% 当状态空间特别巨大时，对值函数的估计是特别困难的，DQN通过深度神经网络稳定训练的动作值函数
-When state space is very large, it is difficult to estimate the action function, Deep Q-Network (DQN) \cite{mnih2015human} stabilizes the training of action value function approximation with deep neural networks.
-% 但DQN会有过高估计的问题，因此我们采用Double DQN，他通过分离选择和评价
-DQN uses the same values to select and to evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection, futhermore, In Double Deep Q-Network (DDQN) \cite{ddqn}, two neural networks are learned by assigning each experience randomly to update one of the two networks, a target network is designed to select an action and a evaluation network is designed to generate a Q-value for that action.
+%%%%%%%%%%%%%%%%%% Deep Q Network
+% 当状态空间特别巨大时，对值函数的估计是特别困难的，DQN采用神经网络逼近动作值函数
+When state space is very large, it is difficult to estimate the action function, Deep Q Network (DQN) \cite{mnih2015human} uses a neural network to approximate action value function.
+%%%%%%%%%%%%%%%%%%% Double Deep Q Networks
+% DQN使用相同的值来选择和评估一个动作，如果一个动作值被高估了，它将再次被选择和高估，为了防止这种情况，Double Q-learning[37]将计算与选择解耦
+DQN uses the same values to select and to evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection,
+% 更进一步，DDQN使用第二个神经网络来评估动作的质量，而第一个网络用来通过 e贪婪策略选择动作
+futhermore, Double Deep Q Networks (DDQN) \cite{ddqn} use a second neural network to evaluate the quality of each action, while the first network is used to choose actions through $\epsilon$-greedy policy.
+% 通过从第一个网络复制权值，第二个网络每n次更新一次
+By copying weights from the first network, the second network is updated every $n$ times.
 
-% 在这份工作中，我们使用DDQN作为AOS的方法，并为DE算法选择合适的算子。
-In this work, we use DDQN as the AOS methos and integrate it into MOEA/D-DE.
+% 在这篇论文中，我们提出了一种基于DDQN的AOS方法，
+In this paper, we proposed an AOS method based on DDQN,
+% 我们将强化学习作为算子选择器集成到进化算法中，为每个个体推荐合适的算子，强化学习的奖励与算子的性能相关，根据奖励我们可以更新强化学习的策略，最大化累计期望奖励
+we integrate RL as an operator selector into evolutionary algorithm to recommend suitable operator for each individual, the reward of RL is related to the performance of the operator, according to the reward, we can update the strategy to maximize the cumulative expected reward.
+
 % 我们使用在线控制的方法，将强化学习的选择器嵌入到进化算法中，并根据进化的效果给强化学习适当的奖励，根据奖励我们可以更新强化学习的策略，使得在未来获得最高的期望奖励。
-We used online control method to embed RL selector into evolutionary algorithm,
-according to the effect of evolution, we can give appropriate reward to RL and update the strategy to get the highest expected reward in the future.
-
-
-% RL的环境通常被描述成马尔科夫决策过程
-% The environment is typically stated in the form of a Markov decision process (MDP),
+% we used online control method to embed RL selector into evolutionary algorithm, according to the effect of evolution, we can give appropriate reward to RL and update the strategy to get the highest expected reward in the future.
 
 \section{AOS via DDQN}
 % 许多论文采用预训练的方式，比如。首先在训练问题上训练多伦，然后在测试问题上使用在线控制的方式，但我们认为不同的问题有不同的最佳算子，而且由于进化路径的不同，在相同的进化阶段也可能有不同的最佳算子，因此AOS难以有迁移性。
+% 现有的将RL应用到AOS问题的工作大多采用离线训练的方式，首先在部分测试问题上收集数据并训练神经网络，之后将训练好的模型应用到测试问题上，
+Most of the existing works of applying RL to AOS problems adopts the way of off-line training, collect data on some benchmark functions and train the neural network, and then use the the trained neural network to predict which operator should be applied to each individual at each generation.
 % 
-% 因为算子的性能在不同的搜索阶段有不同的效果，因此使用离线的方式，先训练后应用的方式是不可靠的。
-% 根据问题的特点,不同的算子适合不同的问题，由于问题的特征不能全部包含在RL的状态中，因此在一个问题上表现好的AOS模型不一定在另一个问题上取得好的效果。
-According to the characteristics of problems, different operators are suitable for different problems, due to the characteristics can not be included in the RL state, so the AOS model that performs well on one problem may not achieveds good results on other problems.
+% 但是在我们看来，不同的问题可能有不同的最佳算子，由于问题的特征不能全部包含在RL的状态中，因此在一个问题上表现好的AOS模型不一定在另一个问题上取得好的效果。
+However, in our opinion, different problems may have different optimal operators, due to the characteristics can not be included in the RL state, so the AOS model that performs well on one problem may not achieveds good results on other problems.
 % 所以我们没有两阶段，先训练再应用的方式，而是直接使用端到端的在线控制，利用当前信息训练模型，预测之后的选择算子。
-so we don't adopt the two-stage method (train stage and control stage), but adopt the end-to-end online control method, use the current information to train neural network and the use the previous training model to select the operators.
+So we don't adopt the two-stage method (train stage and control stage), but adopt the end-to-end online control method, use the current information to train neural network and the use the previous training model to select the operators.
+% 为了增加训练样本利用率，我们使用经验回放机制\cite{DQN}，将transition存储经验池
+In order to increase the utilization of training samples, we use the experience replay mechanism \cite{ddqn} and store the transition $e_t = (s_t,a_t,r_t,s_{t+1})$ at each time-step $t$ in a data set $D_t = {e_1,\dots, e_t}$.
 
 % \subsection{differential evolution}
 %%% 先介绍下传统的差分进化，在moead框架下，使用tche分解
@@ -340,7 +352,7 @@ so we don't adopt the two-stage method (train stage and control stage), but adop
 %%%%  介绍MOEAD，介绍MOEAD-DRA，介绍DE的变体，说明算子池，
 % 为了将AOS应用到多目标问题上，我们需要一个多目标的框架，moea/d将多目标问题分解成单目标问题，可以
 % 大多数的AOS方法都是单目标的，比如DE_DQN and LDE,因为在 Credit Assignment阶段需要评价算子的效果，但是在多目标问题中很难评价两个解的好坏
-Most of the AOS methods are applied to single-objective problem, such as DE-DQN\cite{sharma2019deep} and LDE \cite{sun2021learning}, because the performance of operators should be estimated at the credit assignment stage, but it is difficult to define the quality difference between two non-dominated solutions and the improvement brought by the application of an operator.
+Most of the AOS methods are applied to single-objective problem, such as DE-DQN \cite{sharma2019deep} and LDE \cite{sun2021learning}, because the performance of operators should be estimated at the credit assignment stage, but it is difficult to define the quality difference between two non-dominated solutions and the improvement brought by the application of an operator.
 % 在基于支配的多目标框架中，比如NSGAII，SPEA2，随着目标数增加，非支配解的数量也会快速增加。
 In some algorithmic frameworks which based on dominance relation, such as NSGA-II\cite{nsga2}, SPEA2 \cite{spea2}, with the increase of the number of objectives, the number of non-dominated solutions will increase rapidly,
 % 如果一个父代生成了非支配的子代，我们很难衡量本次算子的效果
@@ -407,7 +419,7 @@ During the search, MOEA/D-DRA works as follows:
 \subsection{AOS with RL}
 %%% 利用强化学习做算子选择，需要介绍算法流程
 % 强化学习解决EvE困境的特性可以用来解决算子选择问题，所以我们将RL作为进化算法的算子选择器， 用来从算子池中选择合适的算子
-The feature of RL to solve EvE dilemma can be used to solve the AOS problem, so we apply RL as the operator selector of evolutionary algorithm to select the appropriate operator from the operator pool  and DDQN is used to optimize the network model.
+The feature of RL to solve EvE dilemma can be used to solve the AOS problem, so we apply RL as the operator selector of evolutionary algorithm to select the appropriate operator from the operator pool and DDQN is used to optimize the network model.
 % 为了更好的发挥AOS的优势，并且适应不同的问题，我们设计了两个算子池(交叉和变异)
 In order to get better results and adapt to different problems, we design two operator pools (crossover pool and mutation pool).
 
@@ -439,7 +451,7 @@ In order to get better results and adapt to different problems, we design two op
           \label{m2m:cro}
         \end{align}
 \end{enumerate}
-Where $x^i$ is the target vector and $v^i$ is the mutant vector. The variables $x^j, j \in \{r_1,r_2,r_3,r_4,r_5\}$ are different solutions chosen randomly from $P$, which are also different from original vector $x^i$. The scaling factor $F > 0$ is a real and constant factor which controls the amplification of the differential vector $x^a-x^b$ and $K \in [0,1]$ is analogous to $F$. For the crossover operator \ref{de1} and \ref{de2}, the binomial crossover operator \cite{storn1997differential} is applied to generate the offspring, it works as
+Where $x^i$ is the target vector and $v^i$ is the mutant vector, the variables $x^j, j \in \{r_1,r_2,r_3,r_4,r_5\}$ are different solutions chosen randomly from $P$, which are also different from original vector $x^i$. The scaling factor $F > 0$ is a real and constant factor which controls the amplification of the differential vector $x^a-x^b$ and $K \in [0,1]$ is analogous to $F$. For the crossover operator \ref{de1} and \ref{de2}, the binomial crossover operator \cite{storn1997differential} is applied to generate the offspring, it works as
 \begin{equation}
   u_{j}^{i}=\left\{\begin{array}{ll}
     v_{j}^{i}, & \text { if }  { rand_j } \leq C R \text { or } j=j_{ {rn^i }} \\
@@ -448,8 +460,6 @@ Where $x^i$ is the target vector and $v^i$ is the mutant vector. The variables $
 \end{equation}
 where $rand_j \in [0,1]$ is the $j^{th}$ uniformly random, $CR \in [0,1]$ is the crossover rate which has to determined by user, $rn^i$ is a randomly selected index from $\{1,2,\dots,D\}$ which ensures that at least one parameter of $u^i$ comes from $v^i$.
 For operator \ref{m2m:cro}, $x^j$ is a solution randomly chosen from $P$ and different from $x^i$, $rand$ is a uniformly random number in $[-1,1]$, $gen$ is the currnet generation and $Maxgen$ is the maximum generation user designed.
-% RC的设计参考了模拟退火的思想，随着进化代数的增加逐渐趋近0
-% The design of $RC$ is based on the idea 
 
 \textit{Mutation Pool}
 \begin{enumerate}

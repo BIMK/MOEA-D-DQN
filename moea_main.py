@@ -38,7 +38,7 @@ if __name__ == '__main__':
     # problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
     # problems = ['UF8','UF9','UF10']
     # problems = ['DTLZ1', 'DTLZ2', 'DTLZ3', 'DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7', ]
-    problems = ['DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7']
+    problems = ['DTLZ2', 'DTLZ5', 'DTLZ6', 'DTLZ7']
     N = 25   # 独立运行N次，取中值
     results = list()
     for problemName in problems:

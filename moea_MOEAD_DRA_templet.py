@@ -159,8 +159,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')
-        # for i in range(self.xovOper.n):
-        # plt.plot(BestSelection[:, i], '.', label=self.xovOper.recOpers[i].name)
-        # plt.legend()
-        # plt.show()
+        for i in range(self.xovOper.n):
+            plt.plot(BestSelection[:, i], '.', label=self.xovOper.recOpers[i].name)
+            plt.legend()
+            plt.show()
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果
