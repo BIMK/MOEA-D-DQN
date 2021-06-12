@@ -13,7 +13,7 @@ if parent_path not in sys.path:
     sys.path.append(parent_path)
 # 配置日志信息
 logging.basicConfig(
-    handlers=[logging.FileHandler("./result/RL_DTLZ_0.log", encoding="utf-8", mode='a')],
+    handlers=[logging.FileHandler("./result/RL_temp.log", encoding="utf-8", mode='a')],
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%m-%d %H:%M:%S')
@@ -25,7 +25,7 @@ formatter = logging.Formatter('%(levelname)-8s--> %(message)s')
 console.setFormatter(formatter)
 # 将定义好的console日志handler添加到root logger
 logging.getLogger('').addHandler(console)
-logging.info('Start----RL_DTLZ-origin----------------------------------')
+logging.info('Start----RL_测试算子性能----------------------------------')
 
 
 def get_time():
@@ -38,7 +38,8 @@ if __name__ == '__main__':
     # problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
     # problems = ['UF8','UF9','UF10']
     # problems = ['DTLZ1', 'DTLZ2', 'DTLZ3', 'DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7', ]
-    problems = ['DTLZ2', 'DTLZ5', 'DTLZ6', 'DTLZ7']
+    # problems = ['ZDT1','ZDT2','ZDT3','ZDT4','ZDT5','ZDT6']
+    problems = ['UF10']
     N = 25   # 独立运行N次，取中值
     results = list()
     for problemName in problems:
@@ -47,17 +48,17 @@ if __name__ == '__main__':
         fileName = problemName
         MyProblem = getattr(__import__('problem.' + problemName), problemName)  # 导入自定义问题类
         MyProblem = getattr(MyProblem, problemName)
-        problem = MyProblem(3)       # 生成问题对象--DTLZ设置为3目标
+        problem = MyProblem()       # 生成问题对象--DTLZ设置为3目标
         PF = problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
         """======================种群设置==============================="""
         Encoding = 'RI'             # 编码方式
-        NIND = 305                  # 种群规模
+        NIND = 605                  # 种群规模
         Field = ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)  # 创建区域描述器
         # 实例化种群对象（此时种群还没被初始化，仅仅是完成种群对象的实例化）
         population = ea.Population(Encoding, Field, NIND)
         """======================算法参数设置=========================="""
         # myAlgorithm = moea_MOEAD_DE_templet(problem, population)
-        MAXGEN = 210
+        MAXGEN = 500
         myAlgorithm = moea_MOEAD_DRA_templet(problem, population, MAXGEN)
         myAlgorithm.MAXGEN = MAXGEN    # 最大进化代数
         myAlgorithm.drawing = 0  # 设置绘图方式（0：不绘图；1：绘制结果图；2：绘制目标空间过程动画；3：绘制决策空间过程动画）

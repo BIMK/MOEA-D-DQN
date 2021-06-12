@@ -9,6 +9,54 @@ import geatpy as ea
 from Nature_DQN import DQN
 
 
+class Best_cro:
+    def __init__(self, Problem, lambda_, maxgen, Encoding, FieldDR, F=0.5, K=0.5, CR=1.0, DN=1, Loop=False):
+        self.name = "Best Selection"
+        self.Problem = Problem
+        self.lambda_ = lambda_  # 权重向量
+        self.Encoding = Encoding
+        self.FieldDR = FieldDR
+        self.F = F  # 差分变异的缩放因子
+        self.K = K  # 应用于差分变异，和缩放因子差不多
+        self.CR = CR  # 交叉概率
+        self.DN = DN  # 表示有多少组差分向量
+        self.Loop = Loop  # 是否采用循环方式处理超出边界的变异结果，用不到
+        self.recOpers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
+                         DE_current_to_rand_1(), DE_current_to_rand_2()]
+        self.n = len(self.recOpers)  # 候选算子个数
+        self.countOpers = np.zeros(self.n)  # 记录算子的选择情况
+        self.processBound = ProcessBound(FieldDR)
+        # self.TechRange = 0
+
+    def do(self, OldChrom, r0, neighbourVector, z, currentGen):
+        # r0是基向量索引，可以对r0:list做变异
+        off = ea.Population(self.Encoding, self.FieldDR, self.n)  # 实例化一个种群对象用于存储用不同算子进化后的个体
+        off.initChrom(self.n)  # 初始化种群染色体矩阵
+        # 使用n个交叉算子，填充到size=n的种群
+        # 模拟二进制交叉和M2m里的交叉需要单独处理
+        off.Chrom[0] = self.recOpers[0].do(OldChrom, r0, neighbourVector)
+        off.Chrom[1] = self.recOpers[1].do(OldChrom, r0, neighbourVector, currentGen)
+        for i in range(2, self.n):
+            off.Chrom[i] = self.recOpers[i].do(OldChrom, r0, neighbourVector)  # 执行变异
+        # 既然要求目标函数值，就需要处理边界
+        off.Chrom = self.processBound.do(off.Chrom)
+
+        off.Phen = off.decoding()  # 解码
+        self.Problem.aimFunc(off)
+        weight = self.lambda_[[r0] * self.n, :]
+        tche = ea.tcheby(off.ObjV, weight, z)
+        # self.TechRange = tche.max() - tche.min()
+        # self.TechRange = tche.mean()
+        # 选择Tech距离最小的作为最优子代
+        Techminindex = np.argmin(tche)
+        # print(Techminindex)
+        self.countOpers[Techminindex] += 1  # 更新算子选择情况
+        chrom = np.array([off.Chrom[Techminindex]])
+        # 确实比应用单个算子效果好
+        # chrom = np.array([off.Chrom[3]])
+        return chrom
+
+
 class RecRL:
     """
     用强化学习选择交叉算子
@@ -18,8 +66,7 @@ class RecRL:
         self.name = "RecRL"
         self.problem = problem
         self.lambda_ = lambda_
-        self.maxgen = maxgen
-        self.recOpers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(self.maxgen), DE_rand_1(), DE_rand_2(),
+        self.recOpers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
                          DE_current_to_rand_1(), DE_current_to_rand_2()]
         self.n = len(self.recOpers)
         self.dqn = DQN(problem.Dim + problem.M, self.n)
@@ -116,17 +163,13 @@ class RecM2m:
         self.MaxGen = maxgen
 
     def do(self, OldChrom, r0, neighbourVector, currentGen: int):
-        # r1 = neighbourVector[0]
-        # r2 = neighbourVector[1]
         # r1, r2 = np.random.choice(neighbourVector, 2, replace=False)  # 不放回的抽取2个
-        r2 = np.random.choice(neighbourVector, 1, replace=False)  # 不放回的抽取2个
+        r2 = np.random.choice(neighbourVector, 1, replace=False)  # 不放回的抽取
         p1 = OldChrom[r0]
-        # p1 = OldChrom[r1]
         p2 = OldChrom[r2]
         # D  = len(p1)   #  决策变量维度
         rc = (2 * np.random.rand(1) - 1) * (1 - np.random.rand(1) ** (-(1 - currentGen / self.MaxGen) ** 0.7))
         OffDec = p1 + rc * (p1 - p2)
-        # OffDec = OffDec[np.newaxis, :]
         return OffDec
 
 
@@ -213,6 +256,24 @@ class DE_current_to_rand_2():
         xr5 = OldChrom[r5]
         v = x + self.K * (x - xr1) + self.F * (xr2 - xr3 + xr4 - xr5)
         return v
+
+
+class ProcessBound:
+    """
+    空操作，仅处理边界信息
+    """
+
+    def __init__(self, FieldDR) -> None:
+        self.FieldDR = FieldDR
+
+    def do(self, OldChrom):
+        lb = self.FieldDR[0]
+        ub = self.FieldDR[1]
+        # 不改变原来染色体矩阵
+        OffChrom = OldChrom.copy()
+        # 边界处理
+        OffChrom = np.minimum(np.maximum(OffChrom, lb), ub)
+        return OffChrom
 
 
 class RecDirect:

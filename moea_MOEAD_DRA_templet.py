@@ -8,10 +8,13 @@ from os import path
 from matplotlib import pyplot as plt
 from Nature_DQN import DQN
 # from mut_de import DE_rand_1, DE_rand_2, DE_current_to_rand_1, DE_current_to_rand_2, RL_mut_moea
-from crossover import RecRL
-from mutation import MutRL
+from crossover import RecRL, Best_cro
+from mutation import MutRL, Mutpolyn
 
 paths.append(path.split(path.split(path.realpath(__file__))[0])[0])
+"""
+本分支测试不同算子在不同问题上的性能，剔除效果不好的算子，减少探索开销
+"""
 
 
 class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
@@ -26,10 +29,10 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         self.DQN = DQN(problem.Dim, 4)
         if population.Encoding == 'RI':
             # self.mutDE = [DE_rand_1(),DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
-            # self.mutOper = RL_mut_moea(problem, self.uniformPoint, self.DQN)
-            self.xovOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
-            # self.mutPolyn = ea.Mutpolyn(Pm=1 / self.problem.Dim, DisI=20, FixType=4)  # 生成多项式变异算子对象
-            self.mutOper = MutRL(problem, self.uniformPoint, population.Encoding, population.Field, MAXGEN, self.NIND)
+            # self.xovOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
+            self.xovOper = Best_cro(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
+            # self.mutOper = MutRL(problem, self.uniformPoint, population.Encoding, population.Field, MAXGEN, self.NIND)
+            self.mutPolyn = ea.Mutpolyn(Pm=1 / self.problem.Dim, DisI=20, FixType=4)  # 生成多项式变异算子对象
         else:
             raise RuntimeError('编码方式必须为''RI''.')
         if self.problem.M <= 2:
@@ -85,7 +88,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # state = np.mean(population.Chrom[indices[replace]], axis=0)
         # state = population.Chrom[i]
         # state_ = offspring.Chrom[0]
-        if not isinstance(self.xovOper, RecRL):
+        if not isinstance(self.xovOper, RecRL):  # 既然不是强化学习的策略，也就不需要后面的更新了
             return
         # 子代相比父代适应度提高的相对率
         FIR = (CombinObjV[replace] - off_CombinObjV[replace]) / CombinObjV[replace]
@@ -132,11 +135,10 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                     np.random.shuffle(indices)
                     # 实例化一个种群对象用于存储进化的后代（这里只进化生成一个后代）
                     offspring = ea.Population(population.Encoding, population.Field, 1)
-                    # offspring.Chrom = self.mutDE[0].do(population.Chrom, population.Field, i, indices)
-                    # offspring.Chrom, self.a = self.mutOper.do(population.Encoding, population.Chrom, population.Field, i, indices, idealPoint)
-                    offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, self.currentGen)
-                    # offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 变异
-                    offspring.Chrom = self.mutOper.do(population.Chrom, offspring.Chrom, i, self.currentGen)
+                    # offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, self.currentGen)
+                    offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, idealPoint, self.currentGen)
+                    offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 变异
+                    # offspring.Chrom = self.mutOper.do(population.Chrom, offspring.Chrom, i, self.currentGen)
                     self.call_aimFunc(offspring)  # 求进化后个体的目标函数值
                     # 更新理想点
                     idealPoint = ea.crtidp(offspring.ObjV, offspring.CV, self.problem.maxormins, idealPoint)
@@ -155,12 +157,12 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 self.xovOper.countOpers = np.zeros(self.xovOper.n)  # 清空算子选择记录器
 
         # 画出不同进化阶段算子选择的结果
-        BestSelection = np.array(PopCountOpers)
+        BestSelection = np.array(PopCountOpers[2:])
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')
         for i in range(self.xovOper.n):
             plt.plot(BestSelection[:, i], '.', label=self.xovOper.recOpers[i].name)
-            plt.legend()
-            plt.show()
+        plt.legend()
+        plt.show()
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果
