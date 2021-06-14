@@ -169,6 +169,7 @@ class RecM2m:
         p2 = OldChrom[r2]
         # D  = len(p1)   #  决策变量维度
         rc = (2 * np.random.rand(1) - 1) * (1 - np.random.rand(1) ** (-(1 - currentGen / self.MaxGen) ** 0.7))
+        # print(currentGen, self.MaxGen)
         OffDec = p1 + rc * (p1 - p2)
         return OffDec
 

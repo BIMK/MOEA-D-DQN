@@ -24,8 +24,11 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         if population.ChromNum != 1:
             raise RuntimeError('传入的种群对象必须是单染色体的种群类型。')
         self.name = 'MOEA/D-DRA-DE'
-        self.MAXGEN = MAXGEN
+        # self.MAXGEN = MAXGEN
         self.uniformPoint, self.NIND = ea.crtup(self.problem.M, population.sizes)  # 生成在单位目标维度上均匀分布的参考点集
+        # 此时种群大小可能小于设计的大小，为了保证评价次数不变，需要增加进化代数
+        MAXGEN = round((MAXGEN * population.sizes) / self.NIND + 0.5)
+        self.MAXGEN = MAXGEN
         self.DQN = DQN(problem.Dim, 4)
         if population.Encoding == 'RI':
             # self.mutDE = [DE_rand_1(),DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
@@ -103,9 +106,10 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         population = self.population
         # NOTE: 在使用crtup生成单位目标维度均匀分布的参考点集时NIND可能不是种群大小。
         # NOTE: 为了保证评价次数不变，要更改MAXGEN
-        self.MAXGEN = round((self.MAXGEN * population.sizes) / self.NIND + 0.5)
+        # self.MAXGEN = round((self.MAXGEN * population.sizes) / self.NIND + 0.5)
         # ===========================准备进化============================
         uniformPoint, NIND = self.uniformPoint, self.NIND
+        # self.MAXGEN = round((self.MAXGEN * population.sizes) / self.NIND + 0.5)
         # 初始化种群染色体矩阵，此时种群规模将调整为uniformPoint点集的大小，initChrom函数会把种群规模给重置
         population.initChrom(NIND)
         self.call_aimFunc(population)  # 计算种群的目标函数值
@@ -157,7 +161,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 self.xovOper.countOpers = np.zeros(self.xovOper.n)  # 清空算子选择记录器
 
         # 画出不同进化阶段算子选择的结果
-        BestSelection = np.array(PopCountOpers[2:])
+        BestSelection = np.array(PopCountOpers)
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')

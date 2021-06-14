@@ -5,9 +5,9 @@ import geatpy as ea
 from matplotlib import pyplot as plt
 
 
-class WFG6(ea.Problem):
+class WFG7(ea.Problem):
     def __init__(self, M=3) -> None:
-        name = 'WFG6'
+        name = 'WFG7'
         maxormins = [1] * M
         Dim = M + 9
         varTypes = [0] * Dim
@@ -20,12 +20,13 @@ class WFG6(ea.Problem):
         self.n_var = Dim
         self.n_position_params = 2
         self.n_constr = 0
-        self.func = optproblems.wfg.WFG6(self.n_obj, self.n_var, self.n_position_params)
+        self.func = optproblems.wfg.WFG7(self.n_obj, self.n_var, self.n_position_params)
         self.xl = self.func.min_bounds
         self.xu = self.func.max_bounds
 
     def aimFunc(self, pop):
         x = pop.Phen
+        # x = pop
         solutions = [Individual(s) for s in x]
         self.func.batch_evaluate(solutions)
         res = np.array([s.objective_values for s in solutions])
@@ -42,7 +43,7 @@ class WFG6(ea.Problem):
 
 if __name__ == '__main__':
     np.set_printoptions(precision=4)
-    wfg6 = WFG6()
+    wfg7 = WFG7()
     # chrom = np.random.random((3, 12))
     chrom = np.array([[0.15978844,
                        0.12375592,
@@ -80,15 +81,10 @@ if __name__ == '__main__':
                        0.44346628,
                        0.72374306,
                        0.90311056]])
-    res = wfg6.aimFunc(chrom)
-    ref = wfg6.calReferObjV()
-    print(ref)
-    plt.plot(ref[:, 0], ref[:, 1], 'ob')
-    plt.show()
-# %%
+    res = wfg7.aimFunc(chrom)
     print(res)
-"""
-[[0.33521392 0.82313503 6.27586571]
- [0.45050928 1.50727252 6.04731173]
- [0.38663854 2.03018402 5.74138428]]
-"""
+    # ref = wfg7.calReferObjV()
+    # print(ref)
+    # plt.plot(ref[:, 0], ref[:, 1], 'ob')
+    # plt.show()
+# %%
