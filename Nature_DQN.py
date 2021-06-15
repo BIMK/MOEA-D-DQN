@@ -4,7 +4,7 @@ DQN步骤：
 - 记忆池里的数据样式
 - CartPole-v0的状态由4位实数编码表示，所以第一层网络是4->50
 """
-#%%
+# %%
 from abc import ABC
 
 import torch
@@ -24,10 +24,10 @@ TARGET_REPLACE_ITER = 100   # target update frequency
 MEMORY_CAPACITY = 500
 # env = gym.make('CartPole-v0')
 # env = env.unwrapped
-N_ACTIONS = 4  # 4种候选的算子
-N_STATES = 30 # 30维决策变量
+# N_ACTIONS = 4  # 4种候选的算子
+# N_STATES = 30  # 30维决策变量
 use_gpu = torch.cuda.is_available()
-#%%
+# %%
 
 
 class Net(nn.Module, ABC):
@@ -54,13 +54,13 @@ class Net(nn.Module, ABC):
 class DQN(object):
     def __init__(self, inDim, outDim):
         self.eval_net, self.target_net = Net(inDim, outDim), Net(inDim, outDim)
-        global N_STATES, N_ACTIONS
-        N_STATES = inDim
-        N_ACTIONS = outDim
+        # global N_STATES, N_ACTIONS
+        self.N_STATES = inDim
+        self.N_ACTIONS = outDim
         self.learn_step_counter = 0                                     # for target updating
         self.memory_counter = 0                                         # for storing memory
         # memory是一个np数组，每一行代表一个记录，状态 动作 奖励 新的状态
-        self.memory = np.zeros((MEMORY_CAPACITY, N_STATES * 2 + 2))     # initialize memory
+        self.memory = np.zeros((MEMORY_CAPACITY, self.N_STATES * 2 + 2))     # initialize memory
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
         self.loss_func = nn.MSELoss()
         if use_gpu:
@@ -78,30 +78,31 @@ class DQN(object):
         # if np.random.uniform() < EPSILON:   # greedy
         if np.random.uniform() < 2:   # greedy
             actions_value = self.eval_net.forward(x)  # shape=(1,action)
-            if use_gpu:
-                actions_value = actions_value.cpu()
-            actions_value[actions_value<=0] = 0.1
-            actions_value = actions_value/torch.sum(actions_value)*100
-            # print(actions_value)
+            # if use_gpu:
+            # actions_value = actions_value.cpu()
+            actions_value = actions_value.detach().numpy()
+            actions_value[actions_value <= 0] = 0.001  # 不能有负概率
+            actions_value = actions_value / np.sum(actions_value)  # 归一化
+            # 计算排名
+            argsort_ = self.N_ACTIONS - 1 - np.argsort(np.argsort(actions_value[0]))
+            # 以系数c拉大概率差距
             c = 0.5
-            for i in range(N_ACTIONS):
-                actions_value[0][i] = actions_value[0][i]*c**i
-            actions_value = actions_value/torch.sum(actions_value)*100
-            # print(actions_value)
+            for i in range(self.N_ACTIONS):
+                actions_value[0][i] = actions_value[0][i] * c**argsort_[i]
+            # 手动设计概率
+            probability_value = np.array([[70, 28, 10, 8, 5, 5]])
+            # probability_value = probability_value / np.sum(probability_value)
+            actions_value = probability_value[:, argsort_]
+
+            actions_value = actions_value / np.sum(actions_value)
 
             # 按照概率取样
-            action = torch.multinomial(actions_value, 1)[0].data.numpy()
-            # 取最大值
-            # print('========================')
-            # print(actions_value)
-            # action = torch.max(actions_value, 1)[1].data.numpy()
-            # print(action)
-
+            action = np.random.choice(np.arange(0, self.N_ACTIONS), size=1, p=actions_value[0])
             # print(actions_value, action)
             # action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)  # return the argmax index
             action = action[0]
         else:   # random
-            action = np.random.randint(0, N_ACTIONS)   # [0,N_ACTIONS)
+            action = np.random.randint(0, self.N_ACTIONS)   # [0,N_ACTIONS)
             # action = action if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)
         return action
 
@@ -123,16 +124,15 @@ class DQN(object):
         # sample batch transitions
         sample_index = np.random.choice(MEMORY_CAPACITY, BATCH_SIZE)
         b_memory = self.memory[sample_index, :]
-        b_s = torch.FloatTensor(b_memory[:, :N_STATES])
-        b_a = torch.LongTensor(b_memory[:, N_STATES:N_STATES+1].astype(int)) # 动作是int型
-        b_r = torch.FloatTensor(b_memory[:, N_STATES+1:N_STATES+2])
-        b_s_ = torch.FloatTensor(b_memory[:, -N_STATES:])
+        b_s = torch.FloatTensor(b_memory[:, :self.N_STATES])
+        b_a = torch.LongTensor(b_memory[:, self.N_STATES:self.N_STATES + 1].astype(int))  # 动作是int型
+        b_r = torch.FloatTensor(b_memory[:, self.N_STATES + 1:self.N_STATES + 2])
+        b_s_ = torch.FloatTensor(b_memory[:, -self.N_STATES:])
         if use_gpu:
             b_s = b_s.cuda()
             b_a = b_a.cuda()
             b_r = b_r.cuda()
             b_s_ = b_s_.cuda()
-            
 
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
@@ -153,11 +153,11 @@ if __name__ == '__main__':
     CountOpers = np.zeros(N_ACTIONS)
     PopCountOpers = []
     dqn = DQN(N_STATES, N_ACTIONS)
-    s = np.random.uniform(-1,1,N_STATES)
-    s_ = np.random.uniform(-1,1,N_STATES)
+    s = np.random.uniform(-1, 1, N_STATES)
+    s_ = np.random.uniform(-1, 1, N_STATES)
 
     print('\nCollecting experience...')
-    for i_episode in range(1,801):
+    for i_episode in range(1, 801):
         a = dqn.choose_action(s)
         # if i_episode > 400:
         #     r = -a
@@ -169,16 +169,15 @@ if __name__ == '__main__':
             dqn.learn()
         CountOpers[a] += 1
         if i_episode % 5 == 0:
-            print(i_episode,' ',a)
+            print(i_episode, ' ', a)
             PopCountOpers.append(CountOpers)
             CountOpers = np.zeros(N_ACTIONS)
 
     PopCountOpers = np.array(PopCountOpers)
     for i in range(N_ACTIONS):
-        plt.plot(PopCountOpers[:, i],'.',label=str(i))
+        plt.plot(PopCountOpers[:, i], '.', label=str(i))
     plt.legend()
     plt.show()
-
 
     sys.exit(0)
 

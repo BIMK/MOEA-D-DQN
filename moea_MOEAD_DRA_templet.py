@@ -6,7 +6,7 @@ from scipy.spatial.distance import cdist
 from sys import path as paths
 from os import path
 from matplotlib import pyplot as plt
-from Nature_DQN import DQN
+# from Nature_DQN import DQN
 # from mut_de import DE_rand_1, DE_rand_2, DE_current_to_rand_1, DE_current_to_rand_2, RL_mut_moea
 from crossover import RecRL, Best_cro
 from mutation import MutRL, Mutpolyn
@@ -29,13 +29,12 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # 此时种群大小可能小于设计的大小，为了保证评价次数不变，需要增加进化代数
         MAXGEN = round((MAXGEN * population.sizes) / self.NIND + 0.5)
         self.MAXGEN = MAXGEN
-        self.DQN = DQN(problem.Dim, 4)
+        # self.DQN = DQN(problem.Dim, 4)
         if population.Encoding == 'RI':
-            # self.mutDE = [DE_rand_1(),DE_rand_2(),DE_current_to_rand_1(),DE_current_to_rand_2()]
-            # self.xovOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
-            self.xovOper = Best_cro(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
-            # self.mutOper = MutRL(problem, self.uniformPoint, population.Encoding, population.Field, MAXGEN, self.NIND)
-            self.mutPolyn = ea.Mutpolyn(Pm=1 / self.problem.Dim, DisI=20, FixType=4)  # 生成多项式变异算子对象
+            self.xovOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
+            # self.xovOper = Best_cro(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
+            self.mutOper = MutRL(problem, self.uniformPoint, population.Encoding, population.Field, MAXGEN, self.NIND)
+            # self.mutPolyn = ea.Mutpolyn(Pm=1 / self.problem.Dim, DisI=20, FixType=4)  # 生成多项式变异算子对象
         else:
             raise RuntimeError('编码方式必须为''RI''.')
         if self.problem.M <= 2:
@@ -84,8 +83,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         off_CombinObjV = self.decomposition(offspring.ObjV, weights, idealPoint, offspring.CV, self.problem.maxormins)
         replace = np.where(off_CombinObjV <= CombinObjV)[0][:self.nr]  # 更新个体的索引
         population[indices[replace]] = offspring  # 更新子代
-        # if replace.size == 0:  # 没得替换
-        # return
+        if replace.size == 0:  # 没得替换
+            return
         # 被取代的父代的平均值作为状态
         # 直系父代的决策变量作为state
         # state = np.mean(population.Chrom[indices[replace]], axis=0)
@@ -139,10 +138,10 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                     np.random.shuffle(indices)
                     # 实例化一个种群对象用于存储进化的后代（这里只进化生成一个后代）
                     offspring = ea.Population(population.Encoding, population.Field, 1)
-                    # offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, self.currentGen)
-                    offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, idealPoint, self.currentGen)
-                    offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 变异
-                    # offspring.Chrom = self.mutOper.do(population.Chrom, offspring.Chrom, i, self.currentGen)
+                    # offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, idealPoint, self.currentGen)
+                    offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, self.currentGen)
+                    # offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 变异
+                    offspring.Chrom = self.mutOper.do(population.Chrom, offspring.Chrom, i, self.currentGen)
                     self.call_aimFunc(offspring)  # 求进化后个体的目标函数值
                     # 更新理想点
                     idealPoint = ea.crtidp(offspring.ObjV, offspring.CV, self.problem.maxormins, idealPoint)
