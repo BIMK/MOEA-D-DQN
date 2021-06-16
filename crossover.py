@@ -7,26 +7,45 @@
 import numpy as np
 import geatpy as ea
 from Nature_DQN import DQN
+import random
+
+
+class Random_cro:
+    # 随机选择交叉算子
+    def __init__(self, maxgen, FieldDR, Encoding):
+        self.name = "Random Selection"
+        self.FieldDR = FieldDR
+        self.Encoding = Encoding
+        # self.Loop = Loop  # 是否采用循环方式处理超出边界的变异结果，用不到
+        self.Opers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
+                      DE_current_to_rand_1(), DE_current_to_rand_2()]
+        self.n = len(self.Opers)
+        self.processBound = ProcessBound(FieldDR)
+
+    def do(self, OldChrom, r0, neighbourVector, currentGen):
+        # off = ea.Population(self.Encoding, self.FieldDR, 1)
+        idx = random.randint(0, self.n)
+        if idx == 0:
+            Chrom = self.Opers[0].do(OldChrom, r0, neighbourVector)
+        elif idx == 1:
+            Chrom = self.Opers[1].do(OldChrom, r0, neighbourVector, currentGen)
+        else:
+            Chrom = self.Opers[idx].do(OldChrom, r0, neighbourVector)
+        return Chrom
 
 
 class Best_cro:
-    def __init__(self, Problem, lambda_, maxgen, Encoding, FieldDR, F=0.5, K=0.5, CR=1.0, DN=1, Loop=False):
+    def __init__(self, Problem, lambda_, maxgen, Encoding, FieldDR):
         self.name = "Best Selection"
         self.Problem = Problem
         self.lambda_ = lambda_  # 权重向量
         self.Encoding = Encoding
         self.FieldDR = FieldDR
-        self.F = F  # 差分变异的缩放因子
-        self.K = K  # 应用于差分变异，和缩放因子差不多
-        self.CR = CR  # 交叉概率
-        self.DN = DN  # 表示有多少组差分向量
-        self.Loop = Loop  # 是否采用循环方式处理超出边界的变异结果，用不到
         self.Opers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
                       DE_current_to_rand_1(), DE_current_to_rand_2()]
         self.n = len(self.Opers)  # 候选算子个数
         self.countOpers = np.zeros(self.n)  # 记录算子的选择情况
         self.processBound = ProcessBound(FieldDR)
-        # self.TechRange = 0
 
     def do(self, OldChrom, r0, neighbourVector, z, currentGen):
         # r0是基向量索引，可以对r0:list做变异
