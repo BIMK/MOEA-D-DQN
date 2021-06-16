@@ -25,13 +25,13 @@ class WFG9(ea.Problem):
         self.xu = self.func.max_bounds
 
     def aimFunc(self, pop):
-        # x = pop.Phen
-        x = pop
+        x = pop.Phen
+        # x = pop
         solutions = [Individual(s) for s in x]
         self.func.batch_evaluate(solutions)
         res = np.array([s.objective_values for s in solutions])
-        # pop.ObjV = res
-        return res
+        pop.ObjV = res
+        # return res
 
     def calReferObjV(self):  # 设定目标数参考值（本问题目标函数参考值设定为理论最优值，即“真实帕累托前沿点”）
         N = 10000  # 设置所要生成的全局最优解的个数

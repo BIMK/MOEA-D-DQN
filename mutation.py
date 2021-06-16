@@ -13,6 +13,43 @@ import geatpy as ea
 from Nature_DQN import DQN
 
 
+class Best_mut:
+    def __init__(self, Problem, lambda_, maxgen, Encoding, FieldDR):
+        self.name = "Best Selection"
+        self.Problem = Problem
+        self.lambda_ = lambda_  # 权重向量
+        self.Encoding = Encoding
+        self.FieldDR = FieldDR
+        self.Opers = [Mutpolyn(self.Encoding, self.FieldDR), Mutgau(self.Encoding, self.FieldDR), MutM2m(self.FieldDR, maxgen)]
+        self.n = len(self.Opers)  # 候选算子个数
+        self.countOpers = np.zeros(self.n)  # 记录算子的选择情况
+        self.processBound = ProcessBound(FieldDR)
+
+    # def do(self, OldChrom, r0, neighbourVector, z, currentGen):
+    def do(self, OldChrom, Parent1, r0, z, currentGen):
+        # r0是基向量索引，可以对r0:list做变异
+        off = ea.Population(self.Encoding, self.FieldDR, self.n)  # 实例化一个种群对象用于存储用不同算子进化后的个体
+        off.initChrom(self.n)  # 初始化种群染色体矩阵
+        # 使用n个变异算子，填充到size=n的种群
+        off.Chrom[0] = self.Opers[0].do(Parent1)
+        off.Chrom[1] = self.Opers[1].do(Parent1)
+        off.Chrom[2] = self.Opers[2].do(OldChrom, r0, Parent1, currentGen)  # mutM2m
+        # 既然要求目标函数值，就需要处理边界
+        off.Chrom = self.processBound.do(off.Chrom)
+
+        off.Phen = off.decoding()  # 解码
+        self.Problem.aimFunc(off)
+        weight = self.lambda_[[r0] * self.n, :]
+        tche = ea.tcheby(off.ObjV, weight, z)
+        # 选择Tech距离最小的作为最优子代
+        Techminindex = np.argmin(tche)
+        self.countOpers[Techminindex] += 1  # 更新算子选择情况
+        chrom = np.array([off.Chrom[Techminindex]])
+        # 确实比应用单个算子效果好
+        # chrom = np.array([off.Chrom[3]])
+        return chrom
+
+
 class MutRL:
     """
     使用强化学习做算子选择,需要有一个滑动窗口shape=(2,N//2)设计为种群的一半大小,存储应用的算子和得到的improvement.
@@ -38,10 +75,10 @@ class MutRL:
         if self.dqn.memory_counter > 100:
             self.a = self.dqn.choose_action(self.state)
             # 优先选择在SW中没有记录的算子
-            for i in range(self.n):
-                if np.sum(self.SW[0] == i) == 0:
-                    self.a = i
-                    break
+            # for i in range(self.n):
+            # if np.sum(self.SW[0] == i) == 0:
+            # self.a = i
+            # break
         else:
             self.a = np.random.randint(0, self.n)
         self.countOpers[self.a] += 1
@@ -86,6 +123,7 @@ FixType:  用某种方式对超出范围的染色体进行修复
 
 class Mutpolyn:
     def __init__(self, Encoding, FieldDR, Pm=None, DisI=20, FixType=3, Parallel=False):
+        self.name = 'Mutpolyn'
         self.Encoding = Encoding
         self.FieldDR = FieldDR
         self.Pm = Pm
@@ -118,6 +156,7 @@ Parallel
 
 class Mutgau:
     def __init__(self, Encoding, FieldDR, Pm=None, Sigma3=None, Middle=None, FixType=None, Parallel=False):
+        self.name = 'Mutgau'
         self.Encoding = Encoding
         self.FieldDR = FieldDR
         self.Pm = Pm
@@ -137,7 +176,7 @@ class MutM2m:
     """
 
     def __init__(self, FieldDR, maxgen) -> None:
-        # self.D = None          # 决策变量维度
+        self.name = 'MutM2m'
         self.FieldDR = FieldDR
         self.MaxGen = maxgen
         pass
@@ -166,9 +205,9 @@ class MutM2m:
         OffDec[temp1] = Lower[temp1] + 0.5 * rnd[temp1] * (OldChrom[r0:r0 + 1][temp1] - Lower[temp1])
         OffDec[temp2] = Upper[temp2] - 0.5 * rnd[temp2] * (Upper[temp2] - OldChrom[r0:r0 + 1][temp2])
         # 检查是否符合边界约束
-        if np.any(OffDec > Upper) or np.any(OffDec < Lower):
-            print("有解越界")
-            print(OffDec)
+        # if np.any(OffDec > Upper) or np.any(OffDec < Lower):
+        # print("有解越界")
+        # print(OffDec)
         return OffDec
 
 
@@ -177,9 +216,12 @@ class ProcessBound:
     空操作，仅处理边界信息
     """
 
-    def do(self, OldChrom, FieldDR):
-        lb = FieldDR[0]
-        ub = FieldDR[1]
+    def __init__(self, FieldDR) -> None:
+        self.FieldDR = FieldDR
+
+    def do(self, OldChrom):
+        lb = self.FieldDR[0]
+        ub = self.FieldDR[1]
         # 不改变原来染色体矩阵
         OffChrom = OldChrom.copy()
         # 边界处理

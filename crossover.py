@@ -21,9 +21,9 @@ class Best_cro:
         self.CR = CR  # 交叉概率
         self.DN = DN  # 表示有多少组差分向量
         self.Loop = Loop  # 是否采用循环方式处理超出边界的变异结果，用不到
-        self.recOpers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
-                         DE_current_to_rand_1(), DE_current_to_rand_2()]
-        self.n = len(self.recOpers)  # 候选算子个数
+        self.Opers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
+                      DE_current_to_rand_1(), DE_current_to_rand_2()]
+        self.n = len(self.Opers)  # 候选算子个数
         self.countOpers = np.zeros(self.n)  # 记录算子的选择情况
         self.processBound = ProcessBound(FieldDR)
         # self.TechRange = 0
@@ -34,12 +34,13 @@ class Best_cro:
         off.initChrom(self.n)  # 初始化种群染色体矩阵
         # 使用n个交叉算子，填充到size=n的种群
         # 模拟二进制交叉和M2m里的交叉需要单独处理
-        off.Chrom[0] = self.recOpers[0].do(OldChrom, r0, neighbourVector)
-        off.Chrom[1] = self.recOpers[1].do(OldChrom, r0, neighbourVector, currentGen)
+        off.Chrom[0] = self.Opers[0].do(OldChrom, r0, neighbourVector)
+        off.Chrom[1] = self.Opers[1].do(OldChrom, r0, neighbourVector, currentGen)
         for i in range(2, self.n):
-            off.Chrom[i] = self.recOpers[i].do(OldChrom, r0, neighbourVector)  # 执行变异
+            off.Chrom[i] = self.Opers[i].do(OldChrom, r0, neighbourVector)  # 执行变异
         # 既然要求目标函数值，就需要处理边界
         off.Chrom = self.processBound.do(off.Chrom)
+        # self.processBound.do(off.Chrom)  # 处理边界
 
         off.Phen = off.decoding()  # 解码
         self.Problem.aimFunc(off)
@@ -270,10 +271,9 @@ class ProcessBound:
     def do(self, OldChrom):
         lb = self.FieldDR[0]
         ub = self.FieldDR[1]
-        # 不改变原来染色体矩阵
-        OffChrom = OldChrom.copy()
+        # OffChrom = OldChrom.copy()
         # 边界处理
-        OffChrom = np.minimum(np.maximum(OffChrom, lb), ub)
+        OffChrom = np.minimum(np.maximum(OldChrom, lb), ub)
         return OffChrom
 
 
