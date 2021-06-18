@@ -179,7 +179,8 @@ AOS requires two tasks to be solved, the \textit{Credit Assignment} strategy tha
 % 信誉赋值定义如何基于算子最近的应用带来的影响评估算子的质量
 Credit assignment defines how to estimate the quality of operators based on the impact of their recent applications.
 % 最常用的信誉分配方法是根据子代相对于父代的适应度提高来确定
-The most common method of credit assignment rewards an operator for its performance to improve the fitness of an offspring over its parent, in \cite{lin2016adaptive} the fitness improvement rates (FIR) is obtained with the used operator, as defined in equation (\ref{eq:fir}).
+The most common method of credit assignment rewards an operator for its performance to improve the fitness of an offspring over its parent, in \cite{lin2016adaptive} the fitness improvement rates (FIR) is obtained with the used operator
+, as defined in Equation (\ref{eq:fir}).
 
 \begin{equation}
   \text{FIR}_{i}=\left\{
@@ -191,9 +192,6 @@ The most common method of credit assignment rewards an operator for its performa
   \right.
   \label{eq:fir}
 \end{equation}
-% \begin{equation}
-% \text{FIR}_{i}=\frac{pf_{i}-cf_{i}}{pf_{i}} \label{eq: fir1}
-% \end{equation}
 
 % pf和cf分别是父代和子代的适应度值，如果父代比子代差，子代不会插入到父代中，因此FIR=0
 where $pf_{i}$ and $cf_{i}$ are the fitness values of parent and its offspring, if the offspring is worse than parent, then set FIR to 0.
@@ -501,8 +499,8 @@ Generally speaking, credit assignment can be divided into two parts. Firstly, th
 
 % 由于目标函数值在前期有较大的改进，在后期变化较小，我们使用适应度提高率来评价子代相对父代的改进，
 Since the objective function value has a great improvement in the early stage and a small change in the later stage, in MOEA/D-DDQN we use the fitness improvement rate to measure the improvement of offspring to their parents.
-The FIR value of $i^{th}$ individual can be calculated as equation (\ref{eq:fir}).
-
+The FIR value of $i^{th}$ individual can be calculated as Equation (\ref{eq:fir}).
+% 把这个公式放到related work
 % \begin{equation}
 %   \text{FIR}_{i}=\left\{
 %   \begin{array}{ll}
@@ -511,10 +509,11 @@ The FIR value of $i^{th}$ individual can be calculated as equation (\ref{eq:fir}
 %     0                            & \text{otherwise}
 %   \end{array}
 %   \right.
+%   \label{eq:fir}
 % \end{equation}
 
 % pf和cf分别是父代和子代的适应度值，如果父代比子代差，子代不会插入到父代中，因此FIR=0
-where $pf_{i}$ and $cf_{i}$ are the fitness values of parent and its offspring, if the offspring is worse than parent, then set FIR to 0.
+% where $pf_{i}$ and $cf_{i}$ are the fitness values of parent and its offspring, if the offspring is worse than parent, then set FIR to 0.
 % 在MOEA/D中，子代可以替换邻域中的个体，为了更准确的衡量子代的效果，我们用邻域适应度提高来评价本次算子的效果
 In MOEA/D, offspring can replace the individuals in the neighborhood. In order to measure the effect of offspring more effectively, we use neighborhood fitness improvement (NFI) to evaluate the effect of the operator.
 % \TODO 这个公式不知道怎么描述合适
@@ -527,9 +526,12 @@ In MOEA/D, offspring can replace the individuals in the neighborhood. In order t
     0                            & \text{otherwise}
   \end{array}
   \right.
+  \label{eq:nfi}
 \end{equation}
 
-
+% pf_k和cf分别是邻域中个体和子代的适应度值，Bi是第i个个体的邻域集合
+where $pf_{k}$ and $cf_{i}$ are the fitness values of individuals in the neighborhood and offspring, $B_i$ is the neighborhood set of the $i^{th}$ individual.
+% 
 % 为了准确的衡量算子的信誉值，我们使用一个固定长度的先进先出的队列来存储算子近期的使用
 We used a fixed-length queue $Q$ to store the recent applications of operators to accurately measure the credit values.
 % 每次应用算子时，A(operator, FIR) 会被添加到队列尾，并且队列头会pop出一个元素。
@@ -550,28 +552,82 @@ $reward_k$ is the maximum FIR that operator $k$ can obtain in recent application
 % 算子的性能在一段时间内是稳定的，因此我们可以将reward_k作为RL的reward，也即是说，对父代i应用算子k后得到的期望reward是reward_k。。。。。。。。。可以放到强化学习里介绍
 The performance of operators are stable for a period of time, so we can take $reward_k$ as the reward of RL, that is to say, the expected reward after applying the operator $k$ to the parent $i$ is $reward_k$.
 
-%%%% 为了使得每个算子都能得到应用，队列中每个算子至少有一条记录，也即是说，如果算子没有在队列中，那么下次一定会应用哪个算子。
-% 为了保证reward_k存在，队列中每个算子至少被应用一次，也就是说，如果唯一的A(op_i,fir)被移出队列，那么下一次一定会选择算子i
-% In order to ensure the existence of $reward_k$, each operator is applied at least once, that is, if the last $k$ is removed from the queue, then operator $k$ will be selected next time.
+% 信誉赋值的伪代码
+The pseudocode of credit assignment scheme is given in Algorithm \ref{alg:credit_assignment}.
+\begin{algorithm}[t]
+  \caption{Credit Assignment}
+  \SetKwComment{Comment}{//}{}
+  \small
+  \KwIn{\textit{op} (applied operator), $x$ (generated offspring)}   % 输入子代和应用的算子
+  \KwOut{\textit{reward}}   % 
+  % 初始化部分变量
+  $Q \leftarrow $ Queue store \textit{NFI} values and applied operators\;  %队列
+  $w \leftarrow $ The maximum length of $Q$\;
+  $B \leftarrow $ Neighborhood set of $x$\;
+  $n_r \leftarrow$ The maximum number of solutions that $x$ can replace\;
+  c = 0\;  % 替换计数，最多替换nr个
+  % \Comment{Get $\textit{NFI}$ using Equation \ref{eq:nfi}}
+  \While {$c < n_r$\textbf{ and }$B \neq \varnothing$}{  % 更新邻域中的解，并计算NFI
+    % 从邻域中随机选一个个体 
+    Randomly choose a solution $x_j$ from $B$\;
+    % 计算FIR
+    $ \textit{fir} = \frac{g(x^j|\lambda^j, z^*) - g(y|\lambda^j, z^*) }{g(x^j|\lambda^j, z^*)} $\;
+    \If {$\textit{fir} > 0$}{
+      Replace $x^j$ with $y$\;
+      $\textit{NFI} = \textit{NFI} + \textit{fir} $\;  % 更新nfi
+      $c=c+1$\;
+    }
+    Remove $x^j$ from $B$\;  % 从邻域中删除xj
+  }
+  %%%%% 将NFI插入队列
+  % 查看队列的长度，如果等于w，pop出一个元素
+  \If {$Q.\textit{length} \geq w$}{
+    $Q$.\textit{pop()}\;
+  }
+  % 将NFI和所用的算子op放入队列
+  $Q$.\textit{insert(\{NFI, op\})}\;
+  %%%% 求队列中op对应的最大NFI值，作为reward
+  $\textit{reward} = 0$\;
+  \For {$i \leftarrow 1 $\textbf{ to }$ Q.\textit{length}$}{
+    \If {$Q_i.\textit{op} == op$}{
+      $\textit{reward} = \max\{\textit{reward}, Q_i.\textit{op}\}$\;
+    }
+  }
+  \Return{\textit{reward}}\;
+  \label{alg:credit_assignment}
+\end{algorithm}
 
 \subsection{Operator Selection \label{operator_selection}}
 %%% 说明算法的算子选择策略
 % 在上一节的credit assignment中确定了算子的质量，接下来的任务就是确定那个算子将被应用，operator selection定义了如何根据算子的质量确定接下来要应用的算子。
-In section \ref{credit_ass}, we determined the quality of operators by credit assignment, and the next task is to determine which operator will be applied. \textit{Operator Selection} defines which operator will be applied according to its known empirical quality.
+In Section \ref{credit_ass}, we determined the quality of operators by credit assignment, and the next task is to determine which operator will be applied. \textit{Operator Selection} defines which operator will be applied according to its known empirical quality.
 % 算子选择要考虑平衡探索和利用，一方面我们希望尽可能选择最佳算子，以最大限度的提高累积效益。另一方面也要给其它算子应用的机会，因为他们有可能在之后又好的表现。
 Operator selection should balance exploration and exploitation, on the one hand, we hope to choose the best operator as far as possible to maximize the cumulative benefits, on the other hand, we should also give opportunities to poor operators, because they may perform well in the future search.
 
 % 我们使用一个神经网络拟合算子的质量，神经网络的输出是分别应用不同的算子后得到的期望reward，之后使用轮盘赌机制选择接下来要应用的算子, 轮盘赌可以保证reward大的算子有更大的概率被选中。
 We use a neural network to fit the quality of the operator, the output of neural network is the expected reward obtained by applying different operators, then we use roulette mechanism to select the next operator to be applied, the roulette mechanism based on probability can ensure that the operator with large reward has a higher probability to be selected.
 % 由于我们选择队列中存储的最大FIR作为算子的reward，因此即使是poor operators在多次应用中也可以获得较大的reward。为了保证每个算子的reward都存在，在w次进化中，每个算子至少应用一次，其中常数w是队列的长度，人为设置。
-Since we take the maximum $FIR$ stored in the queue as the reward of operators, even the poor operators can get a large reward in multiple applications. In order to ensure that every operator has a reward, each operator is applied at least once in the $w$ times, where the constant $w$ is the length of the queue, which is set artificially.
+Since we take the maximum FIR stored in the queue as the reward of operators, even the poor operators can get a large reward in multiple applications. In order to ensure that every operator has a reward, each operator is applied at least once in the $w$ times, where the constant $w$ is the length of the queue, which is set artificially.
 
+% 伪代码
+The details of our proposed operator selection is shown in Algorithm \ref{}.
+
+\begin{
 
 \subsection{Embed DDQN within MOEA/D}
+% todo 伪代码
 %%%% 结合DDQN和算子选择，应用到moead的框架下
 %%% 先说明强化学习的功能，来解释为什么可以做AOS
 % 自适应算子选择问题的本质是根据算子以往的表现估计算子的性能，然后根据算子的性能为之后的个体选择合适的算子。
 The essence of AOS is to estimate the performance of the operator according to the previous applications of the operator, and then select the appropriate operator from the operators pool for the current individual according to the credit of the operators.
+% RL根据当前的state为EA推荐算子，then EA使用给定的算子进化，评估算子的效果给出reward和之后的state, depicted in Figure
+RL recommends the operator for EA according to the current state, then EA uses the given operator to evolve, evaluates the effect of the operator, and gives the reward and the next state, depicted in Figure \ref{fig:RLEA}.
+\begin{figure}[t]
+  \centering
+  \subfloat{\includegraphics[width=0.8\linewidth]{figs/RLEA1.pdf}}
+  \caption{Interaction framework between RL and EA}
+  \label{fig:RLEA}
+\end{figure}
 % 强化学习主要由agent environment state action reward 组成，agent根据环境的状态执行某个动作，之后环境会转换到一个新的状态，并且根据新的状态环境会给出奖励信号，agent根据奖励调整策略，agent的目标是得到最大的累积奖励。
 RL is composed of agent, environment, state, action and reward, agent takes action according to the state of the environment, and then the environment will change to a new state and give a reward value, the agent will adjust its strategy according to the reward and agent's goal is to get the maximum cumulative reward.
 
@@ -606,7 +662,8 @@ To apply the MDP, we also need to give the definition of state, action and rewar
         % 在MDP中，agent根据环境的状态做出动作，具体来说，深度神经网络输出在当前状态下每个动作质量，之后使用operator selection的方法给出具体的算子。
         In MDP, the agent makes an action $a_t$ based on the state $s^i$, specifically, the deep neural network outputs the quality of each action in the current state, and then uses the operator selection \ref{operator_selection} method to give the recommended operator.
         \TODO{action space}
-        \TODO{add equation}
+        % 动作空间是
+        % \TODO{add equation}
         % \item \textit{Policy:}
   \item \textit{Reward:}
         % 执行动作a^i后，状态会从S^i转移到S^i+1，并且环境会通过比较两个状态给出reward，表示动作的好坏。奖励越大，说明算子的效果越好，通过调整策略，在下次类似的状态时有更大的概率应用相同的算子。
@@ -627,6 +684,28 @@ In this paper, MOEA/D is applied, which can decompose MOP into several single-ob
 Since the AOS problems have discrete action space, a variant of the RL, double deep Q learning (DDQN) is applied.
 % 将MOEA/D框架作为环境,与DDQN交互。
 The MOEA/D framework is used as the environment to interacts with DDQN,
+% MOEA/D-DDQN的伪代码
+the details of MOEA/D-DDQN is shown in Algorithm \ref{alg:moead-ddqn}.
+
+\begin{algorithm}[t]
+  \caption{Framework of MOEA/D-DDQN}
+  \SetKwComment{Comment}{//}{}
+  \small
+  % 初始化各种参数
+  % while 评价次数t<FE^max
+  % 索引 i in (1,,NP)
+  % 组成state s_t = {x_i, w_i}
+  % 根据状态选择算子,此处参考 operator selection
+  % a_t = OS(s_t)
+  % generate trial vector u_i for parent x_i using operator a_t
+  % 计算reward，此处参考 credit assignment
+  % 更新邻域中的solutions 
+  % transtion = (s_t, a_t, r_t, u_i)
+  % 利用DQN 使用 transtion更新网络
+
+  \label{alg:moead-ddqn}
+\end{algorithm}
+
 % 在时刻t，个体的决策变量和权重向量共同组成state s，作为神经网络的输入，神经网络的输出是一个n维向量 out，表示应用算子后可以得到的期望累计回报，根据输出向量基于轮盘赌选择一个算子op，应用算子产生子代off，在基于分解的多目标框架中，我们可以很容易的计算子代相对于父代的适应度值提高率FIR，将应用的算子和得到的FIR放入滑动窗口中，之后从滑动窗口中取出算子op对应的最大FIR作为reward r，使用DDQN算法更新RL的策略以最大化累积奖励。
 At time $t$, state $s_t$ is composed of individual decision variables and weight vector as the input of the neural network. The output of the neural network is an n-dim vector $out_t$, which represents the expected cumulative reward after the application of the operator.
 According to the $out_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $off_t$. In multi-objective framework based on decomposition, we can easily calculate the $FIR_t$, put the $op_i$ and $FIR_t$ into the sliding window, then take the maximum $FIR$ corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DDQN algorithm to update the RL strategy to maximize the cumulative reward.
@@ -660,7 +739,7 @@ For each test instances, all algorithms run 30 times independently, in order to 
 the algorithm stops running when the number of evaluations is reached.
 % 评价次数设置
 We set the number of function evaluations for the ZDT test instances as 25000 and the DTLZ test instances as 60000.
-% 秩和检验
+% 秩和检验,显著性分析
 To obtain a statistically comprehensive Conclusions, we conducted the Wilcoxon rank sum test between the data obtained by the comparison algorithms, and the significance difference was 0.05.
 % "+-="
 "+","-","=" denote the results of the compared algorithms are better than, worse than, and similar to those obtained by proposed MOEA/D-DDQN.
