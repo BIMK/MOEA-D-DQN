@@ -555,6 +555,7 @@ The performance of operators are stable for a period of time, so we can take $re
 % 信誉赋值的伪代码
 The pseudocode of credit assignment scheme is given in Algorithm \ref{alg:credit_assignment}.
 \begin{algorithm}[t]
+  \label{alg:credit_assignment}
   \caption{Credit Assignment}
   \SetKwComment{Comment}{//}{}
   \small
@@ -562,7 +563,7 @@ The pseudocode of credit assignment scheme is given in Algorithm \ref{alg:credit
   \KwOut{\textit{reward}}   % 
   % 初始化部分变量
   $Q \leftarrow $ Queue store \textit{NFI} values and applied operators\;  %队列
-  $w \leftarrow $ The maximum length of $Q$\;
+  $W \leftarrow $ The maximum length of $Q$\;
   $B \leftarrow $ Neighborhood set of $x$\;
   $n_r \leftarrow$ The maximum number of solutions that $x$ can replace\;
   c = 0\;  % 替换计数，最多替换nr个
@@ -575,13 +576,13 @@ The pseudocode of credit assignment scheme is given in Algorithm \ref{alg:credit
     \If {$\textit{fir} > 0$}{
       Replace $x^j$ with $y$\;
       $\textit{NFI} = \textit{NFI} + \textit{fir} $\;  % 更新nfi
-      $c=c+1$\;
+      $c$++\;
     }
     Remove $x^j$ from $B$\;  % 从邻域中删除xj
   }
   %%%%% 将NFI插入队列
   % 查看队列的长度，如果等于w，pop出一个元素
-  \If {$Q.\textit{length} \geq w$}{
+  \If {$Q.\textit{length} \geq W$}{
     $Q$.\textit{pop()}\;
   }
   % 将NFI和所用的算子op放入队列
@@ -594,7 +595,6 @@ The pseudocode of credit assignment scheme is given in Algorithm \ref{alg:credit
     }
   }
   \Return{\textit{reward}}\;
-  \label{alg:credit_assignment}
 \end{algorithm}
 
 \subsection{Operator Selection \label{operator_selection}}
@@ -607,12 +607,39 @@ Operator selection should balance exploration and exploitation, on the one hand,
 % 我们使用一个神经网络拟合算子的质量，神经网络的输出是分别应用不同的算子后得到的期望reward，之后使用轮盘赌机制选择接下来要应用的算子, 轮盘赌可以保证reward大的算子有更大的概率被选中。
 We use a neural network to fit the quality of the operator, the output of neural network is the expected reward obtained by applying different operators, then we use roulette mechanism to select the next operator to be applied, the roulette mechanism based on probability can ensure that the operator with large reward has a higher probability to be selected.
 % 由于我们选择队列中存储的最大FIR作为算子的reward，因此即使是poor operators在多次应用中也可以获得较大的reward。为了保证每个算子的reward都存在，在w次进化中，每个算子至少应用一次，其中常数w是队列的长度，人为设置。
-Since we take the maximum FIR stored in the queue as the reward of operators, even the poor operators can get a large reward in multiple applications. In order to ensure that every operator has a reward, each operator is applied at least once in the $w$ times, where the constant $w$ is the length of the queue, which is set artificially.
+Since we take the maximum FIR stored in the queue as the reward of operators, even the poor operators can get a large reward in multiple applications. In order to ensure that every operator has a reward, each operator is applied at least once in the $W$ times, where the constant $W$ is the length of the queue, which is set artificially.
 
 % 伪代码
-The details of our proposed operator selection is shown in Algorithm \ref{}.
+The details of our proposed operator selection is shown in Algorithm \ref{alg:operator_selection}.
 
-\begin{
+\begin{algorithm}
+  \label{alg:operator_selection}
+  \caption{Operator Selection}
+  \SetKwComment{Comment}{//}{}
+  \small
+  \KwIn{$x^i$ (individual decision variables), $\lambda^i$ (Weight vector of $x^i$)}   % 根据个体决策变量和对应的权重向量推荐算子
+  \KwOut{\textit{op}}   %  输出选择的算子
+  % 统计Q中每个算子应用的次数，如果有算子的应用次数是零，直接返回这个算子
+  \For {$i \leftarrow 1 \textbf{ to } W$}{
+    $\textit{op} = Q_i.\textit{op}$\;
+    $n_{op}$++\;
+  }
+  \For {$op \leftarrow 1 \textbf{ to } K$}{
+    \If {$n_{op} = 0$}{
+      \Return {\textit{op}}\;  % 直接返回在Q中没有应用过的算子
+    }
+  }
+  % 将x和lambda组合成RL的state
+  \textit{state} $\leftarrow \{x^i, \lambda^i$\}\;
+  % 将状态输入到神经网络，得到输出向量
+  $a = \{ a^i, \dots , a^K \} = \text{NN}(\textit{state})$\;
+  % 使用roulette，根据输出向量选择算子
+  \textit{op} is choosed by roulette wheel based on $a$\;
+  \Return {\textit{op}}\;
+\end{algorithm}
+
+% \subsection{Double Deep Q Networks}  % 要不要单独介绍DQN
+%%% 这个可能也要给出伪代码
 
 \subsection{Embed DDQN within MOEA/D}
 % todo 伪代码
@@ -688,6 +715,7 @@ The MOEA/D framework is used as the environment to interacts with DDQN,
 the details of MOEA/D-DDQN is shown in Algorithm \ref{alg:moead-ddqn}.
 
 \begin{algorithm}[t]
+  \label{alg:moead-ddqn}
   \caption{Framework of MOEA/D-DDQN}
   \SetKwComment{Comment}{//}{}
   \small
@@ -703,7 +731,6 @@ the details of MOEA/D-DDQN is shown in Algorithm \ref{alg:moead-ddqn}.
   % transtion = (s_t, a_t, r_t, u_i)
   % 利用DQN 使用 transtion更新网络
 
-  \label{alg:moead-ddqn}
 \end{algorithm}
 
 % 在时刻t，个体的决策变量和权重向量共同组成state s，作为神经网络的输入，神经网络的输出是一个n维向量 out，表示应用算子后可以得到的期望累计回报，根据输出向量基于轮盘赌选择一个算子op，应用算子产生子代off，在基于分解的多目标框架中，我们可以很容易的计算子代相对于父代的适应度值提高率FIR，将应用的算子和得到的FIR放入滑动窗口中，之后从滑动窗口中取出算子op对应的最大FIR作为reward r，使用DDQN算法更新RL的策略以最大化累积奖励。
