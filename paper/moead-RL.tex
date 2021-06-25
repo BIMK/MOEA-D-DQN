@@ -17,6 +17,7 @@
 \renewcommand{\algorithmicrequire}{ \textbf{Input:}}      %Use Input in the format of Algorithm
 \renewcommand{\algorithmicensure}{ \textbf{Output:}}     %Use Output in the format of Algorithm
 \DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\argmax}{argmax}
 
 %\setlength{\abovecaptionskip}{-5pt}
 \setlength{\floatsep}{12pt  minus 4pt}
@@ -533,7 +534,7 @@ In MOEA/D, offspring can replace the individuals in the neighborhood. In order t
 where $pf_{k}$ and $cf_{i}$ are the fitness values of individuals in the neighborhood and offspring, $B_i$ is the neighborhood set of the $i^{th}$ individual.
 % 
 % 为了准确的衡量算子的信誉值，我们使用一个固定长度的先进先出的队列来存储算子近期的使用
-We used a fixed-length queue $Q$ to store the recent applications of operators to accurately measure the credit values.
+We used a fixed-length queue \textit{window} (of size \textit{windowSize}) to store the recent applications of operators to accurately measure the credit values.
 % 每次应用算子时，A(operator, FIR) 会被添加到队列尾，并且队列头会pop出一个元素。
 Every time the operator is applied, a tuple $A (op, \text{FIR})$ will be added to the end of the queue ($op$ is the index of the operator in this application, FIR is the fitness improvement rate after application), and an old element is moved out of the queue head.
 
@@ -543,9 +544,9 @@ In the AOS problem, the environment is dynamic and the operator has different pe
 % 有一种理论认为，稀少但是巨大的改进比频繁但微小的改进更有用，xx建议算子应该根据它近期获得的最大FIR作为reward。
 The underlying idea is that rare, but large improvements are more important than frequent small improvements, Fialho \cite{fialho2010comparison} believes that each operator should be rewarded according to the maximum fitness improvement it has recently achieved.
 % 因此我们取队列中的最大值作为operator的reward。
-So we take the maximum value in the queue $Q$ as the operator's reward.
+So we take the maximum value in the queue \textit{window} as the operator's reward.
 \begin{equation}
-  reward_k = \max_{op=k, i\in Q}(\text{FIR}_i) \in A_i(op,\text{FIR}_i)
+  reward_k = \max_{op=k, i\in \textit{window}}(\text{FIR}_i) \in A_i(op,\text{FIR}_i)
 \end{equation}
 % reward_k是算子k在近期的应用中所能获得的最大FIR，
 $reward_k$ is the maximum FIR that operator $k$ can obtain in recent applications.
@@ -559,13 +560,12 @@ The pseudocode of credit assignment scheme is given in Algorithm \ref{alg:credit
   \caption{Credit Assignment}
   \SetKwComment{Comment}{//}{}
   \small
-  \KwIn{\textit{op} (applied operator), $x$ (generated offspring)}   % 输入子代和应用的算子
+  \KwIn{\textit{op} (applied operator), $y$ (generated offspring)}   % 输入子代和应用的算子
   \KwOut{\textit{reward}}   % 
   % 初始化部分变量
-  $Q \leftarrow $ Queue store \textit{NFI} values and applied operators\;  %队列
-  $W \leftarrow $ The maximum length of $Q$\;
-  $B \leftarrow $ Neighborhood set of $x$\;
-  $n_r \leftarrow$ The maximum number of solutions that $x$ can replace\;
+  \textit{window}: The window to store \textit{NFI} values and applied operators\;  %队列
+  $B$: Neighborhood set of $y$\;
+  $n_r$: The maximum number of solutions that the offspring can replace\;
   c = 0\;  % 替换计数，最多替换nr个
   % \Comment{Get $\textit{NFI}$ using Equation \ref{eq:nfi}}
   \While {$c < n_r$\textbf{ and }$B \neq \varnothing$}{  % 更新邻域中的解，并计算NFI
@@ -582,16 +582,16 @@ The pseudocode of credit assignment scheme is given in Algorithm \ref{alg:credit
   }
   %%%%% 将NFI插入队列
   % 查看队列的长度，如果等于w，pop出一个元素
-  \If {$Q.\textit{length} \geq W$}{
-    $Q$.\textit{pop()}\;
+  \If {$\textit{window.length} \geq \textit{windowSize}$}{
+    \textit{window}.\textit{pop()}\;
   }
   % 将NFI和所用的算子op放入队列
-  $Q$.\textit{insert(\{NFI, op\})}\;
+  \textit{window}.\textit{insert(\{NFI, op\})}\;
   %%%% 求队列中op对应的最大NFI值，作为reward
   $\textit{reward} = 0$\;
-  \For {$i \leftarrow 1 $\textbf{ to }$ Q.\textit{length}$}{
-    \If {$Q_i.\textit{op} == op$}{
-      $\textit{reward} = \max\{\textit{reward}, Q_i.\textit{op}\}$\;
+  \For {$i \leftarrow 1 $\textbf{ to }$\textit{window}.\textit{length}$}{
+    \If {$\textit{window}_i.\textit{op} == op$}{
+      $\textit{reward} = \max\{\textit{reward}, \textit{window}_i.\textit{op}\}$\;
     }
   }
   \Return{\textit{reward}}\;
@@ -617,11 +617,15 @@ The details of our proposed operator selection is shown in Algorithm \ref{alg:op
   \caption{Operator Selection}
   \SetKwComment{Comment}{//}{}
   \small
-  \KwIn{$x^i$ (individual decision variables), $\lambda^i$ (Weight vector of $x^i$)}   % 根据个体决策变量和对应的权重向量推荐算子
-  \KwOut{\textit{op}}   %  输出选择的算子
+  \KwIn{$x^i$ (individual decision variables), $\lambda^i$ (weight vector of $x^i$)}   % 根据个体决策变量和对应的权重向量推荐算子
+  \KwOut{\textit{op} (selected operator)}   %  输出选择的算子
+  %%%% 变量说明
+  \textit{window}: The window to store \textit{NFI} values and applied operators\;  %队列
+  $K$: The size of operator pool\;
+  $Q$: The primary action-value network\;
   % 统计Q中每个算子应用的次数，如果有算子的应用次数是零，直接返回这个算子
-  \For {$i \leftarrow 1 \textbf{ to } W$}{
-    $\textit{op} = Q_i.\textit{op}$\;
+  \For {$i \leftarrow 1 \textbf{ to } \textit{windowSize}$}{
+    $\textit{op} = \textit{window}_i.\textit{op}$\;
     $n_{op}$++\;
   }
   \For {$op \leftarrow 1 \textbf{ to } K$}{
@@ -632,7 +636,7 @@ The details of our proposed operator selection is shown in Algorithm \ref{alg:op
   % 将x和lambda组合成RL的state
   \textit{state} $\leftarrow \{x^i, \lambda^i$\}\;
   % 将状态输入到神经网络，得到输出向量
-  $a = \{ a^i, \dots , a^K \} = \text{NN}(\textit{state})$\;
+  $a = \{ a^i, \dots , a^K \} = Q(\textit{state})$\;
   % 使用roulette，根据输出向量选择算子
   \textit{op} is choosed by roulette wheel based on $a$\;
   \Return {\textit{op}}\;
@@ -719,23 +723,55 @@ the details of MOEA/D-DDQN is shown in Algorithm \ref{alg:moead-ddqn}.
   \caption{Framework of MOEA/D-DDQN}
   \SetKwComment{Comment}{//}{}
   \small
+  % \KwIn{}
+  % \KwOut{}
   % 初始化各种参数
+  $\mathcal{P} = \{x^i,\dots,x^N\}$: The initial population\;
+  $\lambda = \{\lambda^i,\dots,\lambda^N\}$: The weight vectors\;
+  $z^* = \{z_1,\dots,z_m\}^T$: The best value found so far objective $f_i$\;
+  $\mathcal{D}$: Experience replay pool\;
+  $N_D$: The experience replay pool maximum size\;
+  $N_b$: Training batch size\;
+
+
   % while 评价次数t<FE^max
+  \While{ the termination critera have not been met}{
+  The indexes of the subproblems whose objectives are MOP individual objectives $f_i$ are selected to form initial $I$ and add other $\frac{N}{5} - m$ indexes to $I$ by using 10-tournament selection based on $\pi^i$.
   % 索引 i in (1,,NP)
-  % 组成state s_t = {x_i, w_i}
-  % 根据状态选择算子,此处参考 operator selection
-  % a_t = OS(s_t)
-  % generate trial vector u_i for parent x_i using operator a_t
-  % 计算reward，此处参考 credit assignment
-  % 更新邻域中的solutions 
+  \ForEach{$i \in I$}{
+  \If{$rand(0,1) < \delta$}{
+    $P = B(i)$\;
+  }\Else{
+    $P = \mathcal{P}$\;
+  }
+  $op = Operator Selection(x^i, \lambda^i)$\;
+  Generate the offspring $y$ by applying the chosen operator $op$ and the polynomial mutation operator\;
+  Update the best value $z^*$ if $z_j > f_j(y)$\;
+  $reward = Credit Assignment(op, y)$\;
+  %%%%% 根据reward更新DDQN权重
+  Store the transition $(s_t, a_t, r_{t+1}, s_{t+1})$ in replay buffer $\mathcal{D}$,
+  replacing the oldest transition if $|\mathcal{D}| >= N_D$\;
+  Sample a batch of $N_b$ transitions $(s_j,a_j,r_{j+1},s_{j+1})$ from $\mathcal{D}$\;
+  Define $a_j^{max} = \argmax_{a^\prime} Q(s_{j+1}, a)$\;
+  $y_j = r + \gamma Q^\prime(s_{j+1}, a_j^{max})$\;
+  Calculate the loss $\mathcal{L} = \frac{1}{N_b} \sum_{i=1}^{N_b}(Q(s_j,a_j)-y_j)^2$\;
+  Update $Q$ using the SGD algorithm by minimizing the loss $\mathcal{L}$\;
+  Every $C$ steps, copy the weight of $Q$ to $Q^\prime$\;
+  }
+  % 更新pi
+  $gen$++\;
+  \If {$mod(gen,50)=0$}{
+    update the utility $\pi^i$ of each subproblem\;
+  }
+  }
   % transtion = (s_t, a_t, r_t, u_i)
   % 利用DQN 使用 transtion更新网络
 
 \end{algorithm}
 
 % 在时刻t，个体的决策变量和权重向量共同组成state s，作为神经网络的输入，神经网络的输出是一个n维向量 out，表示应用算子后可以得到的期望累计回报，根据输出向量基于轮盘赌选择一个算子op，应用算子产生子代off，在基于分解的多目标框架中，我们可以很容易的计算子代相对于父代的适应度值提高率FIR，将应用的算子和得到的FIR放入滑动窗口中，之后从滑动窗口中取出算子op对应的最大FIR作为reward r，使用DDQN算法更新RL的策略以最大化累积奖励。
-At time $t$, state $s_t$ is composed of individual decision variables and weight vector as the input of the neural network. The output of the neural network is an n-dim vector $out_t$, which represents the expected cumulative reward after the application of the operator.
-According to the $out_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $off_t$. In multi-objective framework based on decomposition, we can easily calculate the $FIR_t$, put the $op_i$ and $FIR_t$ into the sliding window, then take the maximum $FIR$ corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DDQN algorithm to update the RL strategy to maximize the cumulative reward.
+At time $t$, state $s_t$ is composed of individual decision variables and weight vector as the input of the neural network. The output of the neural network is an n-dim vector $\text{out}_t$, which represents the expected cumulative reward after the application of the operator.
+According to the $\text{out}_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $\text{off}_t$. In multi-objective framework based on decomposition, we can easily calculate the $\text{FIR}_t$, put the $op_i$ and $\text{FIR}_t$ into the sliding window, then take the maximum FIR corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DDQN algorithm to update the RL strategy to maximize the cumulative reward.
 
 
 
@@ -757,7 +793,6 @@ The parameters of MOEA/D-DDQN are set as follows.
   \item Population size $N$ is set 100 for ZDT and 300 for DTLZ;
   \item Maximum number of solutions replaced by each offspring $n_r$ is 2;
   \item Neighbor size: $T=20$;
-  \item $\epsilon$-greedy policy: $\epsilon=0.01$;
 \end{enumerate}
 
 % 算法跑30次，评价次数
