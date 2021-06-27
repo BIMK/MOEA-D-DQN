@@ -6,7 +6,7 @@ import time
 import geatpy as ea  # import geatpy
 import numpy as np
 
-from moea_MOEAD_DRA_templet import moea_MOEAD_DRA_templet
+from moea_MOEAD_DRA_templet_aos import moea_MOEAD_DRA_templet
 
 parent_path = os.path.dirname(sys.path[0])
 if parent_path not in sys.path:
