@@ -41,8 +41,9 @@ class Best_cro:
         self.lambda_ = lambda_  # 权重向量
         self.Encoding = Encoding
         self.FieldDR = FieldDR
-        self.Opers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
-                      DE_current_to_rand_1(), DE_current_to_rand_2()]
+        # self.Opers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
+        #   DE_current_to_rand_1(), DE_current_to_rand_2()]
+        self.Opers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2()]
         self.n = len(self.Opers)  # 候选算子个数
         self.countOpers = np.zeros(self.n)  # 记录算子的选择情况
         self.processBound = ProcessBound(FieldDR)
@@ -86,11 +87,12 @@ class RecRL:
         self.name = "RecRL"
         self.problem = problem
         self.lambda_ = lambda_
-        self.recOpers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
-                         DE_current_to_rand_1(), DE_current_to_rand_2()]
-        self.n = len(self.recOpers)
+        # self.recOpers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2(),
+        #  DE_current_to_rand_1(), DE_current_to_rand_2()]
+        self.Opers = [Recsbx(XOVR=0.7, Half=True, n=20), RecM2m(maxgen), DE_rand_1(), DE_rand_2()]
+        self.n = len(self.Opers)
         self.dqn = DQN(problem.Dim + problem.M, self.n)
-        self.SW = np.zeros((2, NIND // 2))
+        self.SW = np.zeros((2, NIND * 4))
         self.a = 0
         self.state = None
         self.state_ = None
@@ -102,7 +104,10 @@ class RecRL:
         OldChrom: 变异前的原始矩阵
         return:  返回新种群的染色体矩阵
         """
+        self.gen = currentGen
         self.state = np.hstack((OldChrom[r0], self.lambda_[r0]))
+        # print(self.state.shape)
+        # self.state = np.ones(32)
         if self.dqn.memory_counter > 100:
             self.a = self.dqn.choose_action(self.state)
             # 如果有算子在滑动窗口里没有记录，那么就选它
@@ -114,12 +119,13 @@ class RecRL:
             self.a = np.random.randint(0, self.n)
         self.countOpers[self.a] += 1
         if self.a == 0:  # 使用模拟二进制交叉
-            offChrom = self.recOpers[0].do(OldChrom, r0, neighbourVector)
+            offChrom = self.Opers[0].do(OldChrom, r0, neighbourVector)
         elif self.a == 1:  # 使用M2m里的交叉
-            offChrom = self.recOpers[1].do(OldChrom, r0, neighbourVector, currentGen)
+            offChrom = self.Opers[1].do(OldChrom, r0, neighbourVector, currentGen)
         else:  # 使用差分算子
-            offChrom = self.recOpers[self.a].do(OldChrom, r0, neighbourVector)
+            offChrom = self.Opers[self.a].do(OldChrom, r0, neighbourVector)
         self.state_ = np.hstack((offChrom[0], self.lambda_[r0]))
+        # self.state_ = self.state
         return offChrom
 
     def learn(self, r):
@@ -130,11 +136,26 @@ class RecRL:
         # 将上次进化加入滑动窗口
         self.SW = np.concatenate((self.SW[:, 1:], np.array([[self.a], [r]])), axis=1)
 
-        # r = np.empty(self.n)
-        # for i in range(n):
-        #     r[i] = np.sum(self.SW[1, self.SW[0, :] == i])
+        # r1 = np.empty(self.n)
+        # r2 = np.empty(self.n)
+        # r3 = np.empty(self.n)
+        # for i in range(self.n):
+        #     r1[i] = np.mean(self.SW[1, self.SW[0, :] == i])
+        #     r2[i] = np.median(self.SW[1, self.SW[0, :] == i])
+        #     if len(self.SW[1, self.SW[0, :] == i]):
+        #         r3[i] = np.max(self.SW[1, self.SW[0, :] == i])
+        #     else:
+        #         r3[i] = 0
+        # print("gen", self.gen)
+        # print("mean", r1)
+        # print("median", r2)
+        # print("max", r3)
+
         # self.DQN.store_transition(state,i,r[i],state_)
+        # reward = np.sum(self.SW[1, self.SW[0, :] == self.a])
         reward = np.max(self.SW[1, self.SW[0, :] == self.a])
+        # reward = 6 - self.a
+        # print(reward1, reward)
         self.dqn.store_transition(self.state, self.a, reward, self.state_)
         # 学习,更新DQN
         if self.dqn.memory_counter > 100:

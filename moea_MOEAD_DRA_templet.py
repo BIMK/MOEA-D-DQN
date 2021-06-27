@@ -6,9 +6,7 @@ from scipy.spatial.distance import cdist
 from sys import path as paths
 from os import path
 from matplotlib import pyplot as plt
-# from Nature_DQN import DQN
-# from mut_de import DE_rand_1, DE_rand_2, DE_current_to_rand_1, DE_current_to_rand_2, RL_mut_moea
-from crossover import ProcessBound, RecRL, Best_cro, Recsbx
+from crossover import DE_rand_1, ProcessBound, RecRL, Best_cro, Recsbx
 from mutation import Best_mut, MutRL, Mutpolyn
 
 paths.append(path.split(path.split(path.realpath(__file__))[0])[0])
@@ -32,8 +30,9 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # self.DQN = DQN(problem.Dim, 4)
         if population.Encoding == 'RI':
             # self.xovOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
-            self.countOper = Best_cro(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
-            # self.xovSbx = ea.Recsbx(XOVR=0.9)
+            # self.countOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
+            self.de_rand_1 = DE_rand_1()
+            # self.countOper = Best_cro(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
             # self.xovSbx = Recsbx()
             # self.countOper = Best_mut(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
             # self.mutOper = MutRL(problem, self.uniformPoint, population.Encoding, population.Field, MAXGEN, self.NIND)
@@ -47,8 +46,10 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
             self.decomposition = ea.pbi  # 采用pbi权重聚合法
 
         self.Ps = 0.9  # (Probability of Selection)表示进化时有多大的概率只从邻域中选择个体参与进化
-        self.neighborSize = max(self.NIND // 10, 20)
-        self.nr = max(self.NIND // 100, 3)
+        # self.neighborSize = max(self.NIND // 10, 20)
+        self.neighborSize = 20
+        # self.nr = max(self.NIND // 100, 3)
+        self.nr = 2
         self.learn_interval = 5  # 每5代更新DQN网络
         # self.SW = np.zeros((2, self.NIND // 2))  # 滑动窗口，可以记录算子的情况
         # self.a = 0
@@ -87,25 +88,26 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         off_CombinObjV = self.decomposition(offspring.ObjV, weights, idealPoint, offspring.CV, self.problem.maxormins)
         replace = np.where(off_CombinObjV <= CombinObjV)[0][:self.nr]  # 更新个体的索引
         population[indices[replace]] = offspring  # 更新子代
-        if replace.size == 0:  # 没得替换
-            return
+        # if replace.size == 0:  # 没得替换
+        # return
         # 被取代的父代的平均值作为状态
         # 直系父代的决策变量作为state
         # state = np.mean(population.Chrom[indices[replace]], axis=0)
         # state = population.Chrom[i]
         # state_ = offspring.Chrom[0]
         # if not isinstance(self.xovOper, RecRL):  # 既然不是强化学习的策略，也就不需要后面的更新了
-        if True:
-            return
         # 子代相比父代适应度提高的相对率
         FIR = (CombinObjV[replace] - off_CombinObjV[replace]) / CombinObjV[replace]
         r = FIR.sum()
-        if self.currentGen % self.learn_interval == 0:
-            self.xovOper.learn(r)
-            self.mutOper.learn(r)
+        # print(r)
+        # self.countOper.learn(r)
+        # if self.currentGen % self.learn_interval == 0:
+        # self.xovOper.learn(r)
+        # self.mutOper.learn(r)
 
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
         # ==========================初始化配置===========================
+        self.countOper = RecRL(self.problem, self.uniformPoint, self.MAXGEN, self.NIND)
         self.initialization()
         population = self.population
         # NOTE: 在使用crtup生成单位目标维度均匀分布的参考点集时NIND可能不是种群大小。
@@ -143,13 +145,14 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                     np.random.shuffle(indices)
                     # 实例化一个种群对象用于存储进化的后代（这里只进化生成一个后代）
                     offspring = ea.Population(population.Encoding, population.Field, 1)
-                    offspring.Chrom = self.countOper.do(population.Chrom, i, indices, idealPoint, self.currentGen)  # Best_cro
-                    # offspring.Chrom = self.xovOper.do(population.Chrom, i, indices, self.currentGen)
+                    # offspring.Chrom = self.countOper.do(population.Chrom, i, indices, idealPoint, self.currentGen)  # Best_cro
+                    # offspring.Chrom = self.countOper.do(population.Chrom, i, indices, self.currentGen)  # RL
+                    offspring.Chrom = self.de_rand_1.do(population.Chrom, i, indices)
                     # offspring.Chrom = self.xovSbx.do(population.Chrom, i, indices)  # sbx模拟二进制交叉
                     offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 多项式变异
                     # offspring.Chrom = self.mutOper.do(population.Chrom, offspring.Chrom, i, self.currentGen)
                     # offspring.Chrom = self.countOper.do(population.Chrom, offspring.Chrom, i, idealPoint, self.currentGen)
-                    offspring.Chrom = self.processBound.do(offspring.Chrom)
+                    # offspring.Chrom = self.processBound.do(offspring.Chrom)
                     self.call_aimFunc(offspring)  # 求进化后个体的目标函数值
                     # 更新理想点
                     idealPoint = ea.crtidp(offspring.ObjV, offspring.CV, self.problem.maxormins, idealPoint)
@@ -164,16 +167,18 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 pi[idx] = (0.95 + 0.05 * DELTA[idx] / 0.001) * pi[idx]
                 oldz = newz
                 """统计不同进化阶段算子选择的结果"""
-                PopCountOpers.append(self.countOper.countOpers)
-                self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
+                # PopCountOpers.append(self.countOper.countOpers)
+                # self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
 
         # 画出不同进化阶段算子选择的结果
-        BestSelection = np.array(PopCountOpers[2:])
+        # BestSelection = np.array(PopCountOpers[2:])
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')
+        """
         for i in range(self.countOper.n):
             plt.plot(BestSelection[:, i], '.', label=self.countOper.Opers[i].name)
         plt.legend()
         plt.show()
+        """
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果

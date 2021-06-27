@@ -6,6 +6,7 @@ DQN步骤：
 """
 # %%
 from abc import ABC
+from numpy.lib.function_base import _quantile_dispatcher
 
 import torch
 import torch.nn as nn
@@ -16,11 +17,11 @@ from matplotlib import pyplot as plt
 import sys
 
 # Hyper Parameters
-BATCH_SIZE = 32
+BATCH_SIZE = 8
 LR = 0.01                   # learning rate
 EPSILON = 0.9               # greedy policy
-GAMMA = 0.9                 # reward discount
-TARGET_REPLACE_ITER = 100   # target update frequency
+GAMMA = 0.4                 # reward discount
+TARGET_REPLACE_ITER = 7   # target update frequency
 MEMORY_CAPACITY = 500
 # env = gym.make('CartPole-v0')
 # env = env.unwrapped
@@ -81,16 +82,21 @@ class DQN(object):
             # if use_gpu:
             # actions_value = actions_value.cpu()
             actions_value = actions_value.detach().numpy()
-            actions_value[actions_value <= 0] = 0.001  # 不能有负概率
-            actions_value = actions_value / np.sum(actions_value)  # 归一化
+            # print(actions_value)
+            action = np.argmax(actions_value[0])  # 选择回报最大的动作
+            # print(action)
+            return action
+            # actions_value[actions_value <= 0] = 0.001  # 不能有负概率
+            # actions_value = actions_value / np.sum(actions_value)  # 归一化
             # 计算排名
             argsort_ = self.N_ACTIONS - 1 - np.argsort(np.argsort(actions_value[0]))
             # 以系数c拉大概率差距
-            c = 0.5
-            for i in range(self.N_ACTIONS):
-                actions_value[0][i] = actions_value[0][i] * c**argsort_[i]
+            # c = 0.5
+            # for i in range(self.N_ACTIONS):
+            # actions_value[0][i] = actions_value[0][i] * c**argsort_[i]
             # 手动设计概率
-            probability_value = np.array([[70, 28, 10, 8, 5, 5]])
+            # probability_value = np.array([[70, 28, 10, 8, 5, 5]])
+            probability_value = np.array([[15000, 4, 0.5, 0.5]])
             # probability_value = probability_value / np.sum(probability_value)
             actions_value = probability_value[:, argsort_]
 
@@ -137,7 +143,8 @@ class DQN(object):
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)
         q_next = self.target_net(b_s_).detach()     # detach from graph, don't backpropagate
-        q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE, 1)   # shape (batch, 1)
+        # q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE, 1)   # shape (batch, 1)
+        q_target = b_r
         loss = self.loss_func(q_eval, q_target)
 
         self.optimizer.zero_grad()
