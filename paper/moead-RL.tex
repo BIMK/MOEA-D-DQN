@@ -435,7 +435,19 @@ In order to get better results and adapt to different problems, we design two op
 
 \textit{Crossover Pool}
 \begin{enumerate}
-  % \item Simulated binary crossover
+  \item Simulated binary crossover
+        \begin{equation}
+          \beta=\left\{\begin{array}{cl}
+            (2 u)^{\frac{1}{n_{c+1}}},                         & \text { if } u \leq 0.5 \\
+            \left(\frac{1}{2(1-u)}\right)^{\frac{1}{n_{c+1}}}, & \text { otherwise }
+          \end{array}\right.
+        \end{equation}
+  \item MOEA/D-M2M crossover
+        \begin{align}
+           & v^{i}=x^{i}+rc \cdot\left(x^{i}-x^{j}\right)                                    \\
+           & rc={rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Maxgen}\right)^{0.7}}\right)
+          \label{m2m:cro}
+        \end{align}
   \item DE/rand/1
         \begin{equation}
           v^{i}=x^{i}+F \times\left(x^{r_{1}}-x^{r_{2}}\right)
@@ -446,20 +458,14 @@ In order to get better results and adapt to different problems, we design two op
           v^{i}=x^{i}+F \times\left(x^{r_1}-x^{r_2}\right)+F \times\left(x^{r_3}-x^{r_4}\right)
           \label{de2}
         \end{equation}
-  \item DE/current-to-rand/1
-        \begin{equation}
-          v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)
-        \end{equation}
-  \item DE/current-to-rand/2
-        \begin{equation}
-          v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)+F \times\left(x^{r_{4}}-x^{r_{5}}\right)
-        \end{equation}
-  \item MOEA/D-M2M crossover
-        \begin{align}
-           & v^{i}=x^{i}+rc \cdot\left(x^{i}-x^{j}\right)                                    \\
-           & rc={rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Maxgen}\right)^{0.7}}\right)
-          \label{m2m:cro}
-        \end{align}
+        % \item DE/current-to-rand/1
+        %       \begin{equation}
+        %         v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)
+        %       \end{equation}
+        % \item DE/current-to-rand/2
+        %       \begin{equation}
+        %         v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)+F \times\left(x^{r_{4}}-x^{r_{5}}\right)
+        %       \end{equation}
 \end{enumerate}
 Where $x^i$ is the target vector and $v^i$ is the mutant vector, the variables $x^j, j \in \{r_1,r_2,r_3,r_4,r_5\}$ are different solutions chosen randomly from $P$, which are also different from original vector $x^i$. The scaling factor $F > 0$ is a real and constant factor which controls the amplification of the differential vector $x^a-x^b$ and $K \in [0,1]$ is analogous to $F$. For the crossover operator \ref{de1} and \ref{de2}, the binomial crossover operator \cite{storn1997differential} is applied to generate the offspring, it works as
 \begin{equation}

@@ -106,9 +106,7 @@ class RecRL:
         """
         self.gen = currentGen
         self.state = np.hstack((OldChrom[r0], self.lambda_[r0]))
-        # print(self.state.shape)
-        # self.state = np.ones(32)
-        if self.dqn.memory_counter > 100:
+        if self.dqn.memory_counter > 300:
             self.a = self.dqn.choose_action(self.state)
             # 如果有算子在滑动窗口里没有记录，那么就选它
             for i in range(self.n):
@@ -117,6 +115,8 @@ class RecRL:
                     break
         else:
             self.a = np.random.randint(0, self.n)
+        # self.a = np.random.randint(0, self.n)
+        # self.a = 0
         self.countOpers[self.a] += 1
         if self.a == 0:  # 使用模拟二进制交叉
             offChrom = self.Opers[0].do(OldChrom, r0, neighbourVector)
@@ -125,7 +125,6 @@ class RecRL:
         else:  # 使用差分算子
             offChrom = self.Opers[self.a].do(OldChrom, r0, neighbourVector)
         self.state_ = np.hstack((offChrom[0], self.lambda_[r0]))
-        # self.state_ = self.state
         return offChrom
 
     def learn(self, r):
@@ -189,8 +188,29 @@ class Recsbx:
     def do(self, OldChrom, r0, neighbourVector):
         # pop[r0]作为父代,还需要另外一个父代才能做交叉,所以需要从neighbourVector里随机选一个
         r1 = np.random.choice(neighbourVector)
-        p1 = np.vstack((OldChrom[r0], OldChrom[r1]))
-        off = ea.recsbx(p1, self.XOVR, self.Half, self.n, self.Parallel)
+        p0 = OldChrom[r0:r0 + 1]
+        p1 = OldChrom[r1:r1 + 1]
+        # print(p1)
+        D = p1.shape[1]
+        mu = np.random.rand(1, D)
+        beta = np.zeros((1, D))
+        idx = mu <= 0.5
+        beta[idx] = (2 * mu[idx])**(1 / (self.n + 1))
+        beta[~idx] = (2 - 2 * mu[~idx])**(-1 / (self.n + 1))
+        beta = beta * np.random.choice([-1, 1], (1, D))
+        idx = np.random.rand(1, D) < 0.5
+        beta[idx] = 1
+        # if random.random() < 0.5:
+        # beta = 1
+        if random.random() < 0.5:
+            off = (p0 + p1) / 2 + beta * (p0 - p1) / 2
+        else:
+            off = (p0 + p1) / 2 - beta * (p0 - p1) / 2
+        # off = np.array([off])
+        # print(off)
+        # r1 = np.random.choice(neighbourVector)
+        # p1 = np.vstack((OldChrom[r0], OldChrom[r1]))
+        # off = ea.recsbx(p1, self.XOVR, self.Half, self.n, self.Parallel)
         return off
 
 

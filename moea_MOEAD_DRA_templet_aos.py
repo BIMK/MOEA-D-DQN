@@ -31,7 +31,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         if population.Encoding == 'RI':
             # self.xovOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
             # self.countOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
-            self.de_rand_1 = DE_rand_1()
+            # self.de_rand_1 = DE_rand_1()
             # self.countOper = Best_cro(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
             # self.xovSbx = Recsbx()
             # self.countOper = Best_mut(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
@@ -87,11 +87,11 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         pop_CV = population.CV[indices, :] if population.CV is not None else None
         CombinObjV = self.decomposition(pop_ObjV, weights, idealPoint, pop_CV, self.problem.maxormins)
         off_CombinObjV = self.decomposition(offspring.ObjV, weights, idealPoint, offspring.CV, self.problem.maxormins)
-        population[indices[np.where(off_CombinObjV <= CombinObjV)[0][:self.nr]]] = offspring
-        # replace = np.where(off_CombinObjV <= CombinObjV)[0][:self.nr]  # 更新个体的索引
-        # population[indices[replace]] = offspring  # 更新子代
-        # if replace.size == 0:  # 没得替换
-        # return
+        # population[indices[np.where(off_CombinObjV <= CombinObjV)[0][:self.nr]]] = offspring
+        replace = np.where(off_CombinObjV <= CombinObjV)[0][:self.nr]  # 更新个体的索引
+        population[indices[replace]] = offspring  # 更新子代
+        if replace.size == 0:  # 没得替换
+            return
         # 被取代的父代的平均值作为状态
         # 直系父代的决策变量作为state
         # state = np.mean(population.Chrom[indices[replace]], axis=0)
@@ -99,17 +99,17 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # state_ = offspring.Chrom[0]
         # if not isinstance(self.xovOper, RecRL):  # 既然不是强化学习的策略，也就不需要后面的更新了
         # 子代相比父代适应度提高的相对率
-        # FIR = (CombinObjV[replace] - off_CombinObjV[replace]) / CombinObjV[replace]
-        # r = FIR.sum()
+        FIR = (CombinObjV[replace] - off_CombinObjV[replace]) / CombinObjV[replace]
+        r = FIR.sum()
         # print(r)
-        # self.countOper.learn(r)
-        # if self.currentGen % self.learn_interval == 0:
+        if self.currentGen % self.learn_interval == 0:
+            self.countOper.learn(r)
         # self.xovOper.learn(r)
         # self.mutOper.learn(r)
 
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
         # ==========================初始化配置===========================
-        # self.countOper = RecRL(self.problem, self.uniformPoint, self.MAXGEN, self.NIND)
+        self.countOper = RecRL(self.problem, self.uniformPoint, self.MAXGEN, self.NIND)
         self.initialization()
         population = self.population
         # NOTE: 在使用crtup生成单位目标维度均匀分布的参考点集时NIND可能不是种群大小。
@@ -147,13 +147,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                     # 实例化一个种群对象用于存储进化的后代（这里只进化生成一个后代）
                     offspring = ea.Population(population.Encoding, population.Field, 1)
                     # offspring.Chrom = self.countOper.do(population.Chrom, i, indices, idealPoint, self.currentGen)  # Best_cro
-                    # offspring.Chrom = self.countOper.do(population.Chrom, i, indices, self.currentGen)  # RL
+                    offspring.Chrom = self.countOper.do(population.Chrom, i, indices, self.currentGen)  # RL
                     # offspring.Chrom = self.de_rand_1.do(population.Chrom, i, indices)
-                    r = indices[ea.rps(len(indices), 2)]  # 随机选择两个索引作为差分向量的索引
-                    r1, r2 = r[0], r[1]  # 得到差分向量索引
-                    offspring.Chrom = population.Chrom[[i], :]
-                    offspring.Chrom[0] = offspring.Chrom[0] + 0.5 * (
-                        population.Chrom[r1] - population.Chrom[r2])
                     # offspring.Chrom = self.xovSbx.do(population.Chrom, i, indices)  # sbx模拟二进制交叉
                     offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 多项式变异
                     # offspring.Chrom = self.mutOper.do(population.Chrom, offspring.Chrom, i, self.currentGen)
@@ -177,7 +172,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 # self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
 
         # 画出不同进化阶段算子选择的结果
-        # BestSelection = np.array(PopCountOpers[2:])
+        BestSelection = np.array(PopCountOpers[2:])
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')

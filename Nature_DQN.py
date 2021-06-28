@@ -83,10 +83,10 @@ class DQN(object):
             # actions_value = actions_value.cpu()
             actions_value = actions_value.detach().numpy()
             # print(actions_value)
-            action = np.argmax(actions_value[0])  # 选择回报最大的动作
+            # action = np.argmax(actions_value[0])  # 选择回报最大的动作
             # print(action)
-            return action
-            # actions_value[actions_value <= 0] = 0.001  # 不能有负概率
+            # return action
+            actions_value[actions_value <= 0] = 0.001  # 不能有负概率
             # actions_value = actions_value / np.sum(actions_value)  # 归一化
             # 计算排名
             argsort_ = self.N_ACTIONS - 1 - np.argsort(np.argsort(actions_value[0]))
@@ -96,17 +96,20 @@ class DQN(object):
             # actions_value[0][i] = actions_value[0][i] * c**argsort_[i]
             # 手动设计概率
             # probability_value = np.array([[70, 28, 10, 8, 5, 5]])
-            probability_value = np.array([[15000, 4, 0.5, 0.5]])
             # probability_value = probability_value / np.sum(probability_value)
-            actions_value = probability_value[:, argsort_]
+            # actions_value = probability_value[:, argsort_]
 
             actions_value = actions_value / np.sum(actions_value)
 
             # 按照概率取样
-            action = np.random.choice(np.arange(0, self.N_ACTIONS), size=1, p=actions_value[0])
+
+            try:
+                action = np.random.choice(self.N_ACTIONS, size=1, p=actions_value[0])[0]
+            except:
+                print(actions_value)
+                action = np.random.randint(0, self.N_ACTIONS)
             # print(actions_value, action)
             # action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)  # return the argmax index
-            action = action[0]
         else:   # random
             action = np.random.randint(0, self.N_ACTIONS)   # [0,N_ACTIONS)
             # action = action if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)
