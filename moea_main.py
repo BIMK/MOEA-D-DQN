@@ -5,6 +5,7 @@ import sys
 import time
 import geatpy as ea  # import geatpy
 import numpy as np
+from multiprocessing.dummy import Pool as ThreadPool
 
 from moea_MOEAD_DRA_templet_aos import moea_MOEAD_DRA_templet
 
@@ -38,10 +39,10 @@ if __name__ == '__main__':
     # problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
     # problems = ['UF8','UF9','UF10']
     # problems = ['DTLZ1', 'DTLZ2', 'DTLZ3', 'DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7', ]
-    problems = ['ZDT1', 'ZDT2', 'ZDT3', 'ZDT4', 'ZDT5', 'ZDT6']
+    # problems = ['ZDT1', 'ZDT2', 'ZDT3', 'ZDT4', 'ZDT5', 'ZDT6']
     # problems = ['WFG1', 'WFG2', 'WFG3', 'WFG4', 'WFG5', 'WFG6', 'WFG7', 'WFG8', 'WFG9', ]
-    # problems = ['WFG3']
-    N = 45   # 独立运行N次，取中值
+    problems = ['ZDT5']
+    N = 30   # 独立运行N次，取中值
     results = list()
     for problemName in problems:
         """======================实例化问题对象========================="""
@@ -66,17 +67,33 @@ if __name__ == '__main__':
         myAlgorithm.verbose = False
         igd = np.empty(N)
         hv = np.empty(N)
+        """==========================调用算法模板进行种群进化========================"""
+        """
+        def f(x):
+            NDSet, pop, plt = myAlgorithm.run()  # 每次run都是独立的，会重新初始化模版的一些动态参数
+            IGD = ea.indicator.IGD(NDSet.ObjV, PF)     # 计算IGD指标
+            HV = ea.indicator.HV(NDSet.ObjV, PF)       # 计算HV指标
+            logging.info('time: %s,  round %d/%d, IGD = %.7f, HV = %.7f' % (get_time(), x + 1, N, IGD, HV))
+            igd[x] = IGD
+            hv[x] = HV
+        tasks = list(range(N))
+        pool = ThreadPool(10)
+        pool.map(f, tasks)
+        pool.close()
+        pool.join()
+        """
+        # """
         for i in range(N):
-            """==========================调用算法模板进行种群进化========================"""
             NDSet, pop, plt = myAlgorithm.run()  # 每次run都是独立的，会重新初始化模版的一些动态参数
             IGD = ea.indicator.IGD(pop.ObjV, PF)     # 计算IGD指标
             HV = ea.indicator.HV(NDSet.ObjV, PF)       # 计算HV指标
             logging.info('time: %s,  round %d/%d, IGD = %.7f, HV = %.7f' % (get_time(), i + 1, N, IGD, HV))
             igd[i] = IGD
             hv[i] = HV
-        # 保留20个最好数据
-        igd = np.sort(igd)[:25]  # igd取前25
-        hv = np.sort(hv)[-25:]  # hv取后25
+        # """
+        # 保留xx个最好数据
+        igd = np.sort(igd)[:30]  # igd取前xx
+        hv = np.sort(hv)[-30:]  # hv取后xx
         res = "median --- IGD={:.7f}, IGD.std={:.7f}, HV={:.7f}, HV.std={:.7f}".format(np.median(igd), np.std(igd), np.median(hv), np.std(hv))
         results.append(res)
         logging.info(res)
@@ -85,26 +102,26 @@ if __name__ == '__main__':
     sys.exit(0)
 
 """
-    NDSet,pop = myAlgorithm.run()   # 执行算法模板，得到帕累托最优解集NDSet
+    NDSet, pop = myAlgorithm.run()   # 执行算法模板，得到帕累托最优解集NDSet
     # NDSet.save()                # 把结果保存到文件中
     # 输出
     # print(myAlgorithm.mutDE.name)
-    print('用时：%s 秒'%(myAlgorithm.passTime))
-    print('评价次数：%d 次'%(myAlgorithm.evalsNum))
-    print('非支配个体数：%d 个'%(NDSet.sizes))
+    print('用时：%s 秒' % (myAlgorithm.passTime))
+    print('评价次数：%d 次' % (myAlgorithm.evalsNum))
+    print('非支配个体数：%d 个' % (NDSet.sizes))
     # 计算指标
-    PF = problem.getReferObjV() # 获取真实前沿，详见Problem.py中关于Problem类的定义
+    PF = problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
     if PF is not None and NDSet.sizes != 0:
         # GD = ea.indicator.GD(NDSet.ObjV, PF)       # 计算GD指标
         IGD = ea.indicator.IGD(NDSet.ObjV, PF)     # 计算IGD指标
         HV = ea.indicator.HV(NDSet.ObjV, PF)       # 计算HV指标
         # Spacing = ea.indicator.Spacing(NDSet.ObjV) # 计算Spacing指标
         # print('GD',GD)
-        print('IGD',IGD)
+        print('IGD', IGD)
         print('HV', HV)
         # print('Spacing', Spacing)
 """
-"""=============================进化过程指标追踪分析============================"""
+""" == == == == == == == == == == == == == == = 进化过程指标追踪分析 == == == == == == == == == == == == == =="""
 """
     # if PF is not None:
     #     metricName = [['IGD'], ['HV']]
