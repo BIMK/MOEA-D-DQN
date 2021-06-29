@@ -5,6 +5,7 @@ import sys
 import time
 import geatpy as ea  # import geatpy
 import numpy as np
+import scipy.io
 from multiprocessing.dummy import Pool as ThreadPool
 
 from moea_MOEAD_DRA_templet_aos import moea_MOEAD_DRA_templet
@@ -39,11 +40,12 @@ if __name__ == '__main__':
     # problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
     # problems = ['UF8','UF9','UF10']
     # problems = ['DTLZ1', 'DTLZ2', 'DTLZ3', 'DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7', ]
-    # problems = ['ZDT1', 'ZDT2', 'ZDT3', 'ZDT4', 'ZDT5', 'ZDT6']
+    problems = ['ZDT1', 'ZDT2', 'ZDT3', 'ZDT4', 'ZDT6']
     # problems = ['WFG1', 'WFG2', 'WFG3', 'WFG4', 'WFG5', 'WFG6', 'WFG7', 'WFG8', 'WFG9', ]
-    problems = ['ZDT5']
+    # problems = ['ZDT5']
     N = 30   # 独立运行N次，取中值
     results = list()
+    # mat_res = list()
     for problemName in problems:
         """======================实例化问题对象========================="""
         logging.info('time: %s       Start ... %s' % (get_time(), problemName))
@@ -90,6 +92,9 @@ if __name__ == '__main__':
             logging.info('time: %s,  round %d/%d, IGD = %.7f, HV = %.7f' % (get_time(), i + 1, N, IGD, HV))
             igd[i] = IGD
             hv[i] = HV
+            res_mat = {'result': [NIND * MAXGEN, 123], 'metric': {'runtime': 4, 'IGD': IGD, 'HV': HV}}
+            mat_name = './Data/MOEADDQN_' + str(problem.name) + '_M' + str(problem.M) + '_D' + str(problem.Dim) + '_' + str(i + 1) + '.mat'
+            scipy.io.savemat(mat_name, mdict=res_mat)
         # """
         # 保留xx个最好数据
         igd = np.sort(igd)[:30]  # igd取前xx

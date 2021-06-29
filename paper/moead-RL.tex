@@ -3,6 +3,7 @@
 \usepackage{palatino,epsfig,latexsym,cite,graphicx,amsmath,amssymb,amsfonts,multirow,booktabs,color,soul}
 \usepackage{algorithmic,url}
 \usepackage{float}
+\usepackage{paralist}
 \usepackage{threeparttable}
 \usepackage{amsmath}
 \usepackage[linesnumbered,ruled,vlined]{algorithm2e}
@@ -437,26 +438,33 @@ In order to get better results and adapt to different problems, we design two op
 \begin{enumerate}
   \item Simulated binary crossover
         \begin{equation}
+          \label{eq:sbx}
           \beta=\left\{\begin{array}{cl}
-            (2 u)^{\frac{1}{n_{c+1}}},                         & \text { if } u \leq 0.5 \\
-            \left(\frac{1}{2(1-u)}\right)^{\frac{1}{n_{c+1}}}, & \text { otherwise }
+            (2 \mu)^{\frac{1}{\eta+1}},                         & \text { if } u \leq 0.5 \\
+            \left(\frac{1}{2(1-\mu)}\right)^{\frac{1}{\eta+1}}, & \text { otherwise }
           \end{array}\right.
+        \end{equation}
+        \begin{equation}
+          \begin{aligned}
+             & v^i_1=0.5\left[(1+\beta) x_{i}+(1-\beta) x_{j}\right] \\
+             & v^i_2=0.5\left[(1-\beta) x_{i}+(1+\beta) x_{j}\right]
+          \end{aligned}
         \end{equation}
   \item MOEA/D-M2M crossover
         \begin{align}
-           & v^{i}=x^{i}+rc \cdot\left(x^{i}-x^{j}\right)                                    \\
-           & rc={rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Maxgen}\right)^{0.7}}\right)
-          \label{m2m:cro}
+           & v^{i}=x^{i}+rc \times \left(x^{i}-x^{j}\right)                                                      \\
+           & rc={rand} \times \left(1-{rand}^{-\left(1-\frac{\textit{gen}}{\textit{Maxgen}}\right)^{0.7}}\right)
+          \label{c_op:m2m}
         \end{align}
   \item DE/rand/1
         \begin{equation}
           v^{i}=x^{i}+F \times\left(x^{r_{1}}-x^{r_{2}}\right)
-          \label{de1}
+          \label{op:de1}
         \end{equation}
   \item DE/rand/2
         \begin{equation}
           v^{i}=x^{i}+F \times\left(x^{r_1}-x^{r_2}\right)+F \times\left(x^{r_3}-x^{r_4}\right)
-          \label{de2}
+          \label{op:de2}
         \end{equation}
         % \item DE/current-to-rand/1
         %       \begin{equation}
@@ -467,37 +475,44 @@ In order to get better results and adapt to different problems, we design two op
         %         v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)+F \times\left(x^{r_{4}}-x^{r_{5}}\right)
         %       \end{equation}
 \end{enumerate}
-Where $x^i$ is the target vector and $v^i$ is the mutant vector, the variables $x^j, j \in \{r_1,r_2,r_3,r_4,r_5\}$ are different solutions chosen randomly from $P$, which are also different from original vector $x^i$. The scaling factor $F > 0$ is a real and constant factor which controls the amplification of the differential vector $x^a-x^b$ and $K \in [0,1]$ is analogous to $F$. For the crossover operator \ref{de1} and \ref{de2}, the binomial crossover operator \cite{storn1997differential} is applied to generate the offspring, it works as
+% sbx
+In simulated binary crossover (SBX) \cite{sbc}, $\mu$ is a random number between 0 and 1, the distribution index $\eta$ is a nonnegative real number, a large value of $\eta$ brings a higher probability for creating near parent solutions and a small $\eta$ allows distant solutions to be selected as Offspring. We calculate $\beta$ with equal probability based on $\mu$.
+% m2m
+For crossover operator in MOEA/D-M2M \cite{m2m}, $x^j$ is a solution randomly chosen from $P$ and different from $x^i$, $\textit{rand}$ is a uniformly random number in $[-1,1]$, $\textit{gen}$ is the currnet generation and $\textit{Maxgen}$ is the maximum generation user designed.
+% DE
+Where in DE/rand/1 and DE/rand/2, $x^i$ is the target vector and $v^i$ is the mutant vector, the variables $x^j, j \in \{r_1,r_2,r_3,r_4,r_5\}$ are different solutions chosen randomly from $P$, which are also different from original vector $x^i$. The scaling factor $F > 0$ is a real and constant factor which controls the amplification of the differential vector $x^a-x^b$ and $K \in [0,1]$ is analogous to $F$. For the crossover operator \ref{op:de1} and \ref{op:de2}, the binomial crossover operator \cite{storn1997differential} is applied to generate the offspring, it works as
 \begin{equation}
   u_{j}^{i}=\left\{\begin{array}{ll}
-    v_{j}^{i}, & \text { if }  { rand_j } \leq C R \text { or } j=j_{ {rn^i }} \\
+    v_{j}^{i}, & \text { if }  { rand_j } \leq CR \text { or } j=j_{ {rn^i }} \\
     x_{j}^{i}, & \text { otherwise }
   \end{array}\right.
 \end{equation}
 where $rand_j \in [0,1]$ is the $j^{th}$ uniformly random, $CR \in [0,1]$ is the crossover rate which has to determined by user, $rn^i$ is a randomly selected index from $\{1,2,\dots,D\}$ which ensures that at least one parameter of $u^i$ comes from $v^i$.
-For operator \ref{m2m:cro}, $x^j$ is a solution randomly chosen from $P$ and different from $x^i$, $rand$ is a uniformly random number in $[-1,1]$, $gen$ is the currnet generation and $Maxgen$ is the maximum generation user designed.
 
-\textit{Mutation Pool}
-\begin{enumerate}
-  \item Gaussian mutation
-  \item Polynomial mutation
-        \begin{equation}
-          \begin{array}{l}
-            y^{i} = x^{i} + \delta \cdot (ub_k - lb_k) \\
-            \delta=\left\{\begin{array}{l}
-              {\left[2 \mu+(1-2 \mu)\left(1-\delta_{1}\right)^{\eta_{m}+1}\right]^{\frac{1}{\eta_{m}+1}}-1, \text { if } \mu \leq 0.5} \\
-              1-\left[2(1-\mu)+2(\mu-0.5)\left(1-\eta_{2}\right)^{\eta_{m}+1}\right]^{\frac{1}{\eta_{m}+1}}, \text { if } \mu>0.55     \\
-              \delta_1 = (v_k-l_k)/(u_k-l_k)
-            \end{array}\right.
-          \end{array}
-        \end{equation}
-  \item MOEA/D-M2M mutation
-        \begin{align}
-           & y^{i}_{k} = x^{i}_{k} + rm \cdot (ub(k)-lb(k))                                                     \\
-           & r m=0.15 \cdot {rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Max \cdot gen}\right)^{0.7}}\right)
-        \end{align}
-\end{enumerate}
-where in polynomial mutation, $\mu$ is a random number between 0 and 1, $\eta_m$ is the distribution index of polynomial mutation, $ub_k$ and $lb_k$ are the upper and lower bounds of decision variables at the $k^{th}$ position. In MOEA/D-M2M mutation, $rand$ is a random number between -1 and 1, $y^i$ is the new individual of $x^i$ after crossover and mutation.
+% 变异
+After using the crossover mutation, the polynomial mutation operators is applied \cite{deb1996combined}.
+
+% \textit{Mutation Pool}
+% \begin{enumerate}
+%   \item Gaussian mutation
+%   \item Polynomial mutation
+%         \begin{equation}
+%           \begin{array}{l}
+%             y^{i} = x^{i} + \delta \cdot (ub_k - lb_k) \\
+%             \delta=\left\{\begin{array}{l}
+%               {\left[2 \mu+(1-2 \mu)\left(1-\delta_{1}\right)^{\eta_{m}+1}\right]^{\frac{1}{\eta_{m}+1}}-1, \text { if } \mu \leq 0.5} \\
+%               1-\left[2(1-\mu)+2(\mu-0.5)\left(1-\eta_{2}\right)^{\eta_{m}+1}\right]^{\frac{1}{\eta_{m}+1}}, \text { if } \mu>0.55     \\
+%               \delta_1 = (v_k-l_k)/(u_k-l_k)
+%             \end{array}\right.
+%           \end{array}
+%         \end{equation}
+%   \item MOEA/D-M2M mutation
+%         \begin{align}
+%            & y^{i}_{k} = x^{i}_{k} + rm \cdot (ub(k)-lb(k))                                                     \\
+%            & r m=0.15 \cdot {rand} \cdot\left(1-{rand}^{-\left(1-\frac{gen}{Max \cdot gen}\right)^{0.7}}\right)
+%         \end{align}
+% \end{enumerate}
+% where in polynomial mutation, $\mu$ is a random number between 0 and 1, $\eta_m$ is the distribution index of polynomial mutation, $ub_k$ and $lb_k$ are the upper and lower bounds of decision variables at the $k^{th}$ position. In MOEA/D-M2M mutation, $rand$ is a random number between -1 and 1, $y^i$ is the new individual of $x^i$ after crossover and mutation.
 
 \subsection{Credit Assignment \label{credit_ass}}
 %%% 说明本文的适应度赋值部分
@@ -787,33 +802,47 @@ According to the $\text{out}_t$, an operator $op_i$ is selected based on roulett
 \section{Experimental studies}
 %%% 实验研究
 % 为了证明算法MOEA/D-DDQN的有效性，我们在 xxx 数据集进行了测试，并且和MOEA/D-DE,MOEA/D-DRA,MOEA/D-FRRMAB,MOEA/D-IR比较了结果。
-To prove the effectivenness of MOEA/D-DDQN, we test it on ZDT, DTLZ datasets, and compare the results with those obtained by MOEA/D-DE, MOEA/D-DRA, MOEA/D-FRRMAB, MOEA/D-IR.
-
-% 我们分别使用两个神经网络推荐交叉算子和变异算子，除了输入层的维度，两个网络具有相同的结构。
-We use two neural networks to recommend crossover operator and mutation operator respectively. Except for the dimension of input layer, the two networks have the same structure.
+%  \TODO 增加参考文献引用
+To prove the effectivenness of MOEA/D-DQN, we test it on ZDT, DTLZ, WFG, UF datasets, and compare the results with those obtained by MOEA/D-DE, MOEA/D-DRA, MOEA/D-FRRMAB, MOEA/D-IR.
 
 \subsection{Experimental settings}
 % 对比算法的参数设置参考原论文的实现，结果来自PlatEMO platform
-All the parameters in the comparison algorithm are the same as those in the original paper, and the experimental results are collected from PlatEMO platform \cite{PlatEMO}.
+All the parameters in the comparison algorithm are the same as those in the original paper, and the experimental results are collected from PlatEMO \cite{PlatEMO} platform.
 % 算法的参数设置如下
-The parameters of MOEA/D-DDQN are set as follows.
+The parameters of MOEA/D-DQN are set as follows.
 \begin{enumerate}
   \item Parameters in operators: $CR=1$, $F=0.5$, $K=0.5$, $\eta=20$;
-  \item Population size $N$ is set 100 for ZDT and 300 for DTLZ;
+  \item Population size $N$ is set 100 for ZDT, DTLZ and WFG, 600/1000 for bi/tri-objective UF;
   \item Maximum number of solutions replaced by each offspring $n_r$ is 2;
-  \item Neighbor size: $T=20$;
+  \item The neighborhood size: $T=20$;
+  \item Control parameters in operators: We set the $F=0.5$ and $CR=1.0$ for DE operators, and the distribution index $\eta=20$ in SBX.
+  \item Control parameters in MOEA/D-DQN:
+        \begin{enumerate}
+          \item The length of window \textit{windowSize} equal to population size $N$;
+          \item The train batch size: $N_b = 16$;
+          \item The experience replay pool maximum size: $N_D=512$;
+        \end{enumerate}
 \end{enumerate}
 
-% 算法跑30次，评价次数
+%%%% 算法跑30次，评价次数
 % 对于每个test instances， 算法独立运行30次，
 For each test instances, all algorithms run 30 times independently, in order to ensure the fairness of the comparison, all algorithms use the same number of function evaluations,
 the algorithm stops running when the number of evaluations is reached.
 % 评价次数设置
-We set the number of function evaluations for the ZDT test instances as 25000 and the DTLZ test instances as 60000.
+We set the number of function evaluations for the ZDT test instances as 10,000, the DTLZ test instances as 30,000, the WFG test instances as 25,000 and the UF test instances as 300,000.
 % 秩和检验,显著性分析
 To obtain a statistically comprehensive Conclusions, we conducted the Wilcoxon rank sum test between the data obtained by the comparison algorithms, and the significance difference was 0.05.
 % "+-="
-"+","-","=" denote the results of the compared algorithms are better than, worse than, and similar to those obtained by proposed MOEA/D-DDQN.
+"+","-","=" denote the results of the compared algorithms are better than, worse than, and similar to those obtained by proposed MOEA/D-DQN.
+
+%%%%% 评价指标
+No single performance metric can give a comprehensive measure of the performance of a MOEA, in this paper, we chose two widely used performance indicators: Inverted generational distance (IGD) \cite{igd} and Hypervolume (HV) \cite{hv}.
+% igd
+Both of them can measure the convergence and distribution of the population, in order to calculate the IGD, we uniformly sample 10,000 points from the real PF of each problem to constitute a reference set. The smaller the IGD value, the closer the solutions are to the real PF.
+% HV
+
+
+
 
 % 使用dark和light gray指示最佳和次优的结果 
 % Dark/light gray emphasizes the best/second-best results.
