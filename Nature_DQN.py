@@ -23,6 +23,7 @@ EPSILON = 0.9               # greedy policy
 GAMMA = 0.4                 # reward discount
 TARGET_REPLACE_ITER = 7   # target update frequency
 MEMORY_CAPACITY = 500
+DEVICE = 3   # 指定GPU
 # env = gym.make('CartPole-v0')
 # env = env.unwrapped
 # N_ACTIONS = 4  # 4种候选的算子
@@ -65,8 +66,8 @@ class DQN(object):
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
         self.loss_func = nn.MSELoss()
         if use_gpu:
-            self.eval_net, self.target_net = self.eval_net.cuda(), self.target_net.cuda()
-            self.loss_func = self.loss_func.cuda()
+            self.eval_net, self.target_net = self.eval_net.cuda(DEVICE), self.target_net.cuda(DEVICE)
+            self.loss_func = self.loss_func.cuda(DEVICE)
 
     def choose_action(self, x):
         # x: a game state
@@ -74,13 +75,13 @@ class DQN(object):
         # 返回的是0-1动作整数编码
         x = torch.unsqueeze(torch.FloatTensor(x), 0)
         if use_gpu:
-            x = x.cuda()
+            x = x.cuda(DEVICE)
         # input only one sample
         # if np.random.uniform() < EPSILON:   # greedy
         if np.random.uniform() < 2:   # greedy
             actions_value = self.eval_net.forward(x)  # shape=(1,action)
-            # if use_gpu:
-            # actions_value = actions_value.cpu()
+            if use_gpu:
+                actions_value = actions_value.cpu()
             actions_value = actions_value.detach().numpy()
             # print(actions_value)
             # action = np.argmax(actions_value[0])  # 选择回报最大的动作
@@ -138,10 +139,10 @@ class DQN(object):
         b_r = torch.FloatTensor(b_memory[:, self.N_STATES + 1:self.N_STATES + 2])
         b_s_ = torch.FloatTensor(b_memory[:, -self.N_STATES:])
         if use_gpu:
-            b_s = b_s.cuda()
-            b_a = b_a.cuda()
-            b_r = b_r.cuda()
-            b_s_ = b_s_.cuda()
+            b_s = b_s.cuda(DEVICE)
+            b_a = b_a.cuda(DEVICE)
+            b_r = b_r.cuda(DEVICE)
+            b_s_ = b_s_.cuda(DEVICE)
 
         # q_eval w.r.t the action in experience
         q_eval = self.eval_net(b_s).gather(1, b_a)  # shape (batch, 1)

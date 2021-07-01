@@ -47,10 +47,10 @@
   Evolutionary Algorithms (EAs) are stochastic optimization algorithms which are greatly influenced by operators, different operators have various search range.
   % AOS提供对进化算法的在线控制，即为当前个体选择合适的算子。
   Adaptive operator selection (AOS) provides the on-line control of the evolutionary algorithms that is to choose the appropriate operator for the current individual.
-  % 本文提出了一种基于DDQN的算子选择策略，来确定哪个算子将被应用
-  This paper proposed a new AOS approach based on Doubel Deep Q Network, a Deep Reinforcement Learning (RL) algorithm in discrete action spaces, to determine which operator will be applied.
+  % 本文提出了一种基于DQN的算子选择策略，来确定哪个算子将被应用
+  This paper proposed a new AOS approach based on Deep Q Network, a Deep Reinforcement Learning (RL) algorithm in discrete action spaces, to determine which operator will be applied.
   % AOS的两部分信誉赋值和算子选择，分别对应MDP中的reward和action，当前个体的特征可以作为MDP的state，
-  The two main components of AOS,Credit Assignment and Operator Selection, correspond toReward and Action of Markov Decision Process (MDP) andthe State of MDP can be represented by the  features ofthe current individual.
+  The two main components of AOS,Credit Assignment and Operator Selection, correspond toReward and Action of Markov Decision Process (MDP) andthe State of MDP can be represented by the features ofthe current individual.
   % 根据之前的规则，算子选择问题可以被建模成MDP，并且用强化学习解决。 
   According to the above rules, the operator selection problem is modeled as MDP and can be solved by reinforcement learning.
   % 在进化过程中，
@@ -63,7 +63,7 @@
 \end{IEEEkeywords}
 
 \section{Introduction}
-%%%%%%%%%%%%%%%%%%%%%%%%      需要在introduction里说明我的算法，包括主要的过程，实验部分，和其它RL的相关知识
+%%%%%%%%%%%%%%%%%      需要在introduction里说明我的算法，包括主要的过程，实验部分，和其它RL的相关知识
 
 %%% 介绍下进化多目标优化
 % 由于多个目标间通常互相冲突，没有一个全局最优解，一般会有一个PF
@@ -119,8 +119,8 @@ But even at the same state, the best operator is different for different individ
 In this paper, we proposed an AOS method based on RL, which can recommend different operators according to the individual to achieve more fine-grained control and recommend crossover operators and mutation operators respectively to achieve better results.
 
 % 本文组织结构
-% 在第二章，我们介绍了多目标优化，强化学习的和AOS的相关工作. 在第三章，我们提出了MOEA/D-DDQN，并详细介绍了实现细节。实验结果
-The rest of this paper is organized as follows. In Section II, we introduced the background of AOS and some related works. We proposed AOS methods MOEA/D-DDQN and introduced the details of tis implementation in Section III. In Section IV, the experimental results are presented and analyzed. At last, we give the main conclusions and lines for future research in Section V.
+% 在第二章，我们介绍了多目标优化，强化学习的和AOS的相关工作. 在第三章，我们提出了MOEA/D-DQN，并详细介绍了实现细节。实验结果
+The rest of this paper is organized as follows. In Section II, we introduced the background of AOS and some related works. We proposed AOS methods MOEA/D-DQN and introduced the details of tis implementation in Section III. In Section IV, the experimental results are presented and analyzed. At last, we give the main conclusions and lines for future research in Section V.
 
 \IEEEpubidadjcol
 
@@ -327,7 +327,7 @@ the value-based method relies on finding the action that maximizes the action va
 %%%%%%%%%%%%%%%%%% Deep Q Network
 % 当状态空间特别巨大时，对值函数的估计是特别困难的，DQN采用神经网络逼近动作值函数
 When state space is very large, it is difficult to estimate the action function, Deep Q Network (DQN) \cite{mnih2015human} uses a neural network to approximate action value function.
-%%%%%%%%%%%%%%%%%%% Double Deep Q Networks
+%%%%%%%%%%%%%%%%%%% Deep Q Networks
 % DQN使用相同的值来选择和评估一个动作，如果一个动作值被高估了，它将再次被选择和高估，为了防止这种情况，Double Q-learning[37]将计算与选择解耦
 DQN uses the same values to select and to evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection,
 % 更进一步，DDQN使用第二个神经网络来评估动作的质量，而第一个网络用来通过 e贪婪策略选择动作
@@ -335,15 +335,15 @@ futhermore, Double Deep Q Networks (DDQN) \cite{ddqn} use a second neural networ
 % 通过从第一个网络复制权值，第二个网络每n次更新一次
 By copying weights from the first network, the second network is updated every $n$ times.
 
-% 在这篇论文中，我们提出了一种基于DDQN的AOS方法，
-In this paper, we proposed an AOS method based on DDQN,
+% 在这篇论文中，我们提出了一种基于DQN的AOS方法，
+In this paper, we proposed an AOS method based on DQN,
 % 我们将强化学习作为算子选择器集成到进化算法中，为每个个体推荐合适的算子，强化学习的奖励与算子的性能相关，根据奖励我们可以更新强化学习的策略，最大化累计期望奖励
 we integrate RL as an operator selector into evolutionary algorithm to recommend suitable operator for each individual, the reward of RL is related to the performance of the operator, according to the reward, we can update the strategy to maximize the cumulative expected reward.
 
 % 我们使用在线控制的方法，将强化学习的选择器嵌入到进化算法中，并根据进化的效果给强化学习适当的奖励，根据奖励我们可以更新强化学习的策略，使得在未来获得最高的期望奖励。
 % we used online control method to embed RL selector into evolutionary algorithm, according to the effect of evolution, we can give appropriate reward to RL and update the strategy to get the highest expected reward in the future.
 
-\section{AOS via DDQN}
+\section{AOS via DQN}
 % 许多论文采用预训练的方式，比如。首先在训练问题上训练多伦，然后在测试问题上使用在线控制的方式，但我们认为不同的问题有不同的最佳算子，而且由于进化路径的不同，在相同的进化阶段也可能有不同的最佳算子，因此AOS难以有迁移性。
 % 现有的将RL应用到AOS问题的工作大多采用离线训练的方式，首先在部分测试问题上收集数据并训练神经网络，之后将训练好的模型应用到测试问题上，
 Most of the existing works of applying RL to AOS problems adopts the way of off-line training, collect data on some benchmark functions and train the neural network, and then use the the trained neural network to predict which operator should be applied to each individual at each generation.
@@ -353,7 +353,7 @@ However, in our opinion, different problems may have different optimal operators
 % 所以我们没有两阶段，先训练再应用的方式，而是直接使用端到端的在线控制，利用当前信息训练模型，预测之后的选择算子。
 So we don't adopt the two-stage method (train stage and control stage), but adopt the end-to-end online control method, use the current information to train neural network and the use the previous training model to select the operators.
 % 为了增加训练样本利用率，我们使用经验回放机制\cite{DQN}，将transition存储经验池
-In order to increase the utilization of training samples, we use the experience replay mechanism \cite{ddqn} and store the transition $e_t = (s_t,a_t,r_t,s_{t+1})$ at each time-step $t$ in a data set $D_t = {e_1,\dots, e_t}$.
+In order to increase the utilization of training samples, we use the experience replay mechanism \cite{zha2019experience} and store the transition $e_t = (s_t,a_t,r_t,s_{t+1})$ at each time-step $t$ in a data set $D_t = {e_1,\dots, e_t}$.
 
 % \subsection{differential evolution}
 %%% 先介绍下传统的差分进化，在moead框架下，使用tche分解
@@ -430,11 +430,13 @@ During the search, MOEA/D-DRA works as follows:
 \subsection{AOS with RL}
 %%% 利用强化学习做算子选择，需要介绍算法流程
 % 强化学习解决EvE困境的特性可以用来解决算子选择问题，所以我们将RL作为进化算法的算子选择器， 用来从算子池中选择合适的算子
-The feature of RL to solve EvE dilemma can be used to solve the AOS problem, so we apply RL as the operator selector of evolutionary algorithm to select the appropriate operator from the operator pool and DDQN is used to optimize the network model.
+The feature of RL to solve EvE dilemma can be used to solve the AOS problem, so we apply RL as the operator selector of evolutionary algorithm to select the appropriate operator from the operator pool and DQN is used to optimize the network model.
 % 为了更好的发挥AOS的优势，并且适应不同的问题，我们设计了两个算子池(交叉和变异)
-In order to get better results and adapt to different problems, we design two operator pools (crossover pool and mutation pool).
+% In order to get better results and adapt to different problems, we design two operator pools (crossover pool and mutation pool).
+% 暂时就使用一个算子池
+In order to get better results and adapt to different problems, we design an operator pool with four different operators.
 
-\textit{Crossover Pool}
+\textit{Operator Pool}
 \begin{enumerate}
   \item Simulated binary crossover
         \begin{equation}
@@ -520,7 +522,7 @@ After using the crossover mutation, the polynomial mutation operators is applied
 Generally speaking, credit assignment can be divided into two parts. Firstly, the fitness improvement of the operator is determined according to the influence on the recent application, and then the quality of the operator is estimated according to the fitness improvement of the operator over a period of time.
 
 % 由于目标函数值在前期有较大的改进，在后期变化较小，我们使用适应度提高率来评价子代相对父代的改进，
-Since the objective function value has a great improvement in the early stage and a small change in the later stage, in MOEA/D-DDQN we use the fitness improvement rate to measure the improvement of offspring to their parents.
+Since the objective function value has a great improvement in the early stage and a small change in the later stage, in MOEA/D-DQN we use the fitness improvement rate to measure the improvement of offspring to their parents.
 The FIR value of $i^{th}$ individual can be calculated as Equation (\ref{eq:fir}).
 % 把这个公式放到related work
 % \begin{equation}
@@ -663,12 +665,12 @@ The details of our proposed operator selection is shown in Algorithm \ref{alg:op
   \Return {\textit{op}}\;
 \end{algorithm}
 
-% \subsection{Double Deep Q Networks}  % 要不要单独介绍DQN
+% \subsection{Deep Q Networks}  % 要不要单独介绍DQN
 %%% 这个可能也要给出伪代码
 
-\subsection{Embed DDQN within MOEA/D}
+\subsection{Embed DQN within MOEA/D}
 % todo 伪代码
-%%%% 结合DDQN和算子选择，应用到moead的框架下
+%%%% 结合DQN和算子选择，应用到moead的框架下
 %%% 先说明强化学习的功能，来解释为什么可以做AOS
 % 自适应算子选择问题的本质是根据算子以往的表现估计算子的性能，然后根据算子的性能为之后的个体选择合适的算子。
 The essence of AOS is to estimate the performance of the operator according to the previous applications of the operator, and then select the appropriate operator from the operators pool for the current individual according to the credit of the operators.
@@ -731,17 +733,17 @@ For example, in domination relation based multi-objective algorithms, such as NS
 % 我们使用MOEAD算法，which可以将多目标问题分解成多个单目标子问题,所以单目标中适应度赋值的方法可以应用moead框架上。
 In this paper, MOEA/D is applied, which can decompose MOP into several single-objective subproblems, so the methods of credit assignment in single-objective can be applied to MOEA/D framework.
 
-%%% 应用的是DDQN的强化学习方法
-% 由于算子选择问题具有离散的动作空间，因此我们使用RL的variant，Double DQN 
-Since the AOS problems have discrete action space, a variant of the RL, double deep Q learning (DDQN) is applied.
-% 将MOEA/D框架作为环境,与DDQN交互。
-The MOEA/D framework is used as the environment to interacts with DDQN,
-% MOEA/D-DDQN的伪代码
-the details of MOEA/D-DDQN is shown in Algorithm \ref{alg:moead-ddqn}.
+%%% 应用的是DQN的强化学习方法
+% 由于算子选择问题具有离散的动作空间，因此我们使用RL的variant，DQN 
+Since the AOS problems have discrete action space, a variant of the RL, deep Q learning (DQN) is applied.
+% 将MOEA/D框架作为环境,与DQN交互。
+The MOEA/D framework is used as the environment to interacts with DQN,
+% MOEA/D-DQN的伪代码
+the details of MOEA/D-DQN is shown in Algorithm \ref{alg:moead-dqn}.
 
 \begin{algorithm}[t]
-  \label{alg:moead-ddqn}
-  \caption{Framework of MOEA/D-DDQN}
+  \label{alg:moead-dqn}
+  \caption{Framework of MOEA/D-DQN}
   \SetKwComment{Comment}{//}{}
   \small
   % \KwIn{}
@@ -754,7 +756,7 @@ the details of MOEA/D-DDQN is shown in Algorithm \ref{alg:moead-ddqn}.
   $N_D$: The experience replay pool maximum size\;
   $N_b$: Training batch size\;
   $Q$: The primary action-value network\;
-  $Q^\prime$: The target action-value network\;
+  $\hat{Q}$: The target action-value network\;
   % $\gamma$: The discount factor\;
   % $C$: The 
 
@@ -772,15 +774,14 @@ the details of MOEA/D-DDQN is shown in Algorithm \ref{alg:moead-ddqn}.
   Generate the offspring $y$ by applying the chosen operator $op$ and the polynomial mutation operator\;
   Update the best value $z^*$ if $z_j > f_j(y)$\;
   $reward = Credit Assignment(op, y)$\;
-  %%%%% 根据reward更新DDQN权重
+  %%%%% 根据reward更新DQN权重
   Store the transition $(s_t, a_t, r_{t+1}, s_{t+1})$ in replay buffer $\mathcal{D}$,
   replacing the oldest transition if $|\mathcal{D}| >= N_D$\;
   Sample a batch of $N_b$ transitions $(s_j,a_j,r_{j+1},s_{j+1})$ from $\mathcal{D}$\;
-  Define $a_j^{max} = \argmax_{a^\prime} Q(s_{j+1}, a)$\;
-  $y_j = r + \gamma Q^\prime(s_{j+1}, a_j^{max})$\;
+  $y_j = r_j + \gamma \max{_{a^\prime} \hat{Q}(s_{j+1}, a^\prime)}$\;
   Calculate the loss $\mathcal{L} = \frac{1}{N_b} \sum_{i=1}^{N_b}(Q(s_j,a_j)-y_j)^2$\;
   Update $Q$ using the SGD algorithm by minimizing the loss $\mathcal{L}$\;
-  Every $C$ steps, copy the weight of $Q$ to $Q^\prime$\;
+  Every $C$ steps, copy the weight of $Q$ to $\hat{Q}$\;
   }
   % 更新pi
   $gen$++\;
@@ -793,15 +794,15 @@ the details of MOEA/D-DDQN is shown in Algorithm \ref{alg:moead-ddqn}.
 
 \end{algorithm}
 
-% 在时刻t，个体的决策变量和权重向量共同组成state s，作为神经网络的输入，神经网络的输出是一个n维向量 out，表示应用算子后可以得到的期望累计回报，根据输出向量基于轮盘赌选择一个算子op，应用算子产生子代off，在基于分解的多目标框架中，我们可以很容易的计算子代相对于父代的适应度值提高率FIR，将应用的算子和得到的FIR放入滑动窗口中，之后从滑动窗口中取出算子op对应的最大FIR作为reward r，使用DDQN算法更新RL的策略以最大化累积奖励。
+% 在时刻t，个体的决策变量和权重向量共同组成state s，作为神经网络的输入，神经网络的输出是一个n维向量 out，表示应用算子后可以得到的期望累计回报，根据输出向量基于轮盘赌选择一个算子op，应用算子产生子代off，在基于分解的多目标框架中，我们可以很容易的计算子代相对于父代的适应度值提高率FIR，将应用的算子和得到的FIR放入滑动窗口中，之后从滑动窗口中取出算子op对应的最大FIR作为reward r，使用DQN算法更新RL的策略以最大化累积奖励。
 At time $t$, state $s_t$ is composed of individual decision variables and weight vector as the input of the neural network. The output of the neural network is an n-dim vector $\text{out}_t$, which represents the expected cumulative reward after the application of the operator.
-According to the $\text{out}_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $\text{off}_t$. In multi-objective framework based on decomposition, we can easily calculate the $\text{FIR}_t$, put the $op_i$ and $\text{FIR}_t$ into the sliding window, then take the maximum FIR corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DDQN algorithm to update the RL strategy to maximize the cumulative reward.
+According to the $\text{out}_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $\text{off}_t$. In multi-objective framework based on decomposition, we can easily calculate the $\text{FIR}_t$, put the $op_i$ and $\text{FIR}_t$ into the sliding window, then take the maximum FIR corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DQN algorithm to update the RL strategy to maximize the cumulative reward.
 
 
 
 \section{Experimental studies}
 %%% 实验研究
-% 为了证明算法MOEA/D-DDQN的有效性，我们在 xxx 数据集进行了测试，并且和MOEA/D-DE,MOEA/D-DRA,MOEA/D-FRRMAB,MOEA/D-IR比较了结果。
+% 为了证明算法MOEA/D-DQN的有效性，我们在 xxx 数据集进行了测试，并且和MOEA/D-DE,MOEA/D-DRA,MOEA/D-FRRMAB,MOEA/D-IR比较了结果。
 %  \TODO 增加参考文献引用
 To prove the effectivenness of MOEA/D-DQN, we test it on ZDT, DTLZ, WFG, UF datasets, and compare the results with those obtained by MOEA/D-DE, MOEA/D-DRA, MOEA/D-FRRMAB, MOEA/D-IR.
 
@@ -809,7 +810,7 @@ To prove the effectivenness of MOEA/D-DQN, we test it on ZDT, DTLZ, WFG, UF data
 % 对比算法的参数设置参考原论文的实现，结果来自PlatEMO platform
 All the parameters in the comparison algorithm are the same as those in the original paper, and the experimental results are collected from PlatEMO \cite{PlatEMO} platform.
 % 算法的参数设置如下
-The parameters of MOEA/D-DQN are set as follows.
+The parameters of our method MOEA/D-DQN are set as follows.
 \begin{enumerate}
   \item Parameters in operators: $CR=1$, $F=0.5$, $K=0.5$, $\eta=20$;
   \item Population size $N$ is set 100 for ZDT, DTLZ and WFG, 600/1000 for bi/tri-objective UF;
@@ -826,7 +827,7 @@ The parameters of MOEA/D-DQN are set as follows.
 
 %%%% 算法跑30次，评价次数
 % 对于每个test instances， 算法独立运行30次，
-For each test instances, all algorithms run 30 times independently, in order to ensure the fairness of the comparison, all algorithms use the same number of function evaluations,
+All test instances run on the same computer(Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz, 32 GB), for each test instances, all algorithms run 30 times independently, in order to ensure the fairness of the comparison, all algorithms use the same number of function evaluations,
 the algorithm stops running when the number of evaluations is reached.
 % 评价次数设置
 We set the number of function evaluations for the ZDT test instances as 10,000, the DTLZ test instances as 30,000, the WFG test instances as 25,000 and the UF test instances as 300,000.
@@ -840,6 +841,14 @@ No single performance metric can give a comprehensive measure of the performance
 % igd
 Both of them can measure the convergence and distribution of the population, in order to calculate the IGD, we uniformly sample 10,000 points from the real PF of each problem to constitute a reference set. The smaller the IGD value, the closer the solutions are to the real PF.
 % HV
+We set $y^* = (y^*_1, \dots, y^*_m)$ as a point in the objective space which is dominated by any Pareto vectors. Let $S$ be the obtained non-dominated solutions in the objective space. Then the $I_{HV}$ value of $S$ is the volume of the region weakly dominated by $S$ and $y^*$. The larger of the Hypervolume, the better of the approximation. In our experiments, we set $y^* = (1,\dots, 1).$
+
+\subsection{Experimental results}
+%%%%%%% 比较MOEA/D-DQN和对比算法在所有测试问题上的IGD和HV
+% 我们测试了MOEA/D-DQN和4个对比算法在ZDT和UF测试实例上的效果，IGD值are shown in Table 1，可以看到在大多数问题上，MOEA/D-DQN都获得了最好的效果。
+We compared MOEA/D-DQN and four comparison algorithms on ZDT, DTLZ, WFG and UF test instances, Tables
+
+
 
 
 

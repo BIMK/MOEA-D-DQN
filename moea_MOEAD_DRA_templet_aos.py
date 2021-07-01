@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import matplotlib
+import random
 import numpy as np
 import geatpy as ea  # 导入geatpy库
 from scipy.spatial.distance import cdist
@@ -21,7 +22,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         ea.MoeaAlgorithm.__init__(self, problem, population)  # 先调用父类构造方法
         if population.ChromNum != 1:
             raise RuntimeError('传入的种群对象必须是单染色体的种群类型。')
-        self.name = 'MOEA/D-DRA-DE'
+        self.name = 'MOEA/D-DQN'
         # self.MAXGEN = MAXGEN
         self.uniformPoint, self.NIND = ea.crtup(self.problem.M, population.sizes)  # 生成在单位目标维度上均匀分布的参考点集
         # 此时种群大小可能小于设计的大小，为了保证评价次数不变，需要增加进化代数
@@ -102,7 +103,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         FIR = (CombinObjV[replace] - off_CombinObjV[replace]) / CombinObjV[replace]
         r = FIR.sum()
         # print(r)
-        if self.currentGen % self.learn_interval == 0:
+        # if self.currentGen % self.learn_interval == 0:
+        if random.random() < 0.2:
             self.countOper.learn(r)
         # self.xovOper.learn(r)
         # self.mutOper.learn(r)
