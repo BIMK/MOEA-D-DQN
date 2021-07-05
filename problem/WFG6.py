@@ -27,8 +27,13 @@ class WFG6(ea.Problem):
     def aimFunc(self, pop):
         x = pop.Phen
         solutions = [Individual(s) for s in x]
-        self.func.batch_evaluate(solutions)
+        try:
+            self.func.batch_evaluate(solutions)
+        except:
+            raise(x)
         res = np.array([s.objective_values for s in solutions])
+        # OffChrom = np.minimum(np.maximum(OldChrom, lb), ub)
+        # pop.ObjV = np.minimum(np.maximum())
         pop.ObjV = res
         # return res
 

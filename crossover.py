@@ -224,12 +224,13 @@ class RecM2m:
         self.MaxGen = maxgen
 
     def do(self, OldChrom, r0, neighbourVector, currentGen: int):
+        N, D = OldChrom.shape
         # r1, r2 = np.random.choice(neighbourVector, 2, replace=False)  # 不放回的抽取2个
         r2 = np.random.choice(neighbourVector, 1, replace=False)  # 不放回的抽取
         p1 = OldChrom[r0]
         p2 = OldChrom[r2]
         # D  = len(p1)   #  决策变量维度
-        rc = (2 * np.random.rand(1) - 1) * (1 - np.random.rand(1) ** (-(1 - currentGen / self.MaxGen) ** 0.7))
+        rc = (2 * np.random.rand(1) - 1) * (1 - np.random.rand(1) ** (-(1 - currentGen / (self.MaxGen + N)) ** 0.7))
         # print(currentGen, self.MaxGen)
         OffDec = p1 + rc * (p1 - p2)
         return OffDec

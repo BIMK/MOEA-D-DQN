@@ -96,9 +96,9 @@ class DQN(object):
             # for i in range(self.N_ACTIONS):
             # actions_value[0][i] = actions_value[0][i] * c**argsort_[i]
             # 手动设计概率
-            # probability_value = np.array([[70, 28, 10, 8, 5, 5]])
-            # probability_value = probability_value / np.sum(probability_value)
-            # actions_value = probability_value[:, argsort_]
+            probability_value = np.array([[70, 28, 10, 8, 5, 5]])
+            probability_value = probability_value / np.sum(probability_value)
+            actions_value = probability_value[:, argsort_]
 
             actions_value = actions_value / np.sum(actions_value)
 

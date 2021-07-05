@@ -1,9 +1,8 @@
-import scipy.io
-import numpy
-metric = {
-    'runtime': 4,
-    'IGD': 1.12,
-    'HV': 1.12
-}
-res = {'result': [10000, 123], 'metric': metric}
-scipy.io.savemat('aos.mat', mdict=res)
+import numpy as np
+import matplotlib.pyplot as plt
+x = range(1, 13, 1)
+y = range(1, 13, 1)
+plt.plot(x, y)
+plt.xticks(range(1, 13), ('Tom', 'Dick', 'Harry', 'Sally', 'Sue', 'Lily', 'Ava', 'Isla', 'Rose', 'Jack', 'Leo', 'Charlie'))
+# plt.xticks(x, ('Tom', 'Dick', 'Harry', 'Sally', 'Sue', 'Lily', 'Ava', 'Isla', 'Rose', 'Jack', 'Leo', 'Charlie'))
+plt.show()

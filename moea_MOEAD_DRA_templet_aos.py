@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import matplotlib
+import time
 import random
 import numpy as np
 import geatpy as ea  # 导入geatpy库
@@ -161,6 +161,10 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                     idealPoint = ea.crtidp(offspring.ObjV, offspring.CV, self.problem.maxormins, idealPoint)
                     # 重插入更新种群个体
                     self.reinsertion(indices, population, offspring, idealPoint, uniformPoint)
+                # 每一代记录一下算子选择的结果
+                # PopCountOpers.append(self.countOper.countOpers)
+                # self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
+
             """每10代更新一次pi值"""
             if self.currentGen % 10 == 0:
                 newObj = self.decomposition(population.ObjV, uniformPoint, idealPoint, None, self.problem.maxormins)
@@ -170,18 +174,29 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 pi[temp] = (0.95 + 0.05 * delta[temp] / 0.001) * pi[temp]
                 oldObj = newObj
                 """统计不同进化阶段算子选择的结果"""
-                # PopCountOpers.append(self.countOper.countOpers)
-                # self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
+                PopCountOpers.append(self.countOper.countOpers / sum(self.countOper.countOpers))
+                self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
 
         # 画出不同进化阶段算子选择的结果
-        BestSelection = np.array(PopCountOpers[2:])
+        BestSelection = np.array(PopCountOpers[:30])
+        N, D = BestSelection.shape
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')
-        """
+        # """
+        markers = ['o', '^', 's', 'p']
         for i in range(self.countOper.n):
-            plt.plot(BestSelection[:, i], '.', label=self.countOper.Opers[i].name)
-        plt.legend()
+            plt.plot(BestSelection[:, i], '.', label=self.countOper.Opers[i].name, marker=markers[i])
+        plt.legend(loc='upper left', prop={'family': 'Times New Roman'})
+        # 坐标轴刻度
+        # xticks = list(map(str, np.linspace(1, D, D)))
+        xticks = list(map(str, np.arange(1, N + 1, 2)))
+        plt.xticks(range(0, N, 2), xticks, fontsize=12)
+        plt.yticks(fontsize=12)
+        # 坐标轴名称
+        plt.xlabel('Generation (×10)', fontdict={'family': 'Times New Roman', 'fontsize': 14})
+        plt.ylabel('Percentage of operators applied', fontdict={'family': 'Times New Roman', 'fontsize': 14})
+        plt.savefig('C:/Users/lxp/Desktop/pic/' + self.problem.name + str(int(time.time())) + '.pdf')
         plt.show()
-        """
+        # """
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果
