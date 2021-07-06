@@ -351,7 +351,8 @@ we integrate RL as an operator selector into the evolutionary algorithm to recom
 Most of the existing works of applying RL to AOS problems adopt the way of off-line training, collect data on some benchmark functions and train the neural network, and then use the trained neural network to predict which operator should be applied to each individual at each generation.
 % 
 % 但是在我们看来，不同的问题可能有不同的最佳算子，由于问题的特征不能全部包含在RL的状态中，因此在一个问题上表现好的AOS模型不一定在另一个问题上取得好的效果。
-However, in our opinion, different problems may have different optimal operator, due to the characteristics that can not be included in the RL state, so the AOS model that performs well on one problem may not achieves good results on other problems.
+However, in our opinion, different problems may have different optimal operators, due to the characteristics of the problem can not be completely included in the RL state, the model that performs well on one problem may not achieve good results on another.
+% that can not be included in the RL state, so the AOS model that performs well on one problem may not achieves good results on other problems.
 % 所以我们没有两阶段，先训练再应用的方式，而是直接使用端到端的在线控制，利用当前信息训练模型，预测之后的选择算子。
 So we did not take a two-stage method (train stage and control stage), but adopt the end-to-end online control method, use the current information to train a neural network, and use the previous training model to select the operators.
 % 为了增加训练样本利用率，我们使用经验回放机制\cite{DQN}，将transition存储经验池
@@ -365,20 +366,20 @@ In order to increase the utilization of training samples, we use the experience 
 %%%%  介绍MOEAD，介绍MOEAD-DRA，介绍DE的变体，说明算子池，
 % 为了将AOS应用到多目标问题上，我们需要一个多目标的框架，moea/d将多目标问题分解成单目标问题，可以
 % 大多数的AOS方法都是单目标的，比如DE_DQN and LDE,因为在 Credit Assignment阶段需要评价算子的效果，但是在多目标问题中很难评价两个解的好坏
-Most of the AOS methods are applied to single-objective problem, such as DE-DQN \cite{sharma2019deep} and LDE \cite{sun2021learning}, because the performance of operators should be estimated at the credit assignment stage, but it is difficult to define the quality difference between two non-dominated solutions and the improvement brought by the application of an operator.
+Most of the AOS methods are applied to the single-objective problem, such as DE-DQN \cite{sharma2019deep} and LDE \cite{sun2021learning} because the performance of operators should be estimated at the credit assignment stage, but it is difficult to define the quality difference between two non-dominated solutions and the improvement brought by the application of an operator.
 % 在基于支配的多目标框架中，比如NSGAII，SPEA2，随着目标数增加，非支配解的数量也会快速增加。
-In some algorithmic frameworks which based on dominance relation, such as NSGA-II\cite{nsga2}, SPEA2 \cite{spea2}, with the increase of the number of objectives, the number of non-dominated solutions will increase rapidly,
+In some algorithmic frameworks based on dominance relation, such as NSGA-II\cite{nsga2}, SPEA2 \cite{spea2}, with the increase of the number of objectives, the number of non-dominated solutions will increase rapidly,
 % 如果一个父代生成了非支配的子代，我们很难衡量本次算子的效果
 if a parent generates a non-dominated offspring, it is difficult to measure the effect of this operator.
 
 % 这篇工作中我们使用基于分解的多目标优化算法，MOEAD，将多目标问题分解成多个单目标子问题，利用分解的策略，单目标的credit assignment技术可以应用到moead 
-In this paper, we applied the multi-objective evolutionary framework based on decomposition (MOEA/D) \cite{moead} which decompositions a multi-objective optimization problem into plenty of scalar optimization subproblem. Benefit from the decomposition, the credit assignment methods in single-objective can be applied to the MOEA/D framework.
+In this paper, we applied the multi-objective evolutionary framework based on decomposition (MOEA/D) \cite{moead} which decompositions a multi-objective optimization problem into plenty of scalar optimization subproblems. Benefit from the decomposition, the credit assignment methods in single-objective can be applied to the MOEA/D framework.
 % 在mop中，一个Pareto最优解就是在某个问题上达到了最优解，而在所有问题上的加权集合构成了Pareto集合，
-In multi-objective problems, a Pareto optimal solution is to reach the optimal solution on a single-objective optimization problem, and the weighted aggregation on all objectives constitute the Pareto set.
+In multi-objective problems, a Pareto optimal solution is to reach the optimal solution on a single-objective optimization problem, and the weighted aggregation on all objectives constitutes the Pareto set.
 % 为了得到Pareto set， moead利用权重向量将不同的目标组合成多个单目标子问题，在单目标上的最优解构成了MOP的Pareto set。
-To obtain the Pareto set, MOEA/D uses weight vector to combine different objectives into multiple single-objective subproblems, and the optimal solutions on the single-objective constitutes the optimal solutions of MOP.
+To obtain the Pareto set, MOEA/D uses weight vectors to combine different objectives into multiple single-objective subproblems, and the optimal solutions on the single-objective constitute the optimal solutions of MOP.
 % 由于不同子问题间差异过大，moead将子问题按照权重向量分组，使用相邻的解优化当前子问题。
-Due to the great difference between different subproblems, MOEA/D groups the subproblems according to the weight vector and optimizes the current subproblems with neighboring subproblemss.
+Due to the great difference between different subproblems, MOEA/D groups the subproblems according to the weight vector and optimizes the current subproblems with neighboring subproblems.
 % moead的tech分解法
 Three approachs are introduced in MOEA/D to transform the approximation problem of PF into multiple scalar optimization problems \cite{moead}, in this paper, we employ the Tchebycheff approach, the scalar optimization problem is in the form
 \begin{equation}
@@ -387,47 +388,63 @@ Three approachs are introduced in MOEA/D to transform the approximation problem 
      & \text { subject to } x \in \Omega
   \end{aligned}
 \end{equation}
+
 % 介绍公式里的参数 z，lambda， 
 where $z^{*}=\left(z_{1}^{*}, \ldots, z_{m}^{*}\right)^{T}$ is the idea point, i.e. $z_{i}^{*}=\min \left\{f_{i}(x) \mid x \in \Omega\right\}$ for each $i = 1, \dots , m$. $\Lambda=\left\{\lambda^{1}, \ldots, \lambda^{N}\right\}$ is the set of weight vector satisfies $\sum{^m_{i=1} \lambda ^j_i=1}$ and $\lambda^j_i \geq 0$ for all $i \in \{1,\dots, m\}$.
 
 % 在moead中，所有的子问题会被同等的对待，并且被分配了同等的计算量
 In the original MOEA/D, all subproblems are treated equally and get the same computing resources,
 % 但这些子问题有不同的难度，因此在这篇论文里我们用moead-dra。
-but these subproblems may have different complexity, therefore, in this paper, we uses MOEA/D with dynamical resource allocation (MOEA/D-DRA) \cite{moead-dra} which won the CEC09 Uncomstrained MOP test.
+but these subproblems may have different complexity, therefore, in this paper, we use MOEA/D with dynamical resource allocation (MOEA/D-DRA) \cite{moead-dra} which won the CEC09 Uncomstrained MOP test.
 % 对每个子问题，定义一个pi衡量子问题的重要程度
-For each subproblem $i$, $\pi^i$ was defined to measure the improvement of $x^i$ in reducing the objective of this subproblem.
+For each subproblem $i$, $\pi^i$ was defined to measure the improvement of $x^i$ in reducing the objective of this subproblem. $\pi$ is calculated according to Equation \ref{eq:pi},
+\begin{equation}
+  \pi^{i}=\left\{\begin{array}{ll}
+    1,                                                                     & \text { if } \Delta^{i}>0.001 \\
+    \left(0.95+0.05 \times \frac{\Delta^{i}}{0.001}\right) \times \pi^{i}, & \text { otherwise }
+  \end{array}\right.
+  \label{eq:pi}
+\end{equation}
 
-During the search, MOEA/D-DRA works as follows:
-% moead-dra的工作流程
-\begin{enumerate}
-  % 计算权重向量之间的欧氏距离，记录每个向量最近的T个向量
-  \item The Euclidean distance between weight vectors is calculated, and the index of the nearest $t$ weight vectors of each vector is recorded, $T$-neighborhoods of $x_i$ are $B(i) = \{i_i,\dots , i_T\}$ where $\lambda^{i_1},\dots,\lambda^{i_T}$ are the $T$ closest weight vectors to $\lambda^i$.
-        % 使用pi衡量xi在减少子问题上的效用。
-  \item $\pi^i$ is defined to measure the effect of $x^i$ on the optimization subproblem, the indicator is defined as
-        \begin{equation}
-          \pi^{i}=\left\{\begin{array}{ll}
-            1,                                                                     & \text { if } \Delta^{i}>0.001 \\
-            \left(0.95+0.05 \times \frac{\Delta^{i}}{0.001}\right) \times \pi^{i}, & \text { otherwise }
-          \end{array}\right.
-          \label{eq: delta}
-        \end{equation}
-        % 根据pi使用10-tournament selection选择N/5-m个索引加入I
-        By using 10-tournament selection based on $\pi$, select $\frac{N}{5}-m$ indexes other than $i$ and add them to set $I$.
-        % 随机生成rand，确定父代范围
-  \item Uniformly randomly generate a number \textit{rand} to determine parent range
-        \begin{equation}
-          P=\left\{\begin{array}{ll}
-            B(i)             & \text { if } \text { rand }<\delta \\
-            \{1, \ldots, N\} & \text { otherwise }
-          \end{array}\right.
-        \end{equation}
-        % 从P中选择两个index，r2和r3作为父代，利用当前解i作为r1,根据DE算子生成子代y,根据y更新z
-  \item Randomly select two indexes $r_2$, $r_3$ from $P$ and set $r_1=i$, apply DE operator on the above selected indexes to generate the offspring $y$ and update the best value $z^*$ found so far, for each $i=1,\dots,m$, if $z_i^* > f_i(y)$, then set $z_i=f_i(y)$.
-        % 随机从P中选择一个index j，如果生成的解y比j好，就替换j，重复直到P为空或是替换个体到达上限nr
-  \item Replace at most $n_r$ solutions in $P$ by $y$ if $g\left(y \mid \lambda^{j}, z\right) \leq g\left(x^{j} \mid \lambda^{j}, z\right), x \in P$ and then set $x^j=y$.
-        % 每50代更新一次delta^i，在过去50代中子问题目标的相对减少
-  \item The indicator $\pi^i$ was updated every 50 generations according to the formula \ref{eq: delta} and compute the relative decrease $\delta^i$ of the objective for each subproblem $i$ during the last 50 generations.
-\end{enumerate}
+where $\Delta^i$ is the relative decrease of the objective for each subproblem $i$ during the last $\Delta t$ generations, update as Equation \ref{eq:delta},
+\begin{equation}
+  \Delta^{i}=\frac{g^{\mathrm{tch}}\left(\mathrm{x}_{t-\Delta t}^{i} \mid \mathbf{w}^{i}, \mathrm{z}^{*}\right)-g^{\mathrm{tch}}\left(\mathrm{x}_{t}^{i} \mid \mathbf{w}^{i}, \mathrm{z}^{*}\right)}{g^{\mathrm{tch}}\left(\mathrm{x}_{t-\Delta t}^{i} \mid \mathrm{w}^{i}, \mathrm{z}^{*}\right)}
+  \label{eq:delta}
+\end{equation}
+
+where $t$ is the current generation and $\Delta t$ is the updating period, usually set to 50.
+
+% During the search, MOEA/D-DRA works as follows:
+% % moead-dra的工作流程
+% \begin{enumerate}
+%   % 计算权重向量之间的欧氏距离，记录每个向量最近的T个向量
+%   \item The Euclidean distance between weight vectors is calculated, and the index of the nearest $t$ weight vectors of each vector is recorded, $T$-neighborhoods of $x_i$ are $B(i) = \{i_i,\dots , i_T\}$ where $\lambda^{i_1},\dots,\lambda^{i_T}$ are the $T$ closest weight vectors to $\lambda^i$.
+%         % 使用pi衡量xi在减少子问题上的效用。
+%   \item $\pi^i$ is defined to measure the effect of $x^i$ on the optimization subproblem, the indicator is defined as
+%         \begin{equation}
+%           \pi^{i}=\left\{\begin{array}{ll}
+%             1,                                                                     & \text { if } \Delta^{i}>0.001 \\
+%             \left(0.95+0.05 \times \frac{\Delta^{i}}{0.001}\right) \times \pi^{i}, & \text { otherwise }
+%           \end{array}\right.
+%           \label{eq: delta}
+%         \end{equation}
+%         % 根据pi使用10-tournament selection选择N/5-m个索引加入I
+%         By using 10-tournament selection based on $\pi$, select $\frac{N}{5}-m$ indexes other than $i$ and add them to set $I$.
+%         % 随机生成rand，确定父代范围
+%   \item Uniformly randomly generate a number \textit{rand} to determine parent range
+%         \begin{equation}
+%           P=\left\{\begin{array}{ll}
+%             B(i)             & \text { if } \text { rand }<\delta \\
+%             \{1, \ldots, N\} & \text { otherwise }
+%           \end{array}\right.
+%         \end{equation}
+%         % 从P中选择两个index，r2和r3作为父代，利用当前解i作为r1,根据DE算子生成子代y,根据y更新z
+%   \item Randomly select two indexes $r_2$, $r_3$ from $P$ and set $r_1=i$, apply DE operator on the above selected indexes to generate the offspring $y$ and update the best value $z^*$ found so far, for each $i=1,\dots,m$, if $z_i^* > f_i(y)$, then set $z_i=f_i(y)$.
+%         % 随机从P中选择一个index j，如果生成的解y比j好，就替换j，重复直到P为空或是替换个体到达上限nr
+%   \item Replace at most $n_r$ solutions in $P$ by $y$ if $g\left(y \mid \lambda^{j}, z\right) \leq g\left(x^{j} \mid \lambda^{j}, z\right), x \in P$ and then set $x^j=y$.
+%         % 每50代更新一次delta^i，在过去50代中子问题目标的相对减少
+%   \item The indicator $\pi^i$ was updated every 50 generations according to the formula \ref{eq: delta} and compute the relative decrease $\delta^i$ of the objective for each subproblem $i$ during the last 50 generations.
+% \end{enumerate}
 
 \subsection{AOS with RL}
 %%% 利用强化学习做算子选择，需要介绍算法流程
@@ -441,35 +458,33 @@ In order to get better results and adapt to different problems, we design an ope
 \textit{Operator Pool}
 \begin{enumerate}
   \item Simulated binary crossover
-        \begin{equation}
-          \label{eq:sbx}
-          \beta=\left\{\begin{array}{cl}
+        \begin{flalign}
+          & \beta=\left\{\begin{array}{cl}
             (2 \mu)^{\frac{1}{\eta+1}},                         & \text { if } u \leq 0.5 \\
             \left(\frac{1}{2(1-\mu)}\right)^{\frac{1}{\eta+1}}, & \text { otherwise }
-          \end{array}\right.
-        \end{equation}
-        \begin{equation}
-          \begin{aligned}
-             & v^i_1=0.5\left[(1+\beta) x_{i}+(1-\beta) x_{j}\right] \\
-             & v^i_2=0.5\left[(1-\beta) x_{i}+(1+\beta) x_{j}\right]
-          \end{aligned}
-        \end{equation}
+          \end{array}\right. &
+          \label{eq:sbx}
+        \end{flalign}
+        \begin{flalign}
+          & v^i_1=0.5\left[(1+\beta) x_{i}+(1-\beta) x_{j}\right] & \\
+          & v^i_2=0.5\left[(1-\beta) x_{i}+(1+\beta) x_{j}\right]&
+        \end{flalign}
   \item MOEA/D-M2M crossover
-        \begin{align}
-           & v^{i}=x^{i}+rc \times \left(x^{i}-x^{j}\right)                                                      \\
-           & rc={rand} \times \left(1-{rand}^{-\left(1-\frac{\textit{gen}}{\textit{Maxgen}}\right)^{0.7}}\right)
+        \begin{flalign}
+          & v^{i}=x^{i}+rc \times \left(x^{i}-x^{j}\right) &                                                     \\
+          & rc={rand} \times \left(1-{rand}^{-\left(1-\frac{\textit{gen}}{\textit{Maxgen}}\right)^{0.7}}\right) &
           \label{c_op:m2m}
-        \end{align}
+        \end{flalign}
   \item DE/rand/1
-        \begin{equation}
-          v^{i}=x^{i}+F \times\left(x^{r_{1}}-x^{r_{2}}\right)
+        \begin{flalign}
+          & v^{i}=x^{i}+F \times\left(x^{r_{1}}-x^{r_{2}}\right) &
           \label{op:de1}
-        \end{equation}
+        \end{flalign}
   \item DE/rand/2
-        \begin{equation}
-          v^{i}=x^{i}+F \times\left(x^{r_1}-x^{r_2}\right)+F \times\left(x^{r_3}-x^{r_4}\right)
+        \begin{flalign}
+          & v^{i}=x^{i}+F \times\left(x^{r_1}-x^{r_2}\right)+F \times\left(x^{r_3}-x^{r_4}\right)&
           \label{op:de2}
-        \end{equation}
+        \end{flalign}
         % \item DE/current-to-rand/1
         %       \begin{equation}
         %         v^{i}=x^{i}+K \times\left(x^{i}-x^{r_{1}}\right)+F \times\left(x^{r_{2}}-x^{r_{3}}\right)
@@ -521,7 +536,7 @@ After using the crossover mutation, the polynomial mutation operators is applied
 \subsection{Credit Assignment \label{credit_ass}}
 %%% 说明本文的适应度赋值部分
 % 信誉赋值通常可以分为两个部分，首先根据算子对本次进化的影响确定算子的适应度改进，然后根据近期的适应度改进估计算子的质量。
-Generally speaking, credit assignment can be divided into two parts. Firstly, the fitness improvement of the operator is determined according to the influence on the recent application, and then the quality of the operator is estimated according to the fitness improvement of the operator over a period of time.
+Generally speaking, the credit assignment can be divided into two parts. Firstly, the fitness improvement of the operator is determined according to the influence on the recent application, then the quality of the operator is estimated according to the fitness improvement of the operator in a period.
 
 % 由于目标函数值在前期有较大的改进，在后期变化较小，我们使用适应度提高率来评价子代相对父代的改进，
 Since the objective function value has a great improvement in the early stage and a small change in the later stage, in MOEA/D-DQN we use the fitness improvement rate to measure the improvement of offspring to their parents.
@@ -541,7 +556,7 @@ The FIR value of $i^{th}$ individual can be calculated as Equation (\ref{eq:fir}
 % pf和cf分别是父代和子代的适应度值，如果父代比子代差，子代不会插入到父代中，因此FIR=0
 % where $pf_{i}$ and $cf_{i}$ are the fitness values of parent and its offspring, if the offspring is worse than parent, then set FIR to 0.
 % 在MOEA/D中，子代可以替换邻域中的个体，为了更准确的衡量子代的效果，我们用邻域适应度提高来评价本次算子的效果
-In MOEA/D, offspring can replace the individuals in the neighborhood. In order to measure the effect of offspring more effectively, we use neighborhood fitness improvement (NFI) to evaluate the effect of the operator.
+In MOEA/D, offspring can replace the individuals in the neighborhood. In order to measure the effect of offspring more effectively, we use neighborhood fitness improvement (NFI) to evaluate the effect of the operator,
 % \TODO 这个公式不知道怎么描述合适
 \begin{equation}
   \text{NFI}_{i}= \sum_{k \in B_i}
@@ -564,7 +579,7 @@ We used a fixed-length queue \textit{window} (of size \textit{windowSize}) to st
 Every time the operator is applied, a tuple $A (op, \text{FIR})$ will be added to the end of the queue ($op$ is the index of the operator in this application, FIR is the fitness improvement rate after application), and an old element is moved out of the queue head.
 
 % 由于在AOS问题中，环境是动态变化的，算子在不同阶段有不同的性能,因此固定长度的队列可以丢弃之前的无用信息，保存对此时有用的信息
-In the AOS problem, the environment is dynamic and the operator has different performance in different stages. Therefore, the fixed-length queue can discard the useless information before and save the useful information at this time.
+In the AOS problem, the environment is dynamic and the operator has different performances in different stages. Therefore, the fixed-length queue can discard the useless information before and save the valuable information at this time.
 
 % 有一种理论认为，稀少但是巨大的改进比频繁但微小的改进更有用，xx建议算子应该根据它近期获得的最大FIR作为reward。
 The underlying idea is that rare, but large improvements are more important than frequent small improvements, Fialho \cite{fialho2010comparison} believes that each operator should be rewarded according to the maximum fitness improvement it has recently achieved.
@@ -576,7 +591,7 @@ So we take the maximum value in the queue \textit{window} as the operator's rewa
 % reward_k是算子k在近期的应用中所能获得的最大FIR，
 $reward_k$ is the maximum FIR that operator $k$ can obtain in recent applications.
 % 算子的性能在一段时间内是稳定的，因此我们可以将reward_k作为RL的reward，也即是说，对父代i应用算子k后得到的期望reward是reward_k。。。。。。。。。可以放到强化学习里介绍
-The performance of operators are stable for a period of time, so we can take $reward_k$ as the reward of RL, that is to say, the expected reward after applying the operator $k$ to the parent $i$ is $reward_k$.
+The performance of operator is stable in a period, so we can take $reward_k$ as the reward of RL, that is to say, the expected reward after applying the operator $k$ to the parent $i$ is $reward_k$.
 
 % 信誉赋值的伪代码
 The pseudocode of credit assignment scheme is given in Algorithm \ref{alg:credit_assignment}.
@@ -630,7 +645,7 @@ In Section \ref{credit_ass}, we determined the quality of operators by credit as
 Operator selection should balance exploration and exploitation, on the one hand, we hope to choose the best operator as far as possible to maximize the cumulative benefits, on the other hand, we should also give opportunities to poor operators, because they may perform well in the future search.
 
 % 我们使用一个神经网络拟合算子的质量，神经网络的输出是分别应用不同的算子后得到的期望reward，之后使用轮盘赌机制选择接下来要应用的算子, 轮盘赌可以保证reward大的算子有更大的概率被选中。
-We use a neural network to fit the quality of the operator, the output of neural network is the expected reward obtained by applying different operators, then we use roulette mechanism to select the next operator to be applied, the roulette mechanism based on probability can ensure that the operator with large reward has a higher probability to be selected.
+We use a neural network to fit the quality of the operator, the output of the neural network is the expected reward obtained by applying different operators, then we use roulette mechanism to select the next operator to be applied, the roulette mechanism based on probability can ensure that the operator with large reward has a higher probability to be selected.
 % 由于我们选择队列中存储的最大FIR作为算子的reward，因此即使是poor operators在多次应用中也可以获得较大的reward。为了保证每个算子的reward都存在，在w次进化中，每个算子至少应用一次，其中常数w是队列的长度，人为设置。
 Since we take the maximum FIR stored in the queue as the reward of operators, even the poor operators can get a large reward in multiple applications. In order to ensure that every operator has a reward, each operator is applied at least once in the $W$ times, where the constant $W$ is the length of the queue, which is set artificially.
 
@@ -675,7 +690,7 @@ The details of our proposed operator selection is shown in Algorithm \ref{alg:op
 %%%% 结合DQN和算子选择，应用到moead的框架下
 %%% 先说明强化学习的功能，来解释为什么可以做AOS
 % 自适应算子选择问题的本质是根据算子以往的表现估计算子的性能，然后根据算子的性能为之后的个体选择合适的算子。
-The essence of AOS is to estimate the performance of the operator according to the previous applications of the operator, and then select the appropriate operator from the operators pool for the current individual according to the credit of the operators.
+The essence of AOS is to estimate the performance of the operator according to the previous applications of the operator and then select the appropriate operator from the operator pool for the current individual according to the credit of the operators.
 % RL根据当前的state为EA推荐算子，then EA使用给定的算子进化，评估算子的效果给出reward和之后的state, depicted in Figure
 RL recommends the operator for EA according to the current state, then EA uses the given operator to evolve, evaluates the effect of the operator, and gives the reward and the next state, depicted in Figure \ref{fig:RLEA}.
 \begin{figure}[t]
@@ -685,13 +700,13 @@ RL recommends the operator for EA according to the current state, then EA uses t
   \label{fig:RLEA}
 \end{figure}
 % 强化学习主要由agent environment state action reward 组成，agent根据环境的状态执行某个动作，之后环境会转换到一个新的状态，并且根据新的状态环境会给出奖励信号，agent根据奖励调整策略，agent的目标是得到最大的累积奖励。
-RL is composed of agent, environment, state, action and reward, agent takes action according to the state of the environment, and then the environment will change to a new state and give a reward value, the agent will adjust its strategy according to the reward and agent's goal is to get the maximum cumulative reward.
+RL is composed of agent, environment, state, action and reward, the agent takes action according to the state of the environment, and then the environment will change to a new state and give a reward value, the agent will adjust its strategy according to the reward and agent's goal is to get the maximum cumulative reward.
 
 %%% 再说明如何建模成MDP使得RL应用到AOS问题
 % 可以看到AOS和强化学习面临相同的问题，1. 根据当前的状态做出决策，并得到反馈。2. 根据反馈调整策略
 AOS and RL face the same issues:
 \begin{enumerate}
-  \item Make decisions based on current state and get feedback.
+  \item Make decisions based on the current state and get feedback.
   \item Adjust the strategy according to the feedback.
 \end{enumerate}
 %%% 将AOS建模成MDP问题。
@@ -700,7 +715,7 @@ Based on these similar issues, we can use RL to solve AOS problems.
 % 首先需要将进化过程建模为MDP，具有如下定义
 First, we model the evolution procedure as an MDP,
 % MDP是agent与environment交互，以最大化累计reward的数学模型, 在AOS问题中，agent作为controller，负责选择算子，并根据应用算子后的反馈调整选择策略。environment是整个进化算法框架，本文使用MOEA/D框架，负责利用agent给出的算子生成子代，并计算子代的适应度值，向agent返回reward。
-MDP is a mathematical model in which agent interacts with environment to maximize cumulative reward, in AOS problems, agent, as the controller, is responsible for selecting the operator and adjusting the selection strategy according to the feedback after the operator is applied.
+MDP is a mathematical model in which an agent interacts with the environment to maximize cumulative reward, in AOS problems the agent as a controller, is responsible for selecting the operator and adjusting the selection strategy according to the feedback after the operator is applied.
 Environment is the whole framework of evolutionary algorithm, this paper uses the MOEA/D framework, which is responsible for using the operator given by agent to generate the offspring, calculating the fitness value of the offspring, and returning the reward to agent.
 % 为了应用MDP，我们还需要给出状态、动作、奖励的定义
 To apply the MDP, we also need to give the definition of state, action and reward.
@@ -713,7 +728,7 @@ To apply the MDP, we also need to give the definition of state, action and rewar
         \end{equation}
         % x是t时刻第i个个体的D维决策变量，w是第i个个体的权重向量。
         % 由于不同的个体有不同的最佳算子，因此父代的决策变量是必须的。在MOEA/D框架下，多目标被分解成多个单目标，不同的权重组合构成不同的目标，因此分解向量对最佳算子的选择也有影响。
-        Since different individuals have different optimal operator, the decision variables are necessary. In the framework of MOEA/D, multi-objective are decomposed into a set of single-objective, and different weight combinations constitute different objectives, so the decomposition vector also has an impact on the selection of the best operator.
+        Since different individuals have different optimal operators, the decision variables are necessary. In the framework of MOEA/D, multi-objective are decomposed into a set of single-objective, and different weight combinations constitute different objectives, so the decomposition vector also has an impact on the selection of the best operator.
   \item \textit{Action:}
         % 在MDP中，agent根据环境的状态做出动作，具体来说，深度神经网络输出在当前状态下每个动作质量，之后使用operator selection的方法给出具体的算子。
         In MDP, the agent makes an action $a_t$ based on the state $s^i$, specifically, the deep neural network outputs the quality of each action in the current state, and then uses the operator selection \ref{operator_selection} method to give the recommended operator.
@@ -729,11 +744,11 @@ To apply the MDP, we also need to give the definition of state, action and rewar
 
 %%% 说明用的MOEA/D框架
 % 由于在多目标中很难量化子代和父代的性能差异，因此大多数AOS methods被设计应用到单目标问题上。
-Most AOS methods were designed for single-objective problems, because it is difficult to measure the performance difference between a offspring and a parent.
+Most AOS methods were designed for single-objective problems because it is difficult to measure the performance difference between an offspring and a parent.
 % 比如基于支配的多目标算法 NSGAII，SPEA2，大多数解都是非支配的。
 For example, in domination relation based multi-objective algorithms, such as NSGA-II \cite{nsga2} and SPEA2 \cite{spea2}, most of the solutions are non-dominated, so it is difficult to determine the fitness improvement rate.
 % 我们使用MOEAD算法，which可以将多目标问题分解成多个单目标子问题,所以单目标中适应度赋值的方法可以应用moead框架上。
-In this paper, MOEA/D is applied, which can decompose MOP into several single-objective subproblems, so the methods of credit assignment in single-objective can be applied to MOEA/D framework.
+In this paper, MOEA/D is applied, which can decompose MOP into several single-objective subproblems, so the methods of credit assignment in single-objective can be applied to the MOEA/D framework.
 
 %%% 应用的是DQN的强化学习方法
 % 由于算子选择问题具有离散的动作空间，因此我们使用RL的variant，DQN 
@@ -741,7 +756,7 @@ Since the AOS problems have discrete action space, a variant of the RL, deep Q l
 % 将MOEA/D框架作为环境,与DQN交互。
 The MOEA/D framework is used as the environment to interacts with DQN,
 % MOEA/D-DQN的伪代码
-the details of MOEA/D-DQN is shown in Algorithm \ref{alg:moead-dqn}.
+the details of MOEA/D-DQN are shown in Algorithm \ref{alg:moead-dqn}.
 
 \begin{algorithm}[t]
   \label{alg:moead-dqn}
@@ -797,8 +812,8 @@ the details of MOEA/D-DQN is shown in Algorithm \ref{alg:moead-dqn}.
 \end{algorithm}
 
 % 在时刻t，个体的决策变量和权重向量共同组成state s，作为神经网络的输入，神经网络的输出是一个n维向量 out，表示应用算子后可以得到的期望累计回报，根据输出向量基于轮盘赌选择一个算子op，应用算子产生子代off，在基于分解的多目标框架中，我们可以很容易的计算子代相对于父代的适应度值提高率FIR，将应用的算子和得到的FIR放入滑动窗口中，之后从滑动窗口中取出算子op对应的最大FIR作为reward r，使用DQN算法更新RL的策略以最大化累积奖励。
-At time $t$, state $s_t$ is composed of individual decision variables and weight vector as the input of the neural network. The output of the neural network is an n-dim vector $\text{out}_t$, which represents the expected cumulative reward after the application of the operator.
-According to the $\text{out}_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $\text{off}_t$. In multi-objective framework based on decomposition, we can easily calculate the $\text{FIR}_t$, put the $op_i$ and $\text{FIR}_t$ into the sliding window, then take the maximum FIR corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DQN algorithm to update the RL strategy to maximize the cumulative reward.
+At the time $t$, state $s_t$ is composed of individual decision variables and weight vector as the input of the neural network. The output of the neural network is an n-dim vector $\text{out}_t$, which represents the expected cumulative reward after the application of the operator.
+According to the $\text{out}_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $\text{off}_t$. In the multi-objective framework based on decomposition, we can easily calculate the $\text{FIR}_t$, put the $op_i$ and $\text{FIR}_t$ into the sliding window, then take the maximum FIR corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DQN algorithm to update the RL strategy to maximize the cumulative reward.
 
 
 
@@ -806,7 +821,7 @@ According to the $\text{out}_t$, an operator $op_i$ is selected based on roulett
 %%% 实验研究
 % 为了证明算法MOEA/D-DQN的有效性，我们在 xxx 数据集进行了测试，并且和MOEA/D-DE,MOEA/D-DRA,MOEA/D-FRRMAB,MOEA/D-IR比较了结果。
 %  \TODO 增加参考文献引用
-To prove the effectiveness of MOEA/D-DQN, we test it on ZDT, DTLZ, WFG, UF datasets, and compare the results with those obtained by MOEA/D-DE, MOEA/D-DRA, MOEA/D-FRRMAB, MOEA/D-IR.
+To prove the effectiveness of MOEA/D-DQN, we test it on ZDT, DTLZ, WFG , UF datasets, and compare the results with those obtained by MOEA/D-DE, MOEA/D-DRA, MOEA/D-FRRMAB, MOEA/D-IR.
 
 \subsection{Experimental settings}
 % 对比算法的参数设置参考原论文的实现，结果来自PlatEMO platform
@@ -829,17 +844,17 @@ The parameters of our method MOEA/D-DQN are set as follows.
 
 %%%% 算法跑30次，评价次数
 % 对于每个test instances， 算法独立运行30次，
-All test instances run on the same computer(Intel$\circledR$ $\text{Core}^{\text{TM}}$ i7-8700K CPU @ 3.70GHz, 32 GB), for each test instances, all algorithms run 30 times independently, in order to ensure the fairness of the comparison, all algorithms use the same number of function evaluations,
+All test instances run on the same computer(Intel$\circledR$ $\text{Core}^{\text{TM}}$ i7-8700K CPU @ 3.70GHz, 32 GB), for each test instance, all algorithms run 30 times independently, in order to ensure the fairness of the comparison, all algorithms use the same number of function evaluations,
 the algorithm stops running when the number of evaluations is reached.
 % 评价次数设置
-We set the number of function evaluations for the ZDT test instances as 10,000, the DTLZ test instances as 30,000, the WFG test instances as 25,000 and the UF test instances as 300,000.
+We set the number of function evaluations for the ZDT test instances as 10,000, the DTLZ test instances as 30,000, the WFG test instances as 25,000, and the UF test instances as 300,000.
 % 秩和检验,显著性分析
-To obtain a statistically comprehensive Conclusions, we conducted the Wilcoxon rank sum test between the data obtained by the comparison algorithms, and the significance difference was 0.05.
+To obtain a statistically comprehensive conclusion, we conducted the Wilcoxon rank sum test between the data obtained by the comparison algorithms, and the significant difference was 0.05.
 % "+-="
-"+","-","=" denote the results of the compared algorithms are better than, worse than, and similar to those obtained by proposed MOEA/D-DQN.
+"+" ,"-" ,"=" denote the results of the compared algorithms are better than, worse than, and similar to those obtained by proposed MOEA/D-DQN.
 
 %%%%% 评价指标
-No single performance metric can give a comprehensive measure of the performance of a MOEA, in this paper, we chose two widely used performance indicators: Inverted generational distance (IGD) \cite{igd} and Hypervolume (HV) \cite{hv}.
+No single performance metric can give a comprehensive measure of the performance of an MOEA, in this paper, we chose two widely used performance indicators: Inverted generational distance (IGD) \cite{igd} and Hypervolume (HV) \cite{hv}.
 % igd
 Both of them can measure the convergence and distribution of the population, in order to calculate the IGD, we uniformly sample 10,000 points from the real PF of each problem to constitute a reference set. The smaller the IGD value, the closer the solutions are to the real PF.
 % HV
@@ -851,7 +866,7 @@ We set $y^* = (y^*_1, \dots, y^*_m)$ as a point in the objective space which is 
 We compared MOEA/D-DQN and four comparison algorithms on ZDT, DTLZ, WFG and UF test instances, Table \ref{tab:igd_all} Table \ref{tab:hv_all} show the mean and standard deviation of IGD and HV in 30 independent runs.
 
 % 可以看到在大多数问题上，MOEA/D-DQN都获得了最好的效果。
-From the tables \ref{tab:igd_all} and \ref{tab:hv_all}, we can clearly see that the MOEA/D-DQN has achieved the best results in most problems, and the results of IGD and HV indicators are basically consistent. In total, among the five comparison algorithms, it has obtained best results in 19 out of 31 performance for IGD and 20 out of 31 for HV.
+From the tables \ref{tab:igd_all} and \ref{tab:hv_all}, we can see that the MOEA/D-DQN has achieved the best results in most problems, and the results of IGD and HV indicators are consistent. In total, among the five comparison algorithms, it has obtained the best results in 19 out of 31 performance for IGD and 20 out of 31 for HV.
 
 
 
@@ -957,7 +972,7 @@ From the tables \ref{tab:igd_all} and \ref{tab:hv_all}, we can clearly see that 
 %%%% 排名
 To see the overall performances, Table \ref{tab:rank_all} shows the average ranking of IGD and HV on all 31 test instances.
 % 可以看出前4个算法差别不大，而MOEA/D-DQN明显优于其它算法
-It can be seen that the first four algorithms have little difference, and MOEA/D-DQN is obviously better than other algorithms, the results of different indicators are basically consistent.
+It can be seen that the first four algorithms have little difference, and MOEA/D-DQN is better than other algorithms, the results of different indicators are consistent.
 
 
 \begin{table*}[tbp]
@@ -977,7 +992,7 @@ It can be seen that the first four algorithms have little difference, and MOEA/D
 
 %%%%%% 和单个算子的对比，可能比不过，但排名或许能比得过
 % 通常来说，没有一个算子可以在所有问题上都有好的效果，为了研究不同算子在不同问题上的表现，我们比较了单个算子和.. 为了保证公平，除了算子外，其他部分与MOEA/D-DQN一致，
-Generally speaking, no operator can achieve good results on all problems, in order to study the performance of different operators on different problems, MOEA/D-DQN is compared with four MOEA/D variants, each of them using only one operator from the operator pool to produce offspring. The other parts of the comparison algorithms are consistent with MOEA/D-DQN expect for the operator.
+Generally speaking, no operator can achieve good results on all problems, in order to study the performance of different operators on different problems, MOEA/D-DQN is compared with four MOEA/D variants, each of them using only one operator from the operator pool to produce offspring. The other parts of the comparison algorithms are consistent with MOEA/D-DQN except for the operator.
 
 % 表格展示了单个了单个算子和MOEA/D-DQN在31个测试问题上的IGD值和HV值，以及算法在每个测试问题上的排名
 Tables \ref{tab:igd_ops}, \ref{tab:hv_ops} present the IGD and HV values of five algorithms on 31 test instances, as well as the ranks of the algorithms on each instance and the overall ranks of the according to their average rank values on all instances.
@@ -1085,12 +1100,12 @@ From tables \ref{tab:igd_ops}, \ref{tab:hv_ops}, we can see that each operator h
 
 %%%% 算子应用比例
 % 我们已经证明了基于DQN的算子选择方法比应用单个算子有更好的效果，但我们仍不知道算子选择只是选择最佳的单个算子，亦或是在不同阶段有不同的算子处于支配地位。为了研究算子的应用轨迹，我们调查了在搜索过程中每个算子应用比例的变化。
-We have proved that the operator selection based on DQN has better effect than single operator, but we still do not understand that operator selection is only to select the best single operator, or there are different operators in different states. In order to study the application trajectories of operators, we investigate the change of the application proportion of each operator in the search process.
+We have proved that the operator selection based on DQN has a better effect than a single operator, but we still do not understand that operator selection is only to select the best single operator, or there are different operators in different states. In order to study the application trajectories of operators, we investigate the change of the application proportion of each operator in the search process.
 % 为了使得不同阶段区别更加明显，我们每隔10代统计一次算子的应用数量，并在图中画出了算子在整个进化阶段的应用比例，
-In order to make the distinction between different stages more obvious, we count the number of operators applied every 10 generations, and draw the proportion of operators applied in the whole evolution stage in Fig. \ref{fig:tra}.
+In order to make the distinction between different stages more obvious, we count the number of operators applied every 10 generations and draw the proportion of operators applied in the whole evolution stage in Fig. \ref{fig:tra}.
 
 % 从图可以我们看出，在任何测试实例上，没有一个操作员能够主宰整个搜索过程。在开始阶段，由于RL的探索特性，算子选择的策略类似于随机选择, 之后的每个阶段都有单个算子处于支配地位，在不同搜索阶段，支配算子会逐渐从一个算子切换为另一个。
-As we can see from Fig. \ref{fig:tra}, no operator can dominate the whole search process on any of the test instances. In the initial stage, due to the exploration characteristics of RL, the mechanism of operator selection is similar to random selection, after which a single operator is dominant at each stage, and the dominant operator gradually switch from one operator to another at different search stages.
+As we can see from Fig. \ref{fig:tra}, no operator can dominate the whole search process on any of the test instances. In the initial stage, due to the exploration characteristics of RL, the mechanism of operator selection is similar to random selection, after which a single operator is dominant at each stage, and the dominant operator gradually switches from one operator to another at different search stages.
 
 
 \begin{figure*}[t]
@@ -1109,7 +1124,7 @@ As we can see from Fig. \ref{fig:tra}, no operator can dominate the whole search
 
 
 \section{Conclusions}
-In this paper, a adaptive operator selection based on deep Q network (MOEA/D-DQN) is proposed.
+In this paper, an adaptive operator selection based on a Deep Q network (MOEA/D-DQN) is proposed.
 % 建模成MDP，使用深度神经网络作为算子选择器，同时也是强化学习的策略。
 The adaptive operator selection problem was modeled MDP, we use the deep neural network as an operator selector, which is also a reinforcement learning strategy.
 % 我们将适应度提高率作为RL的reward，适应度提高率由生成的子代和被替换的父代个体决定
@@ -1117,18 +1132,18 @@ We take the fitness improvement rate as the RL's reward, and the FIR is determin
 % ，由于进化过程的不稳定性，我们设计了一个固定长度的队列用来store the FIR values of the recently used operators, 为了更好的表示算子的效果，我们取队列中的最大值FIR作为算子的reward反馈给RL
 Due to the instability of the evolutionary process, we design a fixed-length queue to store the FIR values of the recently used operators, and to better represent the effect of the operator, we take the maximum value of FIR of the corresponding operator in the queue as the reward feedback to RL.
 % MOEA/D-DQN通过在线控制的方法，一边对环境采样，一边通过采样得到的数据学习，节省了训练时间，而且比起预训练的方法, MOEA/D-DQN在新的问题上有更好的表现。
-MOEA/D-DQN can save the training time by online control and learning from the sampled data. Moreover, compared with the pre training method, MOEA/D-DQN has better performance on new problems.
+MOEA/D-DQN can save the training time by online control and learning from the sampled data. Moreover, compared with the pre-training method, MOEA/D-DQN has better performance on new problems.
 % 实验结果表明，该算法具有较强的竞争力，说明了该控制器的有效性。
-The experimental results showd that the AOS based on RL was very competitive to the compared algorithms, which shows the effectiveness of the proposed controller.
+The experimental results showed that the AOS based on RL was very competitive to the compared algorithms, which shows the effectiveness of the proposed controller.
 
 % 图x显示不同的算子适用于不同的问题，并且在同一个问题的不同阶段，最佳算子也是不同的。这说明算子选择不光能够减少人工设计参数的复杂性，而且对提升算法的性能是有必要的。
-Fig. \ref{fig:tra} shows that different operators are suitable for different problems and that the optimal operator is different in different stages of the same problem, this shows that operator selection not only reduces the complexity of manually designed parameters, but is also necessary to improve the performance of the algorithm.
+Fig. \ref{fig:tra} shows that different operators are suitable for different problems and that the optimal operator is different in different stages of the same problem, this shows that operator selection not only reduces the complexity of manually designed parameters but is also necessary to improve the performance of the algorithm.
 This is well illustrated by the results in Table \ref{tab:igd_ops} and Table \ref{tab:hv_ops}.
 
 % 之后的工作, 我们希望设计更有效的state来充分说明当前种群的信息，MOEA/D-DQN中的state只和当前个体有关，而忽略了种群中不同个体之间的联系，并且仅以当前个体的fitness improvement作为reward有可能导致陷入局部最优，虽然基于群体智能的进化算法在一定程度上可以避免局部最优，但维护种群的多样性也是有必要的，因此在之后的工作中，我们计划在state和reward同时考虑种群的收敛性和分布性的，根据种群的状态确定当前应该偏向探索或是利用。
-In the future, we hope to disign a more effective state to represent the information of the current population, the state in MOEA/D-DQN is only determined by the current individual, but ignores the connection between different individuals in the population, and only using fitness improvement as the reward may lead to local optimization, although the evolutionary algorithm can avoid local optimization to a certain extent, it is necessary to maintain the diversity of the population. Therefore, in the future work, we plan to represent both the convergence and distribution of the population in the state and reward of RL, and to determine exploration or exploitation depend on the state of the population.
+In the future, we hope to design a more effective state to represent the information of the current population, the state in MOEA/D-DQN is only determined by the current individual but ignores the connection between different individuals in the population, and only using fitness improvement as the reward may lead to local optimization, although the evolutionary algorithm can avoid local optimization to a certain extent, it is necessary to maintain the diversity of the population. Therefore, in the future work, we plan to represent both the convergence and distribution of the population in the state and reward of RL and to determine exploration or exploitation depend on the state of the population.
 % 除了用RL做算子选择，自适应参数控制也是一个很重要的领域，基于policy optimazation的RL方法可以生成实数范围的连续动作作为算法的参数,更进一步，我们可以使用生成式的模型，直接生成子代，避免使用固定生成算子的局限
-In addition to using RL as operator selection, adaptive parameter control is also a very important field. RL based on policy optimization can generate continuous actions as the parameters of operator. Furthermore, we can use generative model to generate offspring directly, avoiding the limitation of using fixed operators.
+In addition to using RL as operator selection, adaptive parameter control is also a very important field. RL based on policy optimization can generate continuous actions as the parameters of operators. Furthermore, we can use a generative model to generate offspring directly, avoiding the limitation of using fixed operators.
 
 
 \ifCLASSOPTIONcaptionsoff
