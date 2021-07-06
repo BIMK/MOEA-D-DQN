@@ -45,18 +45,19 @@
 
 \begin{abstract}
   % 进化算法是一种受算子影响较大的随机优化算法，不同的复制算子具有不同的搜索范围。
-  Evolutionary Algorithms (EAs) are stochastic optimization algorithms which are greatly influenced by operators, different operators have various search range.
+  Evolutionary Algorithms (EAs) are stochastic optimization algorithms which are greatly influenced by operators, different operators have various search ranges.
   % AOS提供对进化算法的在线控制，即为当前个体选择合适的算子。
-  Adaptive operator selection (AOS) provides the on-line control of the evolutionary algorithms that is to choose the appropriate operator for the current individual.
+  Adaptive operator selection (AOS) provides the online control of the evolutionary algorithms that is, to choose the appropriate operator for the current individual.
   % 本文提出了一种基于DQN的算子选择策略，来确定哪个算子将被应用
-  This paper proposed a new AOS approach based on Deep Q Network, a Deep Reinforcement Learning (RL) algorithm in discrete action spaces, to determine which operator will be applied.
+  This paper proposed a new AOS approach based on Deep Q Network (MOEA/D-DQN), a Deep Reinforcement Learning (RL) algorithm in discrete action spaces, to determine which operator will be applied.
   % AOS的两部分信誉赋值和算子选择，分别对应MDP中的reward和action，当前个体的特征可以作为MDP的state，
-  The two main components of AOS,Credit Assignment and Operator Selection, correspond toReward and Action of Markov Decision Process (MDP) andthe State of MDP can be represented by the features ofthe current individual.
-  % 根据之前的规则，算子选择问题可以被建模成MDP，并且用强化学习解决。 
-  According to the above rules, the operator selection problem is modeled as MDP and can be solved by reinforcement learning.
+  The two main components of AOS, \textit{Credit Assignment} and \textit{Operator Selection}. The first defines how to reward an operator based on its recent applications, while the second uses rewards to decide which operator should be selected.
+  %  and the state of MDP can be represented by the features of the current individual.
+  % 算子选择问题通常被建模为MAB问题，并用RL解决
+  Adaptive operator selection problem is usually modeled as Multi-armed Bandit (MAB) problem and can be solved by reinforcement learning.
   % 在进化过程中，
   In the evolutionary process, RL will select an operator for each individual and update the behavioral strategy according to the effect of this selection.
-  Experimental results on \TODO{supplement experimental instructions}.
+  Experimental results show that our proposed MOEA/D-DQN performs better than the other two adaptive operator selection methods (MOEA/D-FRRMAB and MOEA/D-DYTS), and has better performance than other MOEA/D variants (MOEA/D-DRA and MOEA/D-M2M).
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -73,9 +74,9 @@
 
 %%%%%%%%%%%%% 介绍进化算法
 % 进化算法可以解决很多多目标优化问题，最近几十年有了很大的发展，
-Multi-object evolutionary algorithms (MOEAs) have attracted great attention over the past few decades and achieved outstanding performance in solving various kinds of MOPs \cite{fialho2010adaptive},
+Multi-object evolutionary algorithms (MOEAs) have attracted extensive attention over the past few decades and achieved outstanding performance in solving various kinds of MOPs \cite{fialho2010adaptive},
 % 人们提出了很多新的算法，主要有3类，基于支配关系的，基于分解的和基于指标的算法
-a number of algorithms have been proposed, e.g., indicator-based evolutionary algorithm (IBEA) \cite{IBEA}, the multi-objective evolutionary algorithm based on decomposition (MOEA/D) \cite{moead} and fast non-dominated sorting genetic algorithm (NSGA-II) \cite{nsga2}.
+many algorithms have been proposed, e.g., indicator-based evolutionary algorithm (IBEA) \cite{IBEA}, the multi-objective evolutionary algorithm based on decomposition (MOEA/D) \cite{moead} and fast non-dominated sorting genetic algorithm (NSGA-II) \cite{nsga2}.
 % 生成算子对进化算法的性能有很大的影响，有的算子注重探索能力，我们称为全局算子，有的注重局部的收敛，我们称为局部算子,那么如何平衡算法的探索和利用就成了人们研究的对象
 In these algorithms, the reproduction operators have a great influence on the performance.
 Generally speaking, different operators have different applications, some operators tend to explore unknown regions to find global optimal solutions, called global operators; and the others tend to converge quickly with population information, called local operators.
@@ -84,13 +85,13 @@ In order to accelerate the process of evolution, balanced exploration and exploi
 
 %%% 介绍AOS
 % 在进化算法中，有多个变异策略可以用来从父代产生子代解
-In evolutionary algorithm, there are multiple operators that can be applied at each generation to produce new solutions from parent solutions.
+In evolutionary algorithms, multiple operators can be applied at each generation to produce new solutions from parent solutions.
 % AOS是确定应用哪个算子的方法，衡量应用的效果，并且更新算子的credit并且adapt选择策略
-AOS is an approach that decides which operator should be applied, measure the effect of this application, update the credit of operators and adapt selection strategy \cite{li2011multi}.
+AOS is an approach that decides which operator should be applied, measure the effect of this application, update the credit of operators and adapt the selection strategy \cite{li2011multi}.
 % AOS就是为个体推荐合适的算子，在线控制
 % Adaptive operator selection (AOS) applies appropriate operators for individuals by online control while solving the problem, based on the recent performance of operators \cite{li2011multi}.
 % 包含credit assignment和operator selection 两部分，
-An AOS algorithm usually consists of \textit{credit assignment} and \textit{operator selection} \cite{li2013evolving}, credit assignment is to decide how much credit should be assigned to an operator based on its recent performance in the search process, operator selection is to select an operator to use at the next time point based on these current reward values \cite{frrmab}.
+An AOS algorithm usually consists two components: \textit{credit assignment} and \textit{operator selection}. Credit assignment rewards an operator based on its recent performances in the search process and the operator selection determines which operator should be selected according to their rewards.
 % 和credit assignment 尽量准确评价算子近期的效果不同，operator selection 需要平衡探索和利用，即既需要选择尽量表现好的算子来提高算法效果，又需要给表现不好的算子一些机会，因为它们在之后有可能变好。
 Different from credit assignment, which only needs to evaluate operator performance as accurately as possible, operator selection should balance exploration and exploitation: one hopes to give more chances to the best operators found so far in order to maximize the cumulative improvement (exploitation), but also needs to explore poor operators in the future search (exploration).
 % 通常有MAB，UCB，可以和MOEAD结合应用到多目标问题上。
@@ -99,13 +100,13 @@ Different from credit assignment, which only needs to evaluate operator performa
 
 %%%%%%% 介绍RL
 % 根据状态做出动作的强化学习正适合用来解决探索和利用困境
-Reinforcement Learning (RL) that selects actions according to the state is good at solving Exploration vs Exploitation dilemma.
+Reinforcement Learning (RL) that selects actions according to the state is good at solving Exploration vs. Exploitation dilemma.
 % 介绍强化学习
 An RL agent interacts with its environment in discrete time steps, at each time $t$, the agent receives the current state $s_t$ and reward $r_t$. It then chooses an action $a_t$ from the set of available actions, which is subsequently sent to the environment. The environment moves to a new state $s_{t+1}$ and the reward $r_{t+1}$ associated with the transition $(s_t, a_t, s_{t+1})$ is determined. The goal of a reinforcement learning agent is to learn a policy $\pi(a, s)=\operatorname{Pr}\left(a_{t}=a \mid s_{t}=s\right)$ which maximizes the expected cumulative reward.
 
 %%%%%%%%% 将RL应用到AOS
 % 在自适应算子选择问题中，我们可以将多目标优化问题和当前的种群作为环境，将选择算子作为动作，应用所选算子后环境负责给出下一个状态并且评价动作的reward，
-In the AOS problems, we take MOPs and the current population as environment, take the selection operator as action, after the application of the operator, the environment will give the next state and evaluate the reward of the action.
+In the AOS problems, we take MOPs and the current population as environment, take the selection operator as action, after application of the operator, the environment will give the next state and evaluate the reward of the action.
 % 将算子作为动作，将应用算子后种群发生的变化作为奖励，
 % In the AOS problems, we take MOPs and the current population as environment, take the population characteristics as states, take the operators as actions and the improvement of population fitness after the application of the operator is regarded as the reward.
 % 我们会发现遗传算法和强化学习在概念和结构上有相似性
@@ -113,23 +114,23 @@ Viewed in this light, GA can be regarded as similar to RL in its evolution/learn
 
 %%% 介绍本文
 % 现有的AOS方法，比如moead-frrmab和FAME,根据算子近期的表现选择算子，当算法运行到不同阶段时，会及时替换算子以满足问题的需要，
-Existing AOS methods, such as MOEA/D-FRRMAB \cite{frrmab} and FAME \cite{fame}, select an operator from the recent operator performance, when the algorithm runs to different states, it will replace the operator in time to meet the needs of the problem.
+Existing AOS methods, such as MOEA/D-FRRMAB \cite{frrmab} and FAME \cite{fame}, select an operator from the recent operator performances when the algorithm runs to different states, it will replace the operator in time to meet the needs of the problem.
 % 但是即使在同一阶段，针对不同的个体，不同的子问题，最佳的算子也是不同的，因此算子选择策略不应该只考虑阶段性的差异，也应该考虑不同个体间的差异
-But even at the same state, the best operator is different for different individuals and different subproblems. Therefore, the AOS strategy should not only consider the differences of stages, but also consider the individual differences.
+Even at the same state, the best operator is different for different individuals and different subproblems. \XG{ Therefore, the AOS strategy should not only consider the differences of stages, but also consider the individual differences.}
 % 本文提出了一种基于RL的AOS方法，该方法可以根据个体推荐不同的算子来实现更细粒度的控制，并分别推荐交叉算子和变异算子来达到更好的控制效果
 In this paper, we proposed an AOS method based on RL, which can recommend different operators according to the individual to achieve more fine-grained control and recommend crossover operators and mutation operators respectively to achieve better results.
 
 % 本文组织结构
 % 在第二章，我们介绍了多目标优化，强化学习的和AOS的相关工作. 在第三章，我们提出了MOEA/D-DQN，并详细介绍了实现细节。实验结果
-The rest of this paper is organized as follows. In Section II, we introduced the background of AOS and some related works. We proposed AOS methods MOEA/D-DQN and introduced the details of tis implementation in Section III. In Section IV, the experimental results are presented and analyzed. At last, we give the main conclusions and lines for future research in Section V.
+The rest of this paper is organized as follows. In Section II, we introduced the background of AOS and some related works. We proposed AOS methods MOEA/D-DQN and introduced the details of its implementation in Section III. In Section IV, the experimental results are presented and analyzed. At last, we give the main conclusions and lines for future research in Section V.
 
 \IEEEpubidadjcol
 
 \section{Background and Related Work}
 %%% 进化算法的效果和产生子代的策略有关，为了充分利用不同算子，最近几年提出了很多自适应算子选择的策略。
-The performance of EAs mainly depends on its breeding Offspring strategy, to take full advantage of several effective operators, many adaptive operator selection strategies have been proposed in recent years.
+The performance of EAs mainly depends on its generating Offspring strategy, to take full advantage of several effective operators, many adaptive operator selection strategies have been proposed in recent years.
 % 这一章节介绍AOS用到的概念和背景知识，和一些相关的工作。
-This section provides some basic concepts, background knowledge and some related work about AOS.
+This section provides some basic concepts, background knowledge, and some related work about AOS.
 
 \subsection{Multi-objective Optimization}
 %%% 介绍多目标优化和MOEAD
@@ -145,7 +146,7 @@ Multi-objective optimization problems are usually formulated as follows:
 
 %============ 介绍多目标优化
 % x是决策变量，f是一组互相冲突的目标函数，由于目标是冲突的，所以不存在一个解可以在所有目标上达到最优，
-Where $x = (x_1, \cdots , x_D)$ is a decision variable vector of length $D$, $l$ and $u$ are the lower and upper bounds of the decision variables. $f$ consists of $M$ conflicting objective functions. Since the objectives are conflicting, there is no one solution that is optimal for all objectives.
+Where $x = (x_1, \cdots ,x_D)$ is a decision variable vector of length $D$, $l$ and $u$ are the lower and upper bounds of the decision variables. $f$ consists of $M$ conflicting objective functions. Since the objectives are conflicting, there is no one solution that is optimal for all objectives.
 % 所有可能的解构成决策空间，决策空间可以由目标函数对应到目标空间，在目标空间中，如果一个解在所有目标上都不比另一个差，且至少在一个目标上比另一个好，我们就称为一个解支配另一个解。
 All possible decision variables constitute the decision space and objective functions can be mapped from the objective space to the decision space\cite{gonccalves2017adaptive}. In the objective space, one solution is said to dominate the other solution if it is no worse than the other solution on all objectives and is better than the other solution on at least one objective.
 % 当一个解不被支配时就是Pareto最优解
@@ -157,21 +158,21 @@ Very little work has been done to apply AOS to multi-objective evolutionary algo
 % 
 % 在论文中，我们使用MOEA/D作为主要的多目标优化框架，MOEAD的基本思想是将多目标问题分解成多个单目标的子问题,将AOS与MOEA/D结合是合适的，因为单目标的AOS方法可以transfer to MOEAD
 In this paper, we use MOEA/D-DRA \cite{moead-dra} as the evolutionary multi-objective optimization framework. The basic idea of MOEA/D-DRA is to decompose a multi-objective optimization problem into several scalar optimization subproblems and optimizes them together.
-It is appropriate to combine AOS with MOEA/D-DRA, because the single objective AOS method can be easily transferred to MOEA/D-DRA.
+It is appropriate to combine AOS with MOEA/D-DRA because the single objective AOS method can be easily transferred to MOEA/D-DRA.
 
 % 在传统的MOEA中，算法的性能取决于变异算子的质量。一个好的变异算子可以大大提高算法的搜索能力，从而获得更好的收敛和收敛速度。
-The performance of MOEAs are closely related to the quality of operators, A high quality operator can greatly improve the search ability of the algorithm, so as to obtain better comvergence and comvergence speed.
+The performance of MOEAs is closely related to the quality of operators, a high quality operator can greatly improve the searchability of the algorithm, to obtain better convergence and convergence speed.
 % 在过去的二十年里，人们提出了许多非常好的算子，包括经典的突变算子 模拟二进制交叉(SBX)[6]和差分进化(DE)[15]SBX操作符在本地搜索中表现更好，而DE操作符以其强大的全局搜索能力而闻名,
-In the past two decades, many excellent operators have been proposed, including the Simulated Binary Crossover \cite{deb2006reference} and Differential Evolution \cite{storn1997differential}, The SBX operator is good at local search and the DE operator is famous for its powerful global search ability.
+In the past two decades, many excellent operators have been proposed, including the Simulated Binary Crossover \cite{deb2006reference} and Differential Evolution \cite{storn1997differential}, The SBX operator is good at local search and the DE operator is famous for its powerful global searchability.
 % 然而,不同的实验向量生产策略和参数选择对moea的性能有很大的影响，通常没有一个单独的算子可以在所有问题上都表现良好。
 However, different experimental vector selection strategies and parameter settings have a great impact on the performance of MOEA, generally, there is no single operator that can perform well on all problems.
 % 所以我们需要针对不同的问题选择不同的算子和参数， 然而，在现实生活中，问题是事先未知的。因此，当一个复杂的MOP出现时，为其选择参数是困难的
-So we need to select operators and parameters for different problems. However, in real world, the problem is unknown in advance. Therefore, when a complex MOP appears, it is difficult to select operator to solve the problem.
+So we need to select operators and parameters for different problems. However, in real-world, the problem is unknown in advance. Therefore, when a complex MOP appears, it is difficult to select an operator to solve the problem.
 
 \subsection{Adaptive Operator Selection}
 %%% 介绍自适应算子选择
 % 自适应算子选择是控制变异算子在线应用的一种方,选择的依据是算子在之前的表现.法
-AOS is a approach for controlling on-line the application of the variation operators \cite{hitomi2016classification}, the selection is based on the previous performance of the operator.
+AOS is an approach for controlling online the application of the variation operators \cite{hitomi2016classification}, the selection is based on the previous performance of the operator.
 % --- TODO: 介绍MOEAD与AOS结合后的处理流程
 % AOS主要有两个任务，适应度赋值(评价算子)和算子选择(依据评价做出选择)。
 %%%%%%%%%%%%%%%%%% 补充图片，介绍适应度赋值和算子选择的联系
@@ -183,7 +184,7 @@ AOS requires two tasks to be solved, the \textit{Credit Assignment} strategy tha
 Credit assignment defines how to estimate the quality of operators based on the impact of their recent applications.
 % 最常用的信誉分配方法是根据子代相对于父代的适应度提高来确定
 The most common method of credit assignment rewards an operator for its performance to improve the fitness of an offspring over its parent, in \cite{lin2016adaptive} the fitness improvement rates (FIR) is obtained with the used operator
-, as defined in Equation (\ref{eq:fir}).
+, as defined in Equation (\ref{eq:fir}),
 
 \begin{equation}
   \text{FIR}_{i}=\left\{
@@ -197,9 +198,9 @@ The most common method of credit assignment rewards an operator for its performa
 \end{equation}
 
 % pf和cf分别是父代和子代的适应度值，如果父代比子代差，子代不会插入到父代中，因此FIR=0
-where $pf_{i}$ and $cf_{i}$ are the fitness values of parent and its offspring, if the offspring is worse than parent, then set FIR to 0.
+where $pf_{i}$ and $cf_{i}$ are the fitness values of the parent and its offspring, if the offspring is worse than the parent, then set FIR to 0.
 % 由于有写目标函数值的量级不同，如果我们知道真实最优值，一般用父代与真实最优值的差做分母。
-In order to track the dynamics of search process, ExAOS \cite{fialho2008extreme} use a sliding window to save recent fitness improvement rates produced by the operators,
+In order to track the dynamics of the search process, ExAOS \cite{fialho2008extreme} use a sliding window to save recent fitness improvement rates produced by the operators,
 % 有观点认为稀少但巨大的改进比频繁但微小的改进更有用
 some people believe the operators that make rare but large improvements are more important than operators that make frequent and small improvements \cite{fialho2009dynamic},
 % 滑动窗口里存提高率，reward是滑动窗口里operator对应的最大值，
@@ -211,19 +212,19 @@ In addition there are some strategies reward operators that increase the fitness
 Most of the studies on credit assignment in AOS are for single-objective problems, such as \cite{fialho2009dynamic,fialho2009dynamic,cowling2000hyperheuristic}, and there has been little work done on AOS in multi-objective evolutionary computation because it is very difficult to define the credit assignment and compare one solution to another.
 
 % 现有的多目标信誉赋值在比较个体和赋值方式上有所不同
-The existing multi-objective credit assignment is different in which individuals should be compared and assigning strategies, most of the AOS for MOPs is based on different evolution.
+The existing multi-objective credit assignment is different in which individuals should be compared and assigning strategies, most of the AOS for MOPs is based on differential evolution.
 % 有些工作是基于支配关系的，
 Some previous works reward operators based on the dominant relationships,
 % MOSaDE依据帕累托支配关系和拥挤距离来奖励算子。
 such as MOSaDE \cite{huang2007multi} rewards an operator if it is better than incumbent solution in terms of Pareto-dominance and crowding distance.
-In MCHH \cite{mcclymont2011markov}, the reward of operator is determined by the offspring it produces that dominate many solutions from the previous generation. Adap-MODE \cite{li2011multi} rewards an operator according to the fitness improvement of a solution, where fitness is the weighted sum of Pareto metric and density metric.
+In MCHH \cite{mcclymont2011markov}, the reward of an operator is determined by the offspring it produces that dominate many solutions from the previous generation. Adap-MODE \cite{li2011multi} rewards an operator according to the fitness improvement of a solution, where fitness is the weighted sum of Pareto metric and density metric.
 % 有一些基于支配关系奖励算子的工作。比如在AMALGAM中，
 % 最近的一些工作大多是基于分解的多目标算法,比如FRRMAB，根据基于分解的适应值函数评价算子对于目标函数值的提高能力
-Most of the recent work is based on decomposition of multi-objective algorithm, such as MOEA/D-FRRMAB \cite{frrmab}, which reward operator according to the improvement of decomposition-based fitness value compared with the neighboring subproblems.
+Most of the recent works are based on decomposition of the multi-objective algorithm, such as MOEA/D-FRRMAB \cite{frrmab}, which reward an operator according to its improvement of decomposition-based fitness value compared with the neighboring subproblems.
 % B-AOS 双标准的辅助的AOS，一个指标是收敛性，另一个指标是分布性。
-B-AOS \cite{lin2021decomposition} proposed a bicriteria assisted adaptive operator selection strategy, in which one criterion reflecting the convergence according to the Pareto dominant relation and another criterion reflecting the diversity according to the crowding distance.
+B-AOS \cite{lin2021decomposition} proposed a bicriteria-assisted adaptive operator selection strategy, in which one criterion reflecting the convergence according to the Pareto dominant relation and another criterion reflecting the diversity according to the crowding distance.
 % 算法在前期比较注重分布性，在后期更加注重收敛性。
-The algorithm keeps the distribution of the population in the early stage, and pays more attention to the convergence of the population in the later stage.
+The algorithm keeps the distribution of the population in the early stage and pays more attention to the convergence of the population in the later stage.
 % 也有一些基于支配关系的工作，
 On the other hand, AMALGAM \cite{vrugt2007improved} rewards the operator according to the number of solutions it contributes to the population.
 % 通常来讲，有三种基于支配关系的奖励方式。
@@ -233,7 +234,7 @@ Generally speaking, there are three different credit assignments based on domina
 % 和信誉赋值相比，
 % Compared with credit assignment, the operator selection 
 % 信誉赋值之后就可以根据算子的信誉为个体推荐合适的算子，但不能直接选择credit最高的算子，因为这会使我们丢失多样性
-After credit assignment, we can recommend appropriate operators for individuals according to the credit of operators, but we can't choose the operator with the highest credit directly, because it will make us lose diversity.
+After credit assignment, we can recommend appropriate operators for individuals according to the credit of operators, but we can not choose the operator with the highest credit directly, because it will make population lose diversity.
 % 一方面，我们需要给好的算子更多机会，另一方面我们需要探索较差的算子，因为它们可能在未来表现出显著的不同,我们称之为探索利用困境。
 On the one hand, we need to give more opportunities to operators with better track records, on the other hand, we need to explore poor operators, since an operator might perform significantly differently in the future search stages, we called this difficult as exploration versus exploitation (EvE) dilemma.
 
@@ -257,10 +258,10 @@ So in order to avoid the operator probability is too small to be selected, PM de
 \end{equation}
 Where $k$ is the number of operators.
 % PM在很多差算子的情况下很难获得好的结果, 因为多个差的算子的和也是很大的。
-When there are many mediocre operators and only only one efficient operator, it is difficult for PM algorithm to achieve high performance, because the minimal selection probability for each operator is $p_{min}$, the sum of selection probabilities from many mediocre operators has a significant advantage over the high performance operator.
+When there are many mediocre operators and only one efficient operator, it is difficult for the PM algorithm to achieve high performance, because the minimal selection probability for each operator is $p_{min}$, the sum of selection probabilities from many mediocre operators has a significant advantage over the high-performance operator.
 
 % 引入AP方法，赢家通吃的策略，提高最佳算子被选中的概率，降低其它算子的概率。
-Another method based on probability is Adaptive Pursuit (AP) \cite{thierens2007adaptive}, adopts the winner-take-all strategy to allocate the best operator with higher probability, the pursuit method increases the probability of the best operator $a^*$ being selected and reduces the probabilities of other operators.
+Another method based on probability is Adaptive Pursuit (AP) \cite{thierens2007adaptive}, which adopts the winner-take-all strategy to allocate the best operator with higher probability, the pursuit method increases the probability of the best operator $a^*$ being selected and reduces the probabilities of other operators.
 % AP的过程介绍,根据Pmin算出Pmax
 Like PM, AP also designs the minimum probability $p_{min}$, while an operator that works well can obtain the maximum selection probability $p_{max} = 1-(k-1)\times p_{min}$.
 % AP 追踪当前最佳的算子o^*，
@@ -283,7 +284,7 @@ Due to the dynamic nature of the evolution process, an operator might perform si
 % 在多臂赌博机的框架下 EvE困境已经被深入研究
 In the Multi-Armed Bandit (MAB) framework, the EvE trade-off has been intensively studied.
 % 原始的MAB框架使用UCB的方法, 然而UCB只能解决固定报酬分配的MAB问题，但是进化过程是动态的。
-The original MAB framework used the Upper Confidence Bound (UCB) \cite{auer2002finite} method, which guarantees asymptotic optimality with respect to the total cumulative reward. However, UCB solves MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
+The original MAB framework used the Upper Confidence Bound (UCB) \cite{auer2002finite} method, which guarantees asymptotic optimality with respect to the total cumulative reward. However, UCB solves the MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
 % 为了适应动态变化的环境，DMAB算法通过将原始的MAB技术和统计变点测试结合，一旦检测到算子质量分布发生变化就重新启动MAB的流程, 增强了对时间序列变化的有效检测
 In order to adapt to the dynamic environment, the Dynamic Multi-Armed Bandit (DMAB) \cite{dacosta2008adaptive} algorithm combines the original MAB technology with the statistical Page-Hinkley test, which enforces the efficient detection of changes in time series.
 % sliding mab 使用时间窗
@@ -294,18 +295,18 @@ Other operator selectors such as sliding multi-armed bandit (SLMAB) \cite{fialho
 % 强化学习是机器学习的一个领域，研究智能体如何在环境中采取行动，智能体的目标是最大化期望累计回报
 Reinforcement Learning (RL) \cite{sutton2018reinforcement} is an area of machine learning concerned with how intelligence agents ought to take actions in an environment, and the goal of agents is to learn a policy $\pi$ which maximizes the expected cumulative reward \cite{van2012reinforcement}.
 % 基于评价性反馈显示了所采取的行动有多好，而不是它是最好的还是最坏的行动。
-Feedback based on evaluation shows how good the action is, but not whether it was the best or the worst action passible.
+Feedback based on evaluation shows how good the action is, but not whether it was the best or the worst action possible.
 % 强化学习与其他学习类型最重要的区别是，它使用的训练信息是评估所采取的行动，而不是通过给出正确的行动来指导。这就产生了积极探索的需要，明确寻找良好行为的需要。
-The most important difference between RL and supervised learning is that it uses training information to evaluate the actions, rather than instructs by giving best actions.
+The most important difference between RL and supervised learning is that it uses training information to evaluate the actions, rather than instructs by giving the best actions.
 % 因此RL更注重平衡探索和利用
 Therefore, RL pays more attention to find a balance between exploration (of uncharted territory) and exploitation (of current knowledge) \cite{kaelbling1996reinforcement}.
 % 由于强化学习具有平衡探索和利用的特性，它可以被用来解决D-mab问题
-Since RL has the feature of balance EvE, it can be used to solve MAB problem.
+Since RL has the feature of balance EvE, it can be used to solve the MAB problem.
 
 % 强化学习的环境通常以马尔科夫决策过程的形式表示
 The environment of RL is usually expressed in the form of Markov decision process (MDP) \cite{van2012reinforcement},
 % MDP是在环境中模拟智能体的随机性策略（policy）与回报的数学模型，
-MDP is a mathematical model that simulates the agent's policy and return in the environment.
+MDP is a mathematical model that simulates the agent's policy and returns in the environment.
 % 按定义，MDP包含5个模型要素，状态（state）、动作（action）、策略（policy）、奖励（reward）和回报（return
 By definition, MDP includes five elements: state, action, policy, reward and return.
 % 强化学习把学习看作试探评价过程，Agent选择一个动作用于环境，环境接受该动作后状态发生变化，同时产生一个强化信号(奖或惩)反馈给Agent，Agent根据强化信号和环境当前状态再选择下一个动作，选择的原则是使受到正强化(奖)的概率增大。选择的动作不仅影响立即强化值，而且影响环境下一时刻的状态及最终的强化值。
@@ -330,16 +331,16 @@ the value-based method relies on finding the action that maximizes the action va
 When state space is very large, it is difficult to estimate the action function, Deep Q Network (DQN) \cite{mnih2015human} uses a neural network to approximate action value function.
 %%%%%%%%%%%%%%%%%%% Deep Q Networks
 % DQN使用相同的值来选择和评估一个动作，如果一个动作值被高估了，它将再次被选择和高估，为了防止这种情况，Double Q-learning[37]将计算与选择解耦
-DQN uses the same values to select and to evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection,
+DQN uses the same values to select and evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection,
 % 更进一步，DDQN使用第二个神经网络来评估动作的质量，而第一个网络用来通过 e贪婪策略选择动作
-futhermore, Double Deep Q Networks (DDQN) \cite{ddqn} use a second neural network to evaluate the quality of each action, while the first network is used to choose actions through $\epsilon$-greedy policy.
+furthermore, Double Deep Q Networks (DDQN) \cite{ddqn} use a second neural network to evaluate the quality of each action, while the first network is used to choose actions through $\epsilon$-greedy policy.
 % 通过从第一个网络复制权值，第二个网络每n次更新一次
 By copying weights from the first network, the second network is updated every $n$ times.
 
 % 在这篇论文中，我们提出了一种基于DQN的AOS方法，
 In this paper, we proposed an AOS method based on DQN,
 % 我们将强化学习作为算子选择器集成到进化算法中，为每个个体推荐合适的算子，强化学习的奖励与算子的性能相关，根据奖励我们可以更新强化学习的策略，最大化累计期望奖励
-we integrate RL as an operator selector into evolutionary algorithm to recommend suitable operator for each individual, the reward of RL is related to the performance of the operator, according to the reward, we can update the strategy to maximize the cumulative expected reward.
+we integrate RL as an operator selector into the evolutionary algorithm to recommend a suitable operator for each individual, the reward of RL is related to the performance of the operator, according to the reward, we can update the strategy to maximize the cumulative expected reward.
 
 % 我们使用在线控制的方法，将强化学习的选择器嵌入到进化算法中，并根据进化的效果给强化学习适当的奖励，根据奖励我们可以更新强化学习的策略，使得在未来获得最高的期望奖励。
 % we used online control method to embed RL selector into evolutionary algorithm, according to the effect of evolution, we can give appropriate reward to RL and update the strategy to get the highest expected reward in the future.
@@ -347,12 +348,12 @@ we integrate RL as an operator selector into evolutionary algorithm to recommend
 \section{AOS via DQN}
 % 许多论文采用预训练的方式，比如。首先在训练问题上训练多伦，然后在测试问题上使用在线控制的方式，但我们认为不同的问题有不同的最佳算子，而且由于进化路径的不同，在相同的进化阶段也可能有不同的最佳算子，因此AOS难以有迁移性。
 % 现有的将RL应用到AOS问题的工作大多采用离线训练的方式，首先在部分测试问题上收集数据并训练神经网络，之后将训练好的模型应用到测试问题上，
-Most of the existing works of applying RL to AOS problems adopts the way of off-line training, collect data on some benchmark functions and train the neural network, and then use the the trained neural network to predict which operator should be applied to each individual at each generation.
+Most of the existing works of applying RL to AOS problems adopt the way of off-line training, collect data on some benchmark functions and train the neural network, and then use the trained neural network to predict which operator should be applied to each individual at each generation.
 % 
 % 但是在我们看来，不同的问题可能有不同的最佳算子，由于问题的特征不能全部包含在RL的状态中，因此在一个问题上表现好的AOS模型不一定在另一个问题上取得好的效果。
-However, in our opinion, different problems may have different optimal operators, due to the characteristics can not be included in the RL state, so the AOS model that performs well on one problem may not achieveds good results on other problems.
+However, in our opinion, different problems may have different optimal operator, due to the characteristics that can not be included in the RL state, so the AOS model that performs well on one problem may not achieves good results on other problems.
 % 所以我们没有两阶段，先训练再应用的方式，而是直接使用端到端的在线控制，利用当前信息训练模型，预测之后的选择算子。
-So we don't adopt the two-stage method (train stage and control stage), but adopt the end-to-end online control method, use the current information to train neural network and the use the previous training model to select the operators.
+So we did not take a two-stage method (train stage and control stage), but adopt the end-to-end online control method, use the current information to train a neural network, and use the previous training model to select the operators.
 % 为了增加训练样本利用率，我们使用经验回放机制\cite{DQN}，将transition存储经验池
 In order to increase the utilization of training samples, we use the experience replay mechanism \cite{zha2019experience} and store the transition $e_t = (s_t,a_t,r_t,s_{t+1})$ at each time-step $t$ in a data set $D_t = {e_1,\dots, e_t}$.
 
@@ -716,14 +717,14 @@ To apply the MDP, we also need to give the definition of state, action and rewar
   \item \textit{Action:}
         % 在MDP中，agent根据环境的状态做出动作，具体来说，深度神经网络输出在当前状态下每个动作质量，之后使用operator selection的方法给出具体的算子。
         In MDP, the agent makes an action $a_t$ based on the state $s^i$, specifically, the deep neural network outputs the quality of each action in the current state, and then uses the operator selection \ref{operator_selection} method to give the recommended operator.
-        \TODO{action space}
+        % \TODO{action space}
         % 动作空间是
         % \TODO{add equation}
         % \item \textit{Policy:}
   \item \textit{Reward:}
         % 执行动作a^i后，状态会从S^i转移到S^i+1，并且环境会通过比较两个状态给出reward，表示动作的好坏。奖励越大，说明算子的效果越好，通过调整策略，在下次类似的状态时有更大的概率应用相同的算子。
         State will be transferred from $s_{t}$ to $s_{t+1}$ with action $a_t$, and the environment will give a reward $r_{t+1}$ by comparing the two states, indicating the quality of the action $a_t$. A larger reward indicates that the operator has a better performance, by adjusting strategy, the agent is more likely to apply the same operator in the next similar state.
-        \TODO{add equation}
+        % \TODO{add equation}
 \end{enumerate}
 
 %%% 说明用的MOEA/D框架
