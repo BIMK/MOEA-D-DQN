@@ -209,7 +209,7 @@ the operator reward is set to the maximal fitness improvement in the time window
 In addition there are some strategies reward operators that increase the fitness of the solution while maintaining the diversity of the solution set \cite{auer2002finite}.
 
 % 大多数的AOS研究都是关于单目标的，因为多目标很难做信誉赋值，而且也不容易比较解
-Most of the studies on credit assignment in AOS are for single-objective problems, such as \cite{fialho2009dynamic,fialho2009dynamic,cowling2000hyperheuristic}, and there has been little work done on AOS in multi-objective evolutionary computation because it is very difficult to define the credit assignment and compare one solution to another.
+Most of the studies on credit assignment in AOS are for single-objective problems, such as \cite{fialho2009dynamic,cowling2000hyperheuristic}, and there has been little work done on AOS in multi-objective evolutionary computation because it is very difficult to define the credit assignment and compare one solution to another.
 
 % 现有的多目标信誉赋值在比较个体和赋值方式上有所不同
 The existing multi-objective credit assignment is different in which individuals should be compared and assigning strategies, most of the AOS for MOPs is based on differential evolution.
@@ -237,6 +237,27 @@ Generally speaking, there are three different credit assignments based on domina
 After credit assignment, we can recommend appropriate operators for individuals according to the credit of operators, but we can not choose the operator with the highest credit directly, because it will make population lose diversity.
 % 一方面，我们需要给好的算子更多机会，另一方面我们需要探索较差的算子，因为它们可能在未来表现出显著的不同,我们称之为探索利用困境。
 On the one hand, we need to give more opportunities to operators with better track records, on the other hand, we need to explore poor operators, since an operator might perform significantly differently in the future search stages, we called this difficult as exploration versus exploitation (EvE) dilemma.
+
+%%% 和前面credit assignment类似的介绍不同工作的算子选择方案，
+% DMAB和SLMAB
+
+%  ExAOS
+
+%  MOSaDE
+
+% MCHH
+
+% Adap-MODE
+
+% MOEA/D-FRRMAB
+
+% B-AOS
+
+% AMALGAM
+
+
+
+
 
 % 一个常用的方法是概率匹配算法
 A common method is probability matching (PM) algorithm \cite{thierens2007adaptive}, each operator $o_i$ in the operator pool $O$ has a corresponding probability value $p_{i,t}$ as generation $t$, $p$ is determined by the quality $q_{i,t}$, $q$ is updated according to the reward $r_{i,t}$ received during the credit assignment phase, and the formula is as follows:
