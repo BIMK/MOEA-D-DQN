@@ -57,7 +57,8 @@
   Adaptive operator selection problem is usually modeled as Multi-armed Bandit (MAB) problem and can be solved by reinforcement learning.
   % 在进化过程中，
   In the evolutionary process, RL will select an operator for each individual and update the behavioral strategy according to the effect of this selection.
-  Experimental results show that our proposed MOEA/D-DQN performs better than the other two adaptive operator selection methods (MOEA/D-FRRMAB and MOEA/D-DYTS), and has better performance than other MOEA/D variants (MOEA/D-DRA and MOEA/D-M2M).
+  Experimental results show that our proposed MOEA/D-DQN performs better than the other two adaptive operator selection methods (MOEA/D-FRRMAB and MOEA/D-DYTS), and has better performance than IM-MOEA, MOEA/D and other MOEA/D variants (MOEA/D-DRA and MOEA/D-M2M).
+
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -163,7 +164,7 @@ It is appropriate to combine AOS with MOEA/D-DRA because the single objective AO
 % 在传统的MOEA中，算法的性能取决于变异算子的质量。一个好的变异算子可以大大提高算法的搜索能力，从而获得更好的收敛和收敛速度。
 The performance of MOEAs is closely related to the quality of operators, a high quality operator can greatly improve the searchability of the algorithm, to obtain better convergence and convergence speed.
 % 在过去的二十年里，人们提出了许多非常好的算子，包括经典的突变算子 模拟二进制交叉(SBX)[6]和差分进化(DE)[15]SBX操作符在本地搜索中表现更好，而DE操作符以其强大的全局搜索能力而闻名,
-In the past two decades, many excellent operators have been proposed, including the Simulated Binary Crossover \cite{deb2006reference} and Differential Evolution \cite{storn1997differential}, The SBX operator is good at local search and the DE operator is famous for its powerful global searchability.
+In the past two decades, many excellent operators have been proposed, including the Simulated Binary Crossover \cite{deb2006reference} and Differential Evolution \cite{storn1997differential} (DE), The SBX operator is good at local search and the DE operator is famous for its powerful global searchability.
 % 然而,不同的实验向量生产策略和参数选择对moea的性能有很大的影响，通常没有一个单独的算子可以在所有问题上都表现良好。
 However, different experimental vector selection strategies and parameter settings have a great impact on the performance of MOEA, generally, there is no single operator that can perform well on all problems.
 % 所以我们需要针对不同的问题选择不同的算子和参数， 然而，在现实生活中，问题是事先未知的。因此，当一个复杂的MOP出现时，为其选择参数是困难的
@@ -221,6 +222,7 @@ In MCHH \cite{mcclymont2011markov}, the reward of an operator is determined by t
 % 有一些基于支配关系奖励算子的工作。比如在AMALGAM中，
 % 最近的一些工作大多是基于分解的多目标算法,比如FRRMAB，根据基于分解的适应值函数评价算子对于目标函数值的提高能力
 Most of the recent works are based on decomposition of the multi-objective algorithm, such as MOEA/D-FRRMAB \cite{frrmab}, which reward an operator according to its improvement of decomposition-based fitness value compared with the neighboring subproblems.
+% LROS
 % B-AOS 双标准的辅助的AOS，一个指标是收敛性，另一个指标是分布性。
 B-AOS \cite{lin2021decomposition} proposed a bicriteria-assisted adaptive operator selection strategy, in which one criterion reflecting the convergence according to the Pareto dominant relation and another criterion reflecting the diversity according to the crowding distance.
 % 算法在前期比较注重分布性，在后期更加注重收敛性。
@@ -240,76 +242,85 @@ On the one hand, we need to give more opportunities to operators with better tra
 
 %%% 和前面credit assignment类似的介绍不同工作的算子选择方案，
 % DMAB和SLMAB
+The EvE dilemma has been intensively studied in the Multi-armed Bandit (MAB) problem,
+% 基于MAB的AOS方法将每个operator看做一个arm，每个arm都有一个关于reward的概率分布，我们的目的是在有限的拉动杠杆下获得最大的回报。我们可以选择当前reward最大的arm(利用)，或者其它来得到更准确的估计(探索)
+The AOS methods based on MAB regards each operator as an arm, and each arm provides a random reward from a probability distribution. Our goal is to get the maximum the sum of rewards earned through a sequence of lever pulls, each lever pull can be the largest arm (exploitation) or other (exploration).
 
-%  ExAOS
-
-%  MOSaDE
-
-% MCHH
-
-% Adap-MODE
-
-% MOEA/D-FRRMAB
-
-% B-AOS
-
-% AMALGAM
-
-
-
-
-
-% 一个常用的方法是概率匹配算法
-A common method is probability matching (PM) algorithm \cite{thierens2007adaptive}, each operator $o_i$ in the operator pool $O$ has a corresponding probability value $p_{i,t}$ as generation $t$, $p$ is determined by the quality $q_{i,t}$, $q$ is updated according to the reward $r_{i,t}$ received during the credit assignment phase, and the formula is as follows:
-\begin{equation}
-  q_{i,t+1} = q_{i,t} + \alpha(r_{i,t} - q_{i,t})
-  \label{eq: pm_q}
-\end{equation}
-% 这是利用时序差分法，根据算法的reward估计算子的质量。
-with the learning rate $\alpha \in (0,1]$, using the Temporal-Different method to estimate the quality of operator.
-% 然而，如果有算子在当前的概率=0，那么他在之后就永远不会被选中，quality也不会被更新
-Once a quality $a_{i,t}$ becomes equal to 0, the operator will never be selected in the future and its quality can no longer be updated.
-% 在非平稳的环境中，该算子可能在之后会有更好的表现，所以
-In a non-stationary environment, the operator might perform better in a future stage of the search process.
-% 为了避免有的算子概率太小以至于长时间不被 measure  the  improvement  of  offspring选择，PM设定一个最小选择概率称为 Pmin,
-So in order to avoid the operator probability is too small to be selected, PM designs a minimal probability, $p_{min}: 1 > p_{min} > 0$, for exploring currently underperforming operator. Since the total probability is 1, thus we can get the update rule of $p_{i,t}$:
-\begin{equation}
-  p_{i,t+1} = p_{min} + (1-k \cdot p_{min}) \frac{q_{i,t+1}}{\sum_{i=1}^k q_{i,t+1}}
-  \label{eq: pm_p}
-\end{equation}
-Where $k$ is the number of operators.
-% PM在很多差算子的情况下很难获得好的结果, 因为多个差的算子的和也是很大的。
-When there are many mediocre operators and only one efficient operator, it is difficult for the PM algorithm to achieve high performance, because the minimal selection probability for each operator is $p_{min}$, the sum of selection probabilities from many mediocre operators has a significant advantage over the high-performance operator.
-
-% 引入AP方法，赢家通吃的策略，提高最佳算子被选中的概率，降低其它算子的概率。
-Another method based on probability is Adaptive Pursuit (AP) \cite{thierens2007adaptive}, which adopts the winner-take-all strategy to allocate the best operator with higher probability, the pursuit method increases the probability of the best operator $a^*$ being selected and reduces the probabilities of other operators.
-% AP的过程介绍,根据Pmin算出Pmax
-Like PM, AP also designs the minimum probability $p_{min}$, while an operator that works well can obtain the maximum selection probability $p_{max} = 1-(k-1)\times p_{min}$.
-% AP 追踪当前最佳的算子o^*，
-AP pursues the best operator $o^*$ with the maximal quality, to avoid the disadvantages of PM, AP increases the selection probability of the best operator $p_{o^*,t}$ and decreases the other probabilities $p_{o,t}, \forall o \neq o^*$ by the following formula.
-\begin{equation}
-  p_{i, t+1}=\left\{\begin{array}{ll}
-    p_{i, t}+\beta \cdot\left(p_{\max }-p_{o, t}\right) & \text { if } o=o^{*} \\
-    p_{i, t}+\beta \cdot\left(p_{\min }-p_{o, t}\right) & \text { otherwise }
-  \end{array}\right.
-  \label{eq: AP}
-\end{equation}
-Where $\beta \in (0,1]$ is the learning rate.
-% 
-% 搜索过程中，算子的性能可能是动态变化的，因此在算子选择中最困难的就是平衡探索和利用。
-% The performance of operators may be dynamic in the search process, so the most difficult problem in operator selection is to balance exploration and exploitation.
-% 
-% 由于进化过程是动态的，算子的性能在不同阶段可能有很大的差异，AP和PM可能没有办法适应剧烈变化的环境
-Due to the dynamic nature of the evolution process, an operator might perform significantly differently in different stages, when credit changes rapidly, PM and AP may not be able to quickly adjust their selection strategies.
-
-% 在多臂赌博机的框架下 EvE困境已经被深入研究
-In the Multi-Armed Bandit (MAB) framework, the EvE trade-off has been intensively studied.
-% 原始的MAB框架使用UCB的方法, 然而UCB只能解决固定报酬分配的MAB问题，但是进化过程是动态的。
-The original MAB framework used the Upper Confidence Bound (UCB) \cite{auer2002finite} method, which guarantees asymptotic optimality with respect to the total cumulative reward. However, UCB solves the MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
-% 为了适应动态变化的环境，DMAB算法通过将原始的MAB技术和统计变点测试结合，一旦检测到算子质量分布发生变化就重新启动MAB的流程, 增强了对时间序列变化的有效检测
+% 原始的MAB框架使用UCB的方法, 然而它只能解决固定报酬分配的MAB问题，但是进化过程是动态的。
+The original MAB framework used the Upper Confidence Bound (UCB) \cite{auer2002finite} method, which guarantees asymptotic optimality with respect to the total cumulative reward. However, it solves the MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
+% 为了适应动态变化的环境，DMAB算法通过将原始的MAB技术和统计变点测试结合，一旦检测到算子质量分布发生变化就重新启动MAB的流程, 增强了对时间序列变化的有效检测, 
 In order to adapt to the dynamic environment, the Dynamic Multi-Armed Bandit (DMAB) \cite{dacosta2008adaptive} algorithm combines the original MAB technology with the statistical Page-Hinkley test, which enforces the efficient detection of changes in time series.
 % sliding mab 使用时间窗
-Other operator selectors such as sliding multi-armed bandit (SLMAB) \cite{fialho2010analyzing} using a sliding time window to balance both exploitation and exploration terms.
+% Other operator selectors such as sliding multi-armed bandit (SlMAB) \cite{fialho2010analyzing} using a sliding time window to balance both exploitation and exploration terms.
+% MOEA/D-FRRMAB 使用FRR替换FIR，增加了最佳算子的被选中的概率
+The operator selection scheme of MOEA/D-FRRMAB \cite{frrmab} is similar to the original UCB algorithm, the major difference is that is replaces FIR with fitness rank rate, which increases the chance of the best operator.
+
+% DYTS 
+% 前面解决MAB problem的方法都是基于之前行动来估计reward，但DYTS基于之前获得的奖惩构建概率模型，然后从中采样并选择reward最大的arm。随着进化的进行，我们对概率分布的估计会越来越准确。
+The previous methods to solve the MAB problem are based on the previous actions to estimate the reward, but MOEA/D-DYTS \cite{aos_dyts} takes a different approach, it establishes a Beta distribution for each arm, updates the parameters of the distribution by bernoulli thompson sampling, samples rewards from all distributions each time, adn selects the arm with the largest reward.
+
+% LROS将进化过程分成多个阶段，每个阶段分两部分，Part1使用一部分个体估计算子的性能，part2选择估计值最高的算子进化剩余个体。
+LROS \cite{lros} divides the evolution process into several stages, and each stage is divided into two parts, part 1 use a subset of individuals to test the performance of each operator and in part 2, the operator with the best performance will be selected to generate offspring.
+% B-AOS使用两个算子池，分别专注于探索和利用，并对所有算子的探索能力做排名，如果个体是非支配的，则选择探索能力强的算子池，之后再根据crowding-assisted 选择具体算子。
+% 根据个体是否是非支配解确定使用哪个算子池，之后根据crowding-assisted 选择具体算子。
+Two operator pools are employed in B-AOS \cite{lin2021decomposition}, which focus on exploitation and exploration, each of which includes two DE operators with distinct search patterns, and ranks the exploration ability of all operators. If the individual is non-dominated solution, the operator pool with strong exploration is selected, and then the specific operator is selected according to crowding distance.
+% FAME使用模糊推理系统维护算子的概率，之后使用轮盘赌的方式选择算子。
+FAME \cite{fame} uses fuzzy inference system to maintain the probabilities of operators, and then a roulette mechanism is used the operator.
+
+% 还有一些其它的基于概率
+In addition, there are some AOS methods based on probability, such as SaDE \cite{sade}, JADE \cite{jade}, jDE \cite{jde}.
+
+% % 一个常用的方法是概率匹配算法
+% A common method is probability matching (PM) algorithm \cite{thierens2007adaptive}, each operator $o_i$ in the operator pool $O$ has a corresponding probability value $p_{i,t}$ as generation $t$, $p$ is determined by the quality $q_{i,t}$, $q$ is updated according to the reward $r_{i,t}$ received during the credit assignment phase, and the formula is as follows:
+% \begin{equation}
+%   q_{i,t+1} = q_{i,t} + \alpha(r_{i,t} - q_{i,t})
+%   \label{eq: pm_q}
+% \end{equation}
+% % 这是利用时序差分法，根据算法的reward估计算子的质量。
+% with the learning rate $\alpha \in (0,1]$, using the Temporal-Different method to estimate the quality of operator.
+% % 然而，如果有算子在当前的概率=0，那么他在之后就永远不会被选中，quality也不会被更新
+% Once a quality $a_{i,t}$ becomes equal to 0, the operator will never be selected in the future and its quality can no longer be updated.
+% % 在非平稳的环境中，该算子可能在之后会有更好的表现，所以
+% In a non-stationary environment, the operator might perform better in a future stage of the search process.
+% % 为了避免有的算子概率太小以至于长时间不被 measure  the  improvement  of  offspring选择，PM设定一个最小选择概率称为 Pmin,
+% So in order to avoid the operator probability is too small to be selected, PM designs a minimal probability, $p_{min}: 1 > p_{min} > 0$, for exploring currently underperforming operator. Since the total probability is 1, thus we can get the update rule of $p_{i,t}$:
+% \begin{equation}
+%   p_{i,t+1} = p_{min} + (1-k \cdot p_{min}) \frac{q_{i,t+1}}{\sum_{i=1}^k q_{i,t+1}}
+%   \label{eq: pm_p}
+% \end{equation}
+% Where $k$ is the number of operators.
+% % PM在很多差算子的情况下很难获得好的结果, 因为多个差的算子的和也是很大的。
+% When there are many mediocre operators and only one efficient operator, it is difficult for the PM algorithm to achieve high performance, because the minimal selection probability for each operator is $p_{min}$, the sum of selection probabilities from many mediocre operators has a significant advantage over the high-performance operator.
+
+% % 引入AP方法，赢家通吃的策略，提高最佳算子被选中的概率，降低其它算子的概率。
+% Another method based on probability is Adaptive Pursuit (AP) \cite{thierens2007adaptive}, which adopts the winner-take-all strategy to allocate the best operator with higher probability, the pursuit method increases the probability of the best operator $a^*$ being selected and reduces the probabilities of other operators.
+% % AP的过程介绍,根据Pmin算出Pmax
+% Like PM, AP also designs the minimum probability $p_{min}$, while an operator that works well can obtain the maximum selection probability $p_{max} = 1-(k-1)\times p_{min}$.
+% % AP 追踪当前最佳的算子o^*，
+% AP pursues the best operator $o^*$ with the maximal quality, to avoid the disadvantages of PM, AP increases the selection probability of the best operator $p_{o^*,t}$ and decreases the other probabilities $p_{o,t}, \forall o \neq o^*$ by the following formula.
+% \begin{equation}
+%   p_{i, t+1}=\left\{\begin{array}{ll}
+%     p_{i, t}+\beta \cdot\left(p_{\max }-p_{o, t}\right) & \text { if } o=o^{*} \\
+%     p_{i, t}+\beta \cdot\left(p_{\min }-p_{o, t}\right) & \text { otherwise }
+%   \end{array}\right.
+%   \label{eq: AP}
+% \end{equation}
+% Where $\beta \in (0,1]$ is the learning rate.
+% % 
+% % 搜索过程中，算子的性能可能是动态变化的，因此在算子选择中最困难的就是平衡探索和利用。
+% % The performance of operators may be dynamic in the search process, so the most difficult problem in operator selection is to balance exploration and exploitation.
+% % 
+% % 由于进化过程是动态的，算子的性能在不同阶段可能有很大的差异，AP和PM可能没有办法适应剧烈变化的环境
+% Due to the dynamic nature of the evolution process, an operator might perform significantly differently in different stages, when credit changes rapidly, PM and AP may not be able to quickly adjust their selection strategies.
+
+% % 在多臂赌博机的框架下 EvE困境已经被深入研究
+% In the Multi-Armed Bandit (MAB) framework, the EvE trade-off has been intensively studied.
+% % 原始的MAB框架使用UCB的方法, 然而UCB只能解决固定报酬分配的MAB问题，但是进化过程是动态的。
+% The original MAB framework used the Upper Confidence Bound (UCB) \cite{auer2002finite} method, which guarantees asymptotic optimality with respect to the total cumulative reward. However, UCB solves the MAB problem with stationary reward distributions, as previously mentioned, the evolution process is dynamic.
+% % 为了适应动态变化的环境，DMAB算法通过将原始的MAB技术和统计变点测试结合，一旦检测到算子质量分布发生变化就重新启动MAB的流程, 增强了对时间序列变化的有效检测
+% In order to adapt to the dynamic environment, the Dynamic Multi-Armed Bandit (DMAB) \cite{dacosta2008adaptive} algorithm combines the original MAB technology with the statistical Page-Hinkley test, which enforces the efficient detection of changes in time series.
+% % sliding mab 使用时间窗
+% Other operator selectors such as sliding multi-armed bandit (SLMAB) \cite{fialho2010analyzing} using a sliding time window to balance both exploitation and exploration terms.
 
 \subsection{Reinforcement Learning}
 %%%%%%%%%%%%% 强化学习介绍
@@ -322,44 +333,87 @@ The most important difference between RL and supervised learning is that it uses
 % 因此RL更注重平衡探索和利用
 Therefore, RL pays more attention to find a balance between exploration (of uncharted territory) and exploitation (of current knowledge) \cite{kaelbling1996reinforcement}.
 % 由于强化学习具有平衡探索和利用的特性，它可以被用来解决D-mab问题
-Since RL has the feature of balance EvE, it can be used to solve the MAB problem.
+Since RL has the feature of balance EvE, it can be used to solve the dynamic MAB problem.
 
 % 强化学习的环境通常以马尔科夫决策过程的形式表示
-The environment of RL is usually expressed in the form of Markov decision process (MDP) \cite{van2012reinforcement},
+% The environment of RL is usually expressed in the form of Markov decision process (MDP) \cite{van2012reinforcement},
 % MDP是在环境中模拟智能体的随机性策略（policy）与回报的数学模型，
-MDP is a mathematical model that simulates the agent's policy and returns in the environment.
+% MDP is a mathematical model that simulates the agent's policy and returns in the environment.
 % 按定义，MDP包含5个模型要素，状态（state）、动作（action）、策略（policy）、奖励（reward）和回报（return
-By definition, MDP includes five elements: state, action, policy, reward and return.
-% 强化学习把学习看作试探评价过程，Agent选择一个动作用于环境，环境接受该动作后状态发生变化，同时产生一个强化信号(奖或惩)反馈给Agent，Agent根据强化信号和环境当前状态再选择下一个动作，选择的原则是使受到正强化(奖)的概率增大。选择的动作不仅影响立即强化值，而且影响环境下一时刻的状态及最终的强化值。
+% By definition, MDP includes five elements: state, environment, action, policy and reward, all of which we’ll explain below.
+% 强化学习可以通过主体、环境、状态、行动和奖励的概念来理解，我们将在下面解释所有这些概念。
+Reinforcement learning can be understood through the concepts of agent, policy, environment, state, action and reward, all of which we’ll explain below.
+% 
+\begin{itemize}
+  \item Agent: The learner and the decision maker.
+  \item Policy: The policy is the strategy that the agent employs to determine the next action based on the current state.
+  \item Environment: The world through which the agent moves, and which responds to the agent. The environment takes the agent’s current state and action as input, and returns as output the agent’s reward and its next state.
+  \item State: The state of the agent in the environment.
+  \item Action: A set of actions which the agent can perform.
+  \item Reward: A reward is the feedback by which we measure the success or failure of an agent’s actions in a given state.
+\end{itemize}
+
+% 强化学习通过试错的方式训练，Agent选择一个动作用于环境，环境接受该动作后状态发生变化，同时产生一个强化信号(奖或惩)反馈给Agent，Agent根据强化信号和环境变化后的状态调整选择的策略，选择的原则是使受到正强化(奖)的概率增大。选择的动作不仅影响立即强化值，而且影响环境下一时刻的状态及最终的强化值，强化学习的目标是得到使得累计reward最大的policy。
+RL is trained by trial and error. The agent choose an action to apply to the environment.After the environment accepts the action, the state changes, and a signal (reward or punishment) is generated to feed back to the agent. The agent adjusts the selected policy according to the signal and the state after the environment changes, the goal of RL is to get a policy that maximizes the expected cumulative reward.
 % 
 % RL的典型模型可以描述为：agent根据环境给定的状态采取行动，环境接受行动并将报酬返回给agent，RL的目标是调整策略使报酬最大化（报酬随时间的累积）。
-The typical model of RL can be described as: an agent takes actions according to the state given by environment, the environment accepts the action and returns the reward to the agent, and the goad of RL is to adjust the strategy to maximize the return (the accumulation of rewards over time).
+% The typical model of RL can be described as: an agent takes actions according to the state given by environment, the environment accepts the action and returns the reward to the agent, and the goad of RL is to adjust the strategy to maximize the return (the accumulation of rewards over time).
+
 % 从方法上来讲，强化学习可以分为两类，基于策略的方法和基于值的方法。
 RL can be divided into two categories, value-based methods and strategy-based methods.
 % 基于策略的RL方法直接使用具有自己参数的函数优化器来优化一个随机策略。
 The strategy-based RL method appropriates a stochastic policy directly using an independent function approximator with its own parameters \cite{sutton1999policy}.
 % 策略是一个条件概率分布，表明在某种状态下执行某个动作的概率,策略将状态映射到一个动作或多个动作的分布，因此可以应用到连续动作环境中，策略优化就是寻找一个最优的映射使得动作获得的累计奖励最大
-A policy $\pi$ is a conditional probability distribution $\pi = p(a_t\| s_t; \theta)$, which indicates the probability of taking action $a_t$ in state $s_t$ and $\theta$ is the parameter of policy \cite{sun2021learning}, policy map a state to an action or a distribution over actions, so it can be used in continuous action environment, and the policy optimization is to find an optimal mapping that maximizes the cumulative reward.
+A policy $\pi$ is a conditional probability distribution $\pi = p(a_t \mid s_t; \theta)$, which indicates the probability of taking action $a_t$ in state $s_t$ and $\theta$ is the parameter of policy \cite{sun2021learning}, policy map a state to an action or a distribution over actions, so it can be used in continuous action environment, and the policy optimization is to find an optimal mapping that maximizes the cumulative reward.
+
 % 基于值的RL方法使用函数优化器逼近动作值函数，不需要建立映射
 The value-based RL method appropriates the action value function through the function approximator, without require to build maps of the domains \cite{dearden1998bayesian}.
 % 动作值函数q是表示在状态s下执行动作a可以获得的期望回报，是强化学习的基本概念,Q-learning是经典的基于动作函数优化的方法，一旦我们知道值函数或是状态函数，就可以推导出选择动作的策略。
-Action value function $q(s_t,a_t)$ is the expected reward that can be obtained by taking action $a_t$ in state $s_t$, which is the fundamental concept in RL. Q-learning \cite{watkins1992q} is a classical algorithm for learning action value function and once we have optimal action value function, we can derive that the optimal strategy is to choose the action with the largest $q$ value in the current state,
+Action value function $Q^{\pi}\left(s_{t}, a_{t}\right)=\mathbb{E}\left[R_{t} \mid s_{t}, a_{t}\right]$ is the expected reward that can be obtained by taking action $a_t$ in state $s_t$, which is the fundamental concept in RL, where $R_{t}=\sum_{i=t}^{\infty} \gamma^{i-t} r_{i}$ is the discount sum of future rewards and $\gamma \in [0,1]$ is discount factor. Q-learning \cite{watkins1992q} is a classical algorithm for learning action value function and once we have optimal action value function, we can derive that the optimal strategy is to choose the action with the largest $q$ value in the current state $\pi_{q}(s)=\operatorname{argmax}_{a \in \mathcal{A}} q(s, a)$,
 % 基于值的方法依赖于寻找使得action-value function最大化的动作，因此只能处理离散的低维的动作空间。
 the value-based method relies on finding the action that maximizes the action value function, so it can only deal with discrete and low-dimensional action spaces.
 
+% TODO S A 公式化描述一下
 %%%%%%%%%%%%%%%%%% Deep Q Network
 % 当状态空间特别巨大时，对值函数的估计是特别困难的，DQN采用神经网络逼近动作值函数
-When state space is very large, it is difficult to estimate the action function, Deep Q Network (DQN) \cite{mnih2015human} uses a neural network to approximate action value function.
-%%%%%%%%%%%%%%%%%%% Deep Q Networks
-% DQN使用相同的值来选择和评估一个动作，如果一个动作值被高估了，它将再次被选择和高估，为了防止这种情况，Double Q-learning[37]将计算与选择解耦
-DQN uses the same values to select and evaluate an action, so if an action value is overestimable, it will be selected and overestimated again. To prevent this, Double Q-learning \cite{hasselt2010double} decouples the evaluation from the selection,
-% 更进一步，DDQN使用第二个神经网络来评估动作的质量，而第一个网络用来通过 e贪婪策略选择动作
-furthermore, Double Deep Q Networks (DDQN) \cite{ddqn} use a second neural network to evaluate the quality of each action, while the first network is used to choose actions through $\epsilon$-greedy policy.
-% 通过从第一个网络复制权值，第二个网络每n次更新一次
-By copying weights from the first network, the second network is updated every $n$ times.
+When state space is very large, it is difficult to estimate the action function, Deep Q Network (DQN) \cite{mnih2015human} uses a neural network $Q$ to approximate action-value function.
+% DQN使用\epsilon greedy策略，
+In DQN, an $\epsilon$-greedy policy is applied, which with probability $\epsilon$ takes a random action and takes the action $\pi_{Q}(s)=\operatorname{argmax}_{a \in \mathcal{A}} Q(s, a)$ with probability $1-\epsilon$.
+% 经验池就像监督学习的数据集一样，
+During training the transition tuples $(s_{t}, a_{t}, r_{t}, s_{t+1})$ are stored in the \textit{experience replay pool} \cite{her}, which is just like the data set of supervised learning. The generation of new experiences is interleaved with neural network training. The network is trained using mini-batch gradient descent on the loss $\mathcal{L}=\mathbb{E}\left(Q\left(s_{t}, a_{t}\right)-y_{t}\right)^{2}$.
+% 最佳Q值
+Let $Q^*$ as the optimal network, It is easy to show that it satisfies the following equation:
+\begin{equation}
+  Q^{*}(s, a)=\mathbb{E}_{s^{\prime} \sim p(\cdot \mid s, a)}\left[r(s, a)+\gamma \max _{a^{\prime} \in \mathcal{A}} Q^{*}\left(s^{\prime}, a^{\prime}\right)\right]
+  \label{eq:bellman}
+\end{equation}
 
-% 在这篇论文中，我们提出了一种基于DQN的AOS方法，
-In this paper, we proposed an AOS method based on DQN,
+% 因此我们可以推导出target
+According to the Equation \ref{eq:bellman}, we can derivate the target $y_{t}=r_{t}+\gamma \max _{a^{\prime} \in \mathcal{A}} Q\left(s_{t+1}, a^{\prime}\right)$ and the tuples $(s_{t}, a_{t}, r_{t}, s_{t+1})$ are sampled from the experience replay pool.
+
+
+% y_t和网络参数有关，而我们又用它来优化网络参数，这两者相关性太强使得网络不容易收敛，因此
+The target $y_t$ depends on the network parameters, and we use it to calculate the loss. The strong correlation between two makes it difficult for the network to converge. In order to make the optimization process more stable, Nature DQN \cite{mnih2015human} uses a \textit{target network} to calculate the target $y_t$ which target network changes at a slower pace than the primary network. A common way is to copy weights from the primary network.
+
+%%%%%%%%%%%%%%%%%%% Double Deep Q Networks
+% DQN使用相同的值来选择和评估一个动作，如果一个动作值被高估了，它将再次被选择和高估，为了防止这种情况，Double Q-learning[37]将计算与选择解耦
+% Double DQN 也有两个网络，但是它对target的计算不同，它解耦了动作的选择和目标Q值的计算，先在primary network找到最大Q值对应的动作，然后在target network计算Q值。
+To combine the best of both networks, the Double DQN \cite{ddqn} algorithm proposed that select the action on the primary network but to use the value of state-action corresponding to the target network.
+
+%%%%%%%%%%%%%% 使用RL做AOS的相关工作
+% 有一些基于RL的AOS方法，但是它们中大部分是基于传统的RL方法，比如概率匹配和多臂赌博机，Qlearning和SARSA
+There are several AOS methods based on RL are proposed, most of them use traditional RL methods, such as probability matching \cite{fialho2010toward,sharma2018performance}, multi-arm bandits \cite{dacosta2008adaptive}, Q-learning \cite{pettinger2002controlling} and SARSA \cite{sakurai2010method}.
+
+% 除此之外，也有一些基于深度强化学习的工作，
+In addition, there are also some works based on deep reinforcement learning,
+% 在DE-DDQN中，DDQN被用来为DE做算子选择，两阶段的方法，先在一部分问题上训练神经网络，之后迁移到其它测试问题。
+such as DE-DDQN \cite{sharma2019deep}, a Double DQN is used to control the mutation strategies of DE. DE-DDQN takes a two-phase approach. First, a neural network is trained offline by collecting data of applying each mutation strategy in the multiple runs of DE tackling benchmark functions.
+Second, DDQN uses the trained neural network to predict which mutation strategy should be applied.
+% LDE通过policy gradient调整算子的参数，由于演化过程前后相关，第t代的解依赖于前几代收集到的信息，因此它将参数控制策略建模为一个循环神经网络，并使用policy gradient优化这个网络。
+LDE \cite{sun2021learning} proposed a adaptive parameter control approach based on policy gradient, due to the evolution procedure can be considered as a stochastic time series. The solution of create at generation $t$ depends on the information collected from previous generations from 1 to $t-1$. To accommodate the time-dependence feature, LDE models the parameter control strategy as a recurrent neural network and optimize the network with policy gradient.
+
+% 上面两份工作都是基于单目标优化问题，在这篇论文中，我们提出了一种基于DQN的多目标AOS方法，
+The above two works are based on single-objective optimization problem. In this paper, we proposed a multi-objective AOS method based on DQN.
 % 我们将强化学习作为算子选择器集成到进化算法中，为每个个体推荐合适的算子，强化学习的奖励与算子的性能相关，根据奖励我们可以更新强化学习的策略，最大化累计期望奖励
 we integrate RL as an operator selector into the evolutionary algorithm to recommend a suitable operator for each individual, the reward of RL is related to the performance of the operator, according to the reward, we can update the strategy to maximize the cumulative expected reward.
 
@@ -596,8 +650,8 @@ where $pf_{k}$ and $cf_{i}$ are the fitness values of individuals in the neighbo
 % 
 % 为了准确的衡量算子的信誉值，我们使用一个固定长度的先进先出的队列来存储算子近期的使用
 We used a fixed-length queue \textit{window} (of size \textit{windowSize}) to store the recent applications of operators to accurately measure the credit values.
-% 每次应用算子时，A(operator, FIR) 会被添加到队列尾，并且队列头会pop出一个元素。
-Every time the operator is applied, a tuple $A (op, \text{FIR})$ will be added to the end of the queue ($op$ is the index of the operator in this application, FIR is the fitness improvement rate after application), and an old element is moved out of the queue head.
+% 每次应用算子时，A(operator, NFI) 会被添加到队列尾，并且队列头会pop出一个元素。
+Every time the operator is applied, a tuple $A (op, \text{NFI})$ will be added to the end of the queue ($op$ is the index of the operator in this application, NFI is the fitness improvement rate after application), and an old element is moved out of the queue head.
 
 % 由于在AOS问题中，环境是动态变化的，算子在不同阶段有不同的性能,因此固定长度的队列可以丢弃之前的无用信息，保存对此时有用的信息
 In the AOS problem, the environment is dynamic and the operator has different performances in different stages. Therefore, the fixed-length queue can discard the useless information before and save the valuable information at this time.
@@ -607,10 +661,10 @@ The underlying idea is that rare, but large improvements are more important than
 % 因此我们取队列中的最大值作为operator的reward。
 So we take the maximum value in the queue \textit{window} as the operator's reward.
 \begin{equation}
-  reward_k = \max_{op=k, i\in \textit{window}}(\text{FIR}_i) \in A_i(op,\text{FIR}_i)
+  reward_k = \max_{op=k, i\in \textit{window}}(\text{NFI}_i) \in A_i(op,\text{NFI}_i)
 \end{equation}
 % reward_k是算子k在近期的应用中所能获得的最大FIR，
-$reward_k$ is the maximum FIR that operator $k$ can obtain in recent applications.
+$reward_k$ is the maximum NFI that operator $k$ can obtain in recent applications.
 % 算子的性能在一段时间内是稳定的，因此我们可以将reward_k作为RL的reward，也即是说，对父代i应用算子k后得到的期望reward是reward_k。。。。。。。。。可以放到强化学习里介绍
 The performance of operator is stable in a period, so we can take $reward_k$ as the reward of RL, that is to say, the expected reward after applying the operator $k$ to the parent $i$ is $reward_k$.
 
@@ -668,7 +722,7 @@ Operator selection should balance exploration and exploitation, on the one hand,
 % 我们使用一个神经网络拟合算子的质量，神经网络的输出是分别应用不同的算子后得到的期望reward，之后使用轮盘赌机制选择接下来要应用的算子, 轮盘赌可以保证reward大的算子有更大的概率被选中。
 We use a neural network to fit the quality of the operator, the output of the neural network is the expected reward obtained by applying different operators, then we use roulette mechanism to select the next operator to be applied, the roulette mechanism based on probability can ensure that the operator with large reward has a higher probability to be selected.
 % 由于我们选择队列中存储的最大FIR作为算子的reward，因此即使是poor operators在多次应用中也可以获得较大的reward。为了保证每个算子的reward都存在，在w次进化中，每个算子至少应用一次，其中常数w是队列的长度，人为设置。
-Since we take the maximum FIR stored in the queue as the reward of operators, even the poor operators can get a large reward in multiple applications. In order to ensure that every operator has a reward, each operator is applied at least once in the $W$ times, where the constant $W$ is the length of the queue, which is set artificially.
+Since we take the maximum NFI stored in the queue as the reward of operators, even the poor operators can get a large reward in multiple applications. In order to ensure that every operator has a reward, each operator is applied at least once in the $W$ times, where the constant $W$ is the length of the queue, which is set artificially.
 
 % 伪代码
 The details of our proposed operator selection is shown in Algorithm \ref{alg:operator_selection}.
@@ -813,9 +867,9 @@ the details of MOEA/D-DQN are shown in Algorithm \ref{alg:moead-dqn}.
   Update the best value $z^*$ if $z_j > f_j(y)$\;
   $reward = Credit Assignment(op, y)$\;
   %%%%% 根据reward更新DQN权重
-  Store the transition $(s_t, a_t, r_{t+1}, s_{t+1})$ in replay buffer $\mathcal{D}$,
+  Store the transition $(s_t, a_t, r, s_{t+1})$ in replay buffer $\mathcal{D}$,
   replacing the oldest transition if $|\mathcal{D}| >= N_D$\;
-  Sample a batch of $N_b$ transitions $(s_j,a_j,r_{j+1},s_{j+1})$ from $\mathcal{D}$\;
+  Sample a batch of $N_b$ transitions $(s_j,a_j,r,s_{j+1})$ from $\mathcal{D}$\;
   $y_j = r_j + \gamma \max{_{a^\prime} \hat{Q}(s_{j+1}, a^\prime)}$\;
   Calculate the loss $\mathcal{L} = \frac{1}{N_b} \sum_{i=1}^{N_b}(Q(s_j,a_j)-y_j)^2$\;
   Update $Q$ using the SGD algorithm by minimizing the loss $\mathcal{L}$\;
@@ -834,15 +888,15 @@ the details of MOEA/D-DQN are shown in Algorithm \ref{alg:moead-dqn}.
 
 % 在时刻t，个体的决策变量和权重向量共同组成state s，作为神经网络的输入，神经网络的输出是一个n维向量 out，表示应用算子后可以得到的期望累计回报，根据输出向量基于轮盘赌选择一个算子op，应用算子产生子代off，在基于分解的多目标框架中，我们可以很容易的计算子代相对于父代的适应度值提高率FIR，将应用的算子和得到的FIR放入滑动窗口中，之后从滑动窗口中取出算子op对应的最大FIR作为reward r，使用DQN算法更新RL的策略以最大化累积奖励。
 At the time $t$, state $s_t$ is composed of individual decision variables and weight vector as the input of the neural network. The output of the neural network is an n-dim vector $\text{out}_t$, which represents the expected cumulative reward after the application of the operator.
-According to the $\text{out}_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $\text{off}_t$. In the multi-objective framework based on decomposition, we can easily calculate the $\text{FIR}_t$, put the $op_i$ and $\text{FIR}_t$ into the sliding window, then take the maximum FIR corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DQN algorithm to update the RL strategy to maximize the cumulative reward.
+According to the $\text{out}_t$, an operator $op_i$ is selected based on roulette, and the $op_t$ is used to generate the offspring $\text{off}_t$. In the multi-objective framework based on decomposition, we can easily calculate the $\text{NFI}_t$, put the $op_i$ and $\text{NFI}_t$ into the sliding window, then take the maximum NFI corresponding to the operator $op_i$ from the sliding window as the reward $r_t$, then use the DQN algorithm to update the RL polidy to maximize the cumulative reward.
 
 
 
 \section{Experimental studies}
 %%% 实验研究
-% 为了证明算法MOEA/D-DQN的有效性，我们在 xxx 数据集进行了测试，并且和MOEA/D-DE,MOEA/D-DRA,MOEA/D-FRRMAB,MOEA/D-IR比较了结果。
+% 为了证明算法MOEA/D-DQN的有效性，我们在 xxx 数据集进行了测试，并且和MOEA/D-DE,MOEA/D-DRA,MOEA/D-FRRMAB比较了结果。
 %  \TODO 增加参考文献引用
-To prove the effectiveness of MOEA/D-DQN, we test it on ZDT, DTLZ, WFG , UF datasets, and compare the results with those obtained by MOEA/D-DE, MOEA/D-DRA, MOEA/D-FRRMAB, MOEA/D-IR.
+To prove the effectiveness of MOEA/D-DQN, we test it on ZDT, DTLZ, WFG , UF datasets, and compare the results with those obtained by IM-MOEA \cite{cheng2015multiobjective}, MOEA/D \cite{moead}, MOEA/D-FRRMAB \cite{frrmab}, MOEA/D-DYTS \cite{aos_dyts}, MOEA/D-DRA \cite{moead-dra} and MOEA/D-M2M \cite{m2m}.
 
 \subsection{Experimental settings}
 % 对比算法的参数设置参考原论文的实现，结果来自PlatEMO platform
@@ -860,8 +914,21 @@ The parameters of our method MOEA/D-DQN are set as follows.
           \item The length of window \textit{windowSize} equal to population size $N$;
           \item The train batch size: $N_b = 16$;
           \item The experience replay pool maximum size: $N_D=512$;
+                % 输入维度等于state的维度，输出维度等于算子池大小，5个隐层的size分别是128,256,128,64,32
+          \item Network architecture: A fully connected neural network with 7 layers. The input dimension is equal to the state dimension, and the output dimension is the size of the operator pool, and the sizes of the remaining 5 hidden layers are 128, 256, 128, 64 and 32 respectively.
         \end{enumerate}
 \end{enumerate}
+
+% \begin{table}
+%   \caption{network architecture}
+%   \begin{tabular}{l}
+%     \toprule
+%     network architecture        \\
+%     \midrule
+%     Linear-1 ($D_{input}$, 128) \\
+%     Linear-2 (128, 256)         \\
+%   \end{tabular}
+% \end{table}
 
 %%%% 算法跑30次，评价次数
 % 对于每个test instances， 算法独立运行30次，
@@ -895,98 +962,102 @@ From the tables \ref{tab:igd_all} and \ref{tab:hv_all}, we can see that the MOEA
 \begin{table*}[tbp]
   \renewcommand{\arraystretch}{1.2}  % 行间距
   \centering
-  \caption{IGD values obtained by MOEA/D-FRRMAB, MOEA/D-DYTS, MOEA/D-DRA, MOEA/D-M2M and proposed MOEA/D-DQN on ZDT, DTLZ, WFG and UF, where the best result in each row is highlighted.}
-  \begin{tabular}{cccccc}
-    \toprule
-    Problem & MOEA/D-FRRMAB              & MOEA/D-DYTS                & MOEA/D-DRA                 & MOEA/D-M2M                 & MOEA/D-DQN               \\
-    \midrule
-    ZDT1    & 3.8123e-2 (2.14e-2) -      & 3.8144e-2 (2.08e-2) -      & 1.9377e-1 (5.73e-2) -      & 1.0701e-1 (8.16e-2) -      & \hl{6.9980e-3 (1.76e-3)} \\
-    ZDT2    & 1.2262e-1 (5.89e-2) -      & 1.1662e-1 (4.88e-2) -      & 3.0430e-1 (1.14e-1) -      & 8.3664e-2 (8.14e-2) -      & \hl{2.4188e-2 (2.15e-2)} \\
-    ZDT3    & 1.9540e-1 (4.85e-2) -      & 2.0511e-1 (4.72e-2) -      & 3.1938e-1 (5.43e-2) -      & 2.4879e-1 (8.09e-2) -      & \hl{1.7122e-2 (5.58e-3)} \\
-    ZDT4    & 7.8472e+0 (4.44e+0) -      & 3.9875e+0 (3.34e+0) -      & 1.1806e+1 (6.89e+0) -      & 1.7537e+1 (5.17e+0) -      & \hl{2.5453e-1 (9.70e-2)} \\
-    ZDT6    & 4.2009e-3 (3.96e-3) =      & \hl{3.5353e-3 (9.44e-4) =} & 5.3427e-2 (1.06e-1) -      & 6.6665e-3 (5.75e-4) -      & 3.8825e-3 (2.74e-3)      \\
-    \hline
-    DTLZ1   & 3.4192e-1 (6.12e-1) -      & 6.3591e-1 (9.08e-1) -      & 1.2916e+0 (1.53e+0) -      & 1.8884e+0 (1.30e+0) -      & \hl{1.8507e-2 (8.58e-4)} \\
-    DTLZ2   & 7.5370e-2 (6.65e-4) -      & 7.5319e-2 (5.90e-4) -      & 7.5716e-2 (6.94e-4) -      & 1.5040e-1 (5.57e-3) -      & \hl{4.7007e-2 (1.53e-4)} \\
-    DTLZ3   & 1.8153e+1 (1.89e+1) -      & 1.7439e+1 (2.28e+1) -      & 2.5743e+1 (2.40e+1) -      & 4.2691e+1 (1.86e+1) -      & \hl{1.2903e+0 (3.04e+0)} \\
-    DTLZ4   & 1.2233e-1 (7.09e-2) -      & 1.6551e-1 (9.04e-2) -      & 2.2549e-1 (1.76e-1) -      & 1.0034e-1 (5.65e-3) -      & \hl{4.7086e-2 (2.36e-4)} \\
-    DTLZ5   & 1.4252e-2 (1.58e-4) +      & 1.4401e-2 (1.19e-4) +      & \hl{1.4166e-2 (1.45e-4) +} & 3.8102e-2 (5.07e-3) -      & 2.6538e-2 (5.78e-4)      \\
-    DTLZ6   & 1.4528e-2 (5.14e-5) +      & 1.4537e-2 (3.79e-5) +      & \hl{1.4338e-2 (6.68e-5) +} & 3.0851e-2 (4.53e-3) =      & 2.9008e-2 (4.72e-5)      \\
-    DTLZ7   & 1.9837e-1 (3.99e-2) -      & 2.1575e-1 (7.33e-2) -      & 2.2761e-1 (6.01e-2) -      & 6.7829e-1 (1.82e-1) -      & \hl{1.1006e-1 (3.56e-4)} \\
-    \hline
-    WFG1    & 1.5443e+0 (7.38e-2) -      & 1.4408e+0 (1.09e-1) -      & 1.3536e+0 (8.07e-2) -      & 1.3838e+0 (6.52e-2) -      & \hl{7.1675e-1 (8.33e-2)} \\
-    WFG2    & 3.6394e-1 (3.00e-2) -      & 3.5163e-1 (2.96e-2) -      & 3.4125e-1 (2.29e-2) -      & 2.8906e-1 (1.05e-2) -      & \hl{2.0742e-1 (1.96e-2)} \\
-    WFG3    & 2.1493e-1 (3.59e-2) -      & 1.9109e-1 (4.03e-2) -      & 1.8917e-1 (3.15e-2) -      & 3.1880e-1 (3.19e-2) -      & \hl{1.2825e-1 (4.77e-3)} \\
-    WFG4    & 3.9968e-1 (1.25e-2) -      & 3.9868e-1 (1.57e-2) -      & 3.8005e-1 (1.12e-2) -      & 3.5696e-1 (1.34e-2) -      & \hl{2.3703e-1 (5.38e-3)} \\
-    WFG5    & 3.3880e-1 (4.34e-3) -      & 3.3789e-1 (5.03e-3) -      & 3.3639e-1 (4.02e-3) -      & 3.4891e-1 (1.60e-2) -      & \hl{2.2353e-1 (3.01e-3)} \\
-    WFG6    & 4.3816e-1 (3.03e-2) -      & 4.3740e-1 (4.00e-2) =      & 4.3393e-1 (2.83e-2) =      & 4.8888e-1 (1.54e-2) -      & \hl{4.2542e-1 (4.02e-2)} \\
-    WFG7    & 3.6693e-1 (9.62e-3) =      & \hl{3.6391e-1 (7.96e-3) =} & 3.6897e-1 (1.03e-2) =      & 3.9817e-1 (1.79e-2) -      & 3.6882e-1 (1.13e-2)      \\
-    WFG8    & \hl{4.4389e-1 (2.41e-2) +} & 4.5188e-1 (4.59e-2) +      & 4.7517e-1 (4.77e-2) =      & 4.9053e-1 (2.17e-2) =      & 4.8352e-1 (5.64e-2)      \\
-    WFG9    & 3.8344e-1 (4.80e-2) =      & 3.4880e-1 (3.77e-2) +      & \hl{3.4008e-1 (1.98e-2) =} & 3.4430e-1 (1.70e-2) =      & 3.5458e-1 (3.56e-2)      \\
-    \hline
-    UF1     & 2.3837e-3 (1.94e-3) =      & 2.7501e-2 (7.77e-2) =      & 1.9429e-3 (7.06e-4) -      & 1.4966e-2 (5.03e-3) -      & \hl{1.3666e-3 (1.05e-4)} \\
-    UF2     & 3.0706e-3 (9.33e-4) -      & 2.0981e-3 (7.41e-4) =      & 3.8904e-3 (1.98e-3) -      & 6.2214e-3 (4.85e-4) -      & \hl{2.0228e-3 (4.02e-4)} \\
-    UF3     & \hl{1.8076e-2 (1.59e-2) =} & 2.5324e-2 (2.19e-2) =      & 2.7810e-2 (4.57e-2) =      & 1.9927e-2 (6.68e-3) =      & 2.1607e-2 (1.97e-2)      \\
-    UF4     & 5.1265e-2 (2.86e-3) -      & 4.9417e-2 (2.48e-3) -      & 6.1483e-2 (4.47e-3) -      & 4.3390e-2 (7.10e-4) -      & \hl{3.3923e-2 (1.36e-3)} \\
-    UF5     & 5.2543e-1 (1.38e-1) =      & 6.3341e-1 (1.26e-1) -      & 5.3079e-1 (1.07e-1) =      & \hl{3.0405e-1 (5.98e-2) +} & 5.2563e-1 (1.62e-1)      \\
-    UF6     & 4.4067e-1 (6.41e-2) -      & 4.5274e-1 (4.32e-2) -      & 3.9160e-1 (7.58e-2) =      & \hl{1.3534e-1 (2.27e-2) +} & 3.7661e-1 (7.47e-2)      \\
-    UF7     & 2.2646e-1 (2.61e-1) -      & 3.1521e-1 (2.59e-1) -      & 2.3092e-1 (2.48e-1) -      & \hl{8.9138e-3 (2.41e-3) +} & 3.1031e-2 (1.06e-1)      \\
-    UF8     & \hl{9.6619e-2 (2.88e-2) +} & 1.0052e-1 (1.29e-2) +      & 1.1058e-1 (5.11e-2) +      & 1.0220e-1 (2.16e-2) +      & 1.2196e-1 (7.22e-2)      \\
-    UF9     & 1.6370e-1 (5.13e-2) =      & 1.8932e-1 (6.28e-3) -      & 1.7194e-1 (3.57e-2) -      & 1.3742e-1 (4.25e-2) =      & \hl{1.2445e-1 (6.56e-2)} \\
-    UF10    & 8.5939e-1 (1.29e-1) -      & 6.6767e-1 (8.06e-2) -      & \hl{4.7879e-1 (7.97e-2) +} & 1.0107e+0 (1.40e-1) -      & 5.3962e-1 (1.80e-1)      \\
-    \hline
-    +/-/=   & 4/20/7                     & 5/20/6                     & 4/20/7                     & 4/22/5                     &                          \\
-    \bottomrule
-  \end{tabular}
+  \caption{IGD values obtained by IM-MOEA, MOEA/D, MOEA/D-FRRMAB, MOEA/D-DYTS, MOEA/D-DRA, MOEA/D-M2M and proposed MOEA/D-DQN on ZDT, DTLZ, WFG and UF, where the best result in each row is highlighted.}
+  \resizebox{\textwidth}{!}{
+    \begin{tabular}{cccccccc}
+      \toprule
+      Problem & IM-MOEA                    & MOEA/D                     & MOEA/D-FRRMAB              & MOEA/D-DYTS                & MOEA/D-DRA                 & MOEA/D-M2M                 & MOEA/D-DQN               \\
+      \midrule
+      ZDT1    & 6.2559e-2 (7.72e-3) -      & 2.6800e-2 (1.58e-2) -      & 3.8123e-2 (2.14e-2) -      & 3.8144e-2 (2.08e-2) -      & 4.6123e-2 (1.82e-2) -      & 1.0701e-1 (8.16e-2) -      & \hl{6.9980e-3 (1.76e-3)} \\
+      ZDT2    & 6.2866e-2 (1.08e-2) -      & 5.9006e-2 (7.55e-2) -      & 1.2262e-1 (5.89e-2) -      & 1.1662e-1 (4.88e-2) -      & 1.1258e-1 (4.76e-2) -      & 8.3664e-2 (8.14e-2) -      & \hl{2.4188e-2 (2.15e-2)} \\
+      ZDT3    & 7.6586e-2 (1.45e-2) -      & 3.1487e-2 (2.29e-2) -      & 1.9540e-1 (4.85e-2) -      & 2.0511e-1 (4.72e-2) -      & 3.1938e-1 (5.43e-2) -      & 2.4879e-1 (8.09e-2) -      & \hl{1.7122e-2 (5.58e-3)} \\
+      ZDT4    & \hl{1.0835e-2 (1.47e-3) +} & 1.7288e-1 (1.12e-1) +      & 7.8472e+0 (4.44e+0) -      & 3.9875e+0 (3.34e+0) -      & 1.1806e+1 (6.89e+0) -      & 1.7537e+1 (5.17e+0) -      & 2.5453e-1 (9.70e-2)      \\
+      ZDT6    & 1.5028e+0 (9.01e-2) -      & 1.1214e-2 (2.47e-3) -      & 4.2009e-3 (3.96e-3) =      & \hl{3.5353e-3 (9.44e-4) =} & 5.3427e-2 (1.06e-1) -      & 6.6665e-3 (5.75e-4) -      & 3.8825e-3 (2.74e-3)      \\
+      \hline
+      WFG1    & 1.3058e+0 (6.48e-2) -      & \hl{3.4553e-1 (3.64e-2) +} & 1.5443e+0 (7.38e-2) -      & 1.4408e+0 (1.09e-1) -      & 1.3536e+0 (8.07e-2) -      & 1.3838e+0 (6.52e-2) -      & 7.1675e-1 (8.33e-2)      \\
+      WFG2    & 2.6466e-1 (1.52e-2) -      & 2.6195e-1 (1.71e-2) -      & 3.6394e-1 (3.00e-2) -      & 3.5163e-1 (2.96e-2) -      & 3.4125e-1 (2.29e-2) -      & 2.8906e-1 (1.05e-2) -      & \hl{2.0742e-1 (1.96e-2)} \\
+      WFG3    & 2.1991e-1 (1.76e-2) -      & 2.0213e-1 (5.61e-2) -      & 2.1493e-1 (3.59e-2) -      & 1.9109e-1 (4.03e-2) -      & 1.8917e-1 (3.15e-2) -      & 3.1880e-1 (3.19e-2) -      & \hl{1.2825e-1 (4.77e-3)} \\
+      WFG4    & 3.3302e-1 (7.61e-3) -      & 2.6556e-1 (7.53e-3) -      & 3.9968e-1 (1.25e-2) -      & 3.9868e-1 (1.57e-2) -      & 3.8005e-1 (1.12e-2) -      & 3.5696e-1 (1.34e-2) -      & \hl{2.3703e-1 (5.38e-3)} \\
+      WFG5    & 3.4015e-1 (1.63e-2) -      & 2.5422e-1 (3.39e-3) -      & 3.3880e-1 (4.34e-3) -      & 3.3789e-1 (5.03e-3) -      & 3.3639e-1 (4.02e-3) -      & 3.4891e-1 (1.60e-2) -      & \hl{2.2353e-1 (3.01e-3)} \\
+      WFG6    & 3.5758e-1 (1.53e-2) +      & \hl{2.9751e-1 (1.92e-2) +} & 4.3816e-1 (3.03e-2) -      & 4.3740e-1 (4.00e-2) =      & 4.3393e-1 (2.83e-2) =      & 4.8888e-1 (1.54e-2) -      & 4.2542e-1 (4.02e-2)      \\
+      WFG7    & \hl{3.5277e-1 (1.18e-2) +} & 3.5619e-1 (5.14e-2) +      & 3.6693e-1 (9.62e-3) =      & 3.6391e-1 (7.96e-3) =      & 3.6897e-1 (1.03e-2) =      & 3.9817e-1 (1.79e-2) -      & 3.6882e-1 (1.13e-2)      \\
+      WFG8    & 4.2368e-1 (1.53e-2) +      & \hl{3.3073e-1 (1.16e-2) +} & 4.4389e-1 (2.41e-2) +      & 4.5188e-1 (4.59e-2) +      & 4.7517e-1 (4.77e-2) =      & 4.9053e-1 (2.17e-2) =      & 4.8352e-1 (5.64e-2)      \\
+      WFG9    & 3.3717e-1 (1.39e-2) =      & \hl{3.2760e-1 (6.22e-2) +} & 3.8344e-1 (4.80e-2) =      & 3.4880e-1 (3.77e-2) +      & 3.4008e-1 (1.98e-2) =      & 3.4430e-1 (1.70e-2) =      & 3.5458e-1 (3.56e-2)      \\
+      \hline
+      DTLZ1   & 3.4132e+0 (7.67e-1) -      & 2.0982e-2 (3.27e-4) -      & 3.4192e-1 (6.12e-1) -      & 6.3591e-1 (9.08e-1) -      & 1.2916e+0 (1.53e+0) -      & 1.8884e+0 (1.30e+0) -      & \hl{1.8507e-2 (8.58e-4)} \\
+      DTLZ2   & 9.4179e-2 (5.15e-3) -      & 5.4467e-2 (1.28e-6) -      & 7.5370e-2 (6.65e-4) -      & 7.5319e-2 (5.90e-4) -      & 7.5716e-2 (6.94e-4) -      & 1.5040e-1 (5.57e-3) -      & \hl{4.7007e-2 (1.53e-4)} \\
+      DTLZ3   & 6.0011e+1 (1.01e+1) -      & \hl{9.7856e-1 (1.26e+0) =} & 1.8153e+1 (1.89e+1) -      & 1.7439e+1 (2.28e+1) -      & 2.5743e+1 (2.40e+1) -      & 4.2691e+1 (1.86e+1) -      & 1.2903e+0 (3.04e+0)      \\
+      DTLZ4   & 7.9127e-2 (3.12e-3) -      & 3.8444e-1 (3.21e-1) -      & 1.2233e-1 (7.09e-2) -      & 1.6551e-1 (9.04e-2) -      & 2.2549e-1 (1.76e-1) -      & 1.0034e-1 (5.65e-3) -      & \hl{4.7086e-2 (2.36e-4)} \\
+      DTLZ5   & 2.4473e-2 (4.64e-3) +      & 3.3764e-2 (6.54e-5) -      & 1.4252e-2 (1.58e-4) +      & 1.4401e-2 (1.19e-4) +      & \hl{1.4166e-2 (1.45e-4) +} & 3.8102e-2 (5.07e-3) -      & 2.6538e-2 (5.78e-4)      \\
+      DTLZ6   & 4.7806e+0 (1.13e-1) -      & 3.3881e-2 (2.56e-5) -      & 1.4528e-2 (5.14e-5) +      & 1.4537e-2 (3.79e-5) +      & \hl{1.4338e-2 (6.68e-5) +} & 3.0851e-2 (4.53e-3) =      & 2.9008e-2 (4.72e-5)      \\
+      DTLZ7   & 3.4424e-1 (4.58e-2) -      & 1.9743e-1 (1.64e-1) -      & 1.9837e-1 (3.99e-2) -      & 2.1575e-1 (7.33e-2) -      & 2.2761e-1 (6.01e-2) -      & 6.7829e-1 (1.82e-1) -      & \hl{1.1006e-1 (3.56e-4)} \\
+      \hline
+      UF1     & 5.4924e-2 (1.06e-2) -      & 1.4922e-1 (5.41e-2) -      & 2.3837e-3 (1.94e-3) =      & 2.7501e-2 (7.77e-2) =      & 1.9429e-3 (7.06e-4) -      & 1.4966e-2 (5.03e-3) -      & \hl{1.3666e-3 (1.05e-4)} \\
+      UF2     & 2.0652e-2 (4.63e-3) -      & 4.5377e-2 (3.63e-2) -      & 3.0706e-3 (9.33e-4) -      & 2.0981e-3 (7.41e-4) =      & 3.8904e-3 (1.98e-3) -      & 6.2214e-3 (4.85e-4) -      & \hl{2.0228e-3 (4.02e-4)} \\
+      UF3     & 7.0425e-2 (7.56e-3) -      & 3.0328e-1 (3.32e-2) -      & \hl{1.8076e-2 (1.59e-2) =} & 2.5324e-2 (2.19e-2) =      & 2.7810e-2 (4.57e-2) =      & 1.9927e-2 (6.68e-3) =      & 2.1607e-2 (1.97e-2)      \\
+      UF4     & 5.9624e-2 (2.70e-3) -      & 5.6160e-2 (5.72e-3) -      & 5.1265e-2 (2.86e-3) -      & 4.9417e-2 (2.48e-3) -      & 6.1483e-2 (4.47e-3) -      & 4.3390e-2 (7.10e-4) -      & \hl{3.3923e-2 (1.36e-3)} \\
+      UF5     & 5.7316e-1 (1.02e-1) =      & 4.8038e-1 (1.27e-1) =      & 5.2543e-1 (1.38e-1) =      & 6.3341e-1 (1.26e-1) -      & 5.3079e-1 (1.07e-1) =      & \hl{3.0405e-1 (5.98e-2) +} & 5.2563e-1 (1.62e-1)      \\
+      UF6     & 1.4211e-1 (2.47e-2) +      & 3.9102e-1 (1.26e-1) =      & 4.4067e-1 (6.41e-2) -      & 4.5274e-1 (4.32e-2) -      & 3.9160e-1 (7.58e-2) =      & \hl{1.3534e-1 (2.27e-2) +} & 3.7661e-1 (7.47e-2)      \\
+      UF7     & 3.3065e-2 (4.82e-2) -      & 4.7546e-1 (1.77e-1) -      & 2.2646e-1 (2.61e-1) -      & 3.1521e-1 (2.59e-1) -      & 2.3092e-1 (2.48e-1) -      & \hl{8.9138e-3 (2.41e-3) +} & 3.1031e-2 (1.06e-1)      \\
+      UF8     & 1.5769e-1 (5.96e-2) -      & 2.8741e-1 (2.30e-1) -      & \hl{9.6619e-2 (2.88e-2) +} & 1.0052e-1 (1.29e-2) +      & 1.1058e-1 (5.11e-2) +      & 1.0220e-1 (2.16e-2) +      & 1.2196e-1 (7.22e-2)      \\
+      UF9     & 1.5937e-1 (6.44e-2) =      & 2.6355e-1 (3.35e-2) -      & 1.6370e-1 (5.13e-2) =      & 1.8932e-1 (6.28e-3) =      & 1.7194e-1 (3.57e-2) -      & \hl{1.3742e-1 (4.25e-2) =} & 1.5445e-1 (6.56e-2)      \\
+      UF10    & \hl{2.3738e-1 (5.84e-4) +} & 7.3227e-1 (1.69e-1) -      & 8.5939e-1 (1.29e-1) -      & 6.6767e-1 (8.06e-2) -      & 4.7879e-1 (7.97e-2) +      & 1.0107e+0 (1.40e-1) -      & 5.3962e-1 (1.80e-1)      \\
+      \hline
+      +/-/=   & 7/21/3                     & 6/22/3                     & 4/20/7                     & 5/19/7                     & 4/20/7                     & 4/22/5                     &                          \\
+      \bottomrule
+    \end{tabular}
+  }
   \label{tab:igd_all}
 \end{table*}
 
 \begin{table*}[tbp]
   \renewcommand{\arraystretch}{1.2}  % 行间距
   \centering
-  \caption{HV values obtained by MOEA/D-FRRMAB, MOEA/D-DYTS, MOEA/D-DRA, MOEA/D-M2M and proposed MOEA/D-DQN on ZDT, DTLZ, WFG and UF, where the best result in each row is highlighted.}
-  \begin{tabular}{cccccc}
-    \toprule
-    Problem & MOEA/D-FRRMAB              & MOEA/D-DYTS                & MOEA/D-DRA                 & MOEA/D-M2M                 & MOEA/D-DQN               \\
-    \midrule
-    ZDT1    & 6.5008e-1 (4.21e-2) -      & 6.5144e-1 (3.94e-2) -      & 4.3095e-1 (6.07e-2) -      & 5.8492e-1 (1.02e-1) -      & \hl{7.1383e-1 (3.22e-3)} \\
-    ZDT2    & 3.4137e-1 (4.81e-2) -      & 3.3871e-1 (4.17e-2) -      & 1.8242e-1 (8.59e-2) -      & 3.4648e-1 (8.72e-2) -      & \hl{4.2482e-1 (1.97e-2)} \\
-    ZDT3    & 4.0050e-1 (4.99e-2) -      & 3.9482e-1 (4.97e-2) -      & 2.9291e-1 (4.11e-2) -      & 4.5588e-1 (6.27e-2) -      & \hl{5.7176e-1 (6.68e-3)} \\
-    ZDT4    & 0.0000e+0 (0.00e+0) -      & 1.8324e-2 (5.51e-2) -      & 0.0000e+0 (0.00e+0) -      & 0.0000e+0 (0.00e+0) -      & \hl{3.6640e-1 (9.68e-2)} \\
-    ZDT6    & 3.8756e-1 (3.81e-3) =      & \hl{3.8820e-1 (7.74e-4) =} & 3.5118e-1 (6.31e-2) -      & 3.8370e-1 (9.72e-4) -      & 3.8782e-1 (3.12e-3)      \\
-    \hline
-    DTLZ1   & 4.5973e-1 (3.37e-1) -      & 2.9816e-1 (3.45e-1) -      & 1.5896e-1 (2.78e-1) -      & 3.0600e-2 (1.14e-1) -      & \hl{8.4290e-1 (2.60e-3)} \\
-    DTLZ2   & 5.2680e-1 (2.02e-3) -      & 5.2742e-1 (1.46e-3) -      & 5.2744e-1 (1.75e-3) -      & 3.6835e-1 (1.22e-2) -      & \hl{5.6260e-1 (1.08e-3)} \\
-    DTLZ3   & 1.0455e-1 (1.89e-1) -      & 7.3842e-2 (1.55e-1) -      & 2.9014e-2 (1.12e-1) -      & 0.0000e+0 (0.00e+0) -      & \hl{2.2500e-1 (2.18e-1)} \\
-    DTLZ4   & 5.1875e-1 (2.30e-2) -      & 5.0512e-1 (2.90e-2) -      & 4.7030e-1 (8.27e-2) -      & 4.7119e-1 (1.13e-2) -      & \hl{5.6242e-1 (1.55e-3)} \\
-    DTLZ5   & 1.9439e-1 (1.04e-4) +      & \hl{1.9447e-1 (6.85e-5) +} & 1.9437e-1 (1.32e-4) +      & 1.6757e-1 (5.95e-3) -      & 1.8605e-1 (3.54e-4)      \\
-    DTLZ6   & 1.9474e-1 (1.71e-5) +      & 1.9474e-1 (1.25e-5) +      & \hl{1.9484e-1 (2.91e-5) +} & 1.8193e-1 (2.74e-3) -      & 1.8459e-1 (3.71e-5)      \\
-    DTLZ7   & 2.0189e-1 (2.78e-2) -      & 1.9794e-1 (2.67e-2) -      & 1.7790e-1 (3.21e-2) -      & 4.5193e-2 (3.74e-2) -      & \hl{2.6054e-1 (9.41e-4)} \\
-    \hline
-    WFG1    & 2.6850e-1 (3.21e-2) -      & 3.3736e-1 (4.74e-2) -      & 3.4552e-1 (2.76e-2) -      & 3.5987e-1 (1.95e-2) -      & \hl{5.9691e-1 (4.54e-2)} \\
-    WFG2    & 8.8930e-1 (7.11e-3) -      & 8.8887e-1 (5.60e-3) -      & 8.8943e-1 (7.79e-3) -      & 8.7498e-1 (6.41e-3) -      & \hl{9.0955e-1 (4.47e-3)} \\
-    WFG3    & 3.2653e-1 (2.14e-2) -      & 3.3520e-1 (2.85e-2) -      & 3.4071e-1 (2.01e-2) -      & 2.9131e-1 (1.75e-2) -      & \hl{3.7149e-1 (2.69e-3)} \\
-    WFG4    & 4.6426e-1 (6.46e-3) -      & 4.6709e-1 (7.48e-3) -      & 4.6253e-1 (6.91e-3) -      & 4.7668e-1 (7.88e-3) -      & \hl{5.1279e-1 (5.51e-3)} \\
-    WFG5    & 4.5819e-1 (2.97e-3) -      & 4.5693e-1 (3.23e-3) -      & 4.5844e-1 (3.04e-3) -      & 4.7358e-1 (6.16e-3) -      & \hl{4.9979e-1 (1.88e-3)} \\
-    WFG6    & 3.8792e-1 (4.59e-2) -      & 3.9318e-1 (4.92e-2) =      & 3.9247e-1 (4.02e-2) =      & 3.6610e-1 (1.18e-2) -      & \hl{4.0557e-1 (4.59e-2)} \\
-    WFG7    & \hl{4.9630e-1 (6.18e-3) =} & 4.9598e-1 (5.46e-3) =      & 4.9527e-1 (6.49e-3) =      & 4.7953e-1 (6.71e-3) -      & 4.9322e-1 (6.75e-3)      \\
-    WFG8    & 3.8395e-1 (1.77e-2) +      & \hl{4.0356e-1 (3.14e-2) +} & 3.6446e-1 (3.13e-2) =      & 3.7039e-1 (1.07e-2) =      & 3.6046e-1 (3.70e-2)      \\
-    WFG9    & 4.1859e-1 (6.21e-2) =      & 4.6132e-1 (4.63e-2) =      & 4.7170e-1 (2.41e-2) =      & \hl{4.9096e-1 (7.05e-3) +} & 4.5656e-1 (4.38e-2)      \\
-    \hline
-    UF1     & 7.2001e-1 (3.98e-3) -      & 6.8333e-1 (1.15e-1) =      & 7.2111e-1 (1.38e-3) -      & 7.0455e-1 (6.88e-3) -      & \hl{7.2239e-1 (1.56e-4)} \\
-    UF2     & 7.2011e-1 (1.18e-3) -      & 7.2127e-1 (9.52e-4) =      & 7.1921e-1 (2.56e-3) -      & 7.1664e-1 (7.09e-4) -      & \hl{7.2149e-1 (7.63e-4)} \\
-    UF3     & 6.8973e-1 (2.88e-2) =      & 6.7574e-1 (3.78e-2) =      & 6.7501e-1 (7.48e-2) =      & \hl{6.9709e-1 (8.10e-3) =} & 6.8253e-1 (3.44e-2)      \\
-    UF4     & 3.7669e-1 (3.93e-3) -      & 3.7652e-1 (4.09e-3) -      & 3.5933e-1 (5.62e-3) -      & 3.8955e-1 (1.08e-3) -      & \hl{4.0228e-1 (1.70e-3)} \\
-    UF5     & 1.0720e-1 (4.80e-2) -      & 1.0232e-1 (4.34e-2) -      & 1.6883e-1 (7.02e-2) =      & \hl{1.6980e-1 (5.50e-2) =} & 1.6464e-1 (8.54e-2)      \\
-    UF6     & 1.1748e-1 (5.96e-2) =      & 8.5356e-2 (9.96e-3) -      & 1.8770e-1 (7.70e-2) =      & \hl{3.3665e-1 (2.34e-2) +} & 1.5061e-1 (7.33e-2)      \\
-    UF7     & 3.9157e-1 (2.04e-1) -      & 3.0724e-1 (2.17e-1) -      & 3.9266e-1 (2.02e-1) -      & \hl{5.7320e-1 (3.54e-3) +} & 5.5683e-1 (9.68e-2)      \\
-    UF8     & 4.7737e-1 (2.57e-2) +      & \hl{4.8312e-1 (3.45e-3) +} & 4.7104e-1 (4.43e-2) +      & 4.3191e-1 (1.88e-2) +      & 4.2908e-1 (5.75e-2)      \\
-    UF9     & 6.6877e-1 (3.70e-2) =      & 6.4829e-1 (8.11e-3) -      & 6.7034e-1 (3.06e-2) =      & 6.6850e-1 (3.63e-2) =      & \hl{6.7685e-1 (5.89e-2)} \\
-    UF10    & 7.3765e-3 (1.80e-2) -      & 4.7815e-2 (2.86e-2) -      & 1.3150e-1 (6.41e-2) =      & 6.4038e-4 (3.37e-3) -      & \hl{1.5583e-1 (7.11e-2)} \\
-    \hline
-    +/-/=   & 4/21/6                     & 4/20/7                     & 3/19/9                     & 4/23/4                     &                          \\
-    \bottomrule
-  \end{tabular}
+  \caption{HV values obtained by IM-MOEA, MOEA/D, MOEA/D-FRRMAB, MOEA/D-DYTS, MOEA/D-DRA, MOEA/D-M2M and proposed MOEA/D-DQN on ZDT, DTLZ, WFG and UF, where the best result in each row is highlighted.}
+  \resizebox{\textwidth}{!}{
+    \begin{tabular}{cccccccc}
+      \toprule
+      Problem & IM-MOEA                    & MOEA/D                     & MOEA/D-FRRMAB              & MOEA/D-DYTS                & MOEA/D-DRA                 & MOEA/D-M2M                 & MOEA/D-DQN               \\
+      \midrule
+      ZDT1    & 6.4051e-1 (9.53e-3) -      & 6.9164e-1 (1.13e-2) -      & 6.5008e-1 (4.21e-2) -      & 6.5144e-1 (3.94e-2) -      & 6.3684e-1 (3.35e-2) -      & 5.8492e-1 (1.02e-1) -      & \hl{7.1383e-1 (3.22e-3)} \\
+      ZDT2    & 3.5549e-1 (1.57e-2) -      & 3.7772e-1 (6.61e-2) -      & 3.4137e-1 (4.81e-2) -      & 3.3871e-1 (4.17e-2) -      & 3.4527e-1 (3.45e-2) -      & 3.4648e-1 (8.72e-2) -      & \hl{4.2482e-1 (1.97e-2)} \\
+      ZDT3    & 5.6094e-1 (1.39e-2) -      & \hl{6.0778e-1 (4.59e-2) +} & 4.0050e-1 (4.99e-2) -      & 3.9482e-1 (4.97e-2) -      & 2.9291e-1 (4.11e-2) -      & 4.5588e-1 (6.27e-2) -      & 5.7176e-1 (6.68e-3)      \\
+      ZDT4    & \hl{7.0825e-1 (2.09e-3) +} & 5.2097e-1 (1.22e-1) +      & 0.0000e+0 (0.00e+0) -      & 1.8324e-2 (5.51e-2) -      & 0.0000e+0 (0.00e+0) -      & 0.0000e+0 (0.00e+0) -      & 3.6640e-1 (9.68e-2)      \\
+      ZDT6    & 0.0000e+0 (0.00e+0) -      & 3.7475e-1 (3.82e-3) -      & 3.8756e-1 (3.81e-3) =      & \hl{3.8820e-1 (7.74e-4) =} & 3.5118e-1 (6.31e-2) -      & 3.8370e-1 (9.72e-4) -      & 3.8782e-1 (3.12e-3)      \\
+      \hline
+      WFG1    & 3.0522e-1 (2.80e-2) -      & \hl{8.2588e-1 (3.85e-2) +} & 2.6850e-1 (3.21e-2) -      & 3.3736e-1 (4.74e-2) -      & 3.4552e-1 (2.76e-2) -      & 3.5987e-1 (1.95e-2) -      & 5.9691e-1 (4.54e-2)      \\
+      WFG2    & 8.8176e-1 (4.26e-3) -      & 8.8162e-1 (1.99e-2) -      & 8.8930e-1 (7.11e-3) -      & 8.8887e-1 (5.60e-3) -      & 8.8943e-1 (7.79e-3) -      & 8.7498e-1 (6.41e-3) -      & \hl{9.0955e-1 (4.47e-3)} \\
+      WFG3    & 3.3697e-1 (7.14e-3) -      & 3.3659e-1 (2.21e-2) -      & 3.2653e-1 (2.14e-2) -      & 3.3520e-1 (2.85e-2) -      & 3.4071e-1 (2.01e-2) -      & 2.9131e-1 (1.75e-2) -      & \hl{3.7149e-1 (2.69e-3)} \\
+      WFG4    & 4.9393e-1 (5.17e-3) -      & \hl{5.2430e-1 (4.29e-3) +} & 4.6426e-1 (6.46e-3) -      & 4.6709e-1 (7.48e-3) -      & 4.6253e-1 (6.91e-3) -      & 4.7668e-1 (7.88e-3) -      & 5.1279e-1 (5.51e-3)      \\
+      WFG5    & 4.6473e-1 (9.84e-3) -      & 4.9618e-1 (2.72e-3) -      & 4.5819e-1 (2.97e-3) -      & 4.5693e-1 (3.23e-3) -      & 4.5844e-1 (3.04e-3) -      & 4.7358e-1 (6.16e-3) -      & \hl{4.9979e-1 (1.88e-3)} \\
+      WFG6    & 4.7011e-1 (1.13e-2) +      & \hl{4.7089e-1 (1.91e-2) +} & 3.8792e-1 (4.59e-2) -      & 3.9318e-1 (4.92e-2) =      & 3.9247e-1 (4.02e-2) =      & 3.6610e-1 (1.18e-2) -      & 4.0557e-1 (4.59e-2)      \\
+      WFG7    & 4.8677e-1 (4.69e-3) -      & 4.8899e-1 (2.21e-2) =      & \hl{4.9630e-1 (6.18e-3) =} & 4.9598e-1 (5.46e-3) =      & 4.9527e-1 (6.49e-3) =      & 4.7953e-1 (6.71e-3) -      & 4.9322e-1 (6.75e-3)      \\
+      WFG8    & 4.0180e-1 (5.44e-3) +      & \hl{4.4511e-1 (7.25e-3) +} & 3.8395e-1 (1.77e-2) +      & 4.0356e-1 (3.14e-2) +      & 3.6446e-1 (3.13e-2) =      & 3.7039e-1 (1.07e-2) =      & 3.6046e-1 (3.70e-2)      \\
+      WFG9    & 4.8323e-1 (5.44e-3) +      & 4.4593e-1 (4.50e-2) =      & 4.1859e-1 (6.21e-2) =      & 4.6132e-1 (4.63e-2) =      & 4.7170e-1 (2.41e-2) =      & \hl{4.9096e-1 (7.05e-3) +} & 4.5656e-1 (4.38e-2)      \\
+      \hline
+      DTLZ1   & 0.0000e+0 (0.00e+0) -      & 8.3824e-1 (2.05e-3) -      & 4.5973e-1 (3.37e-1) -      & 2.9816e-1 (3.45e-1) -      & 1.5896e-1 (2.78e-1) -      & 3.0600e-2 (1.14e-1) -      & \hl{8.4290e-1 (2.60e-3)} \\
+      DTLZ2   & 4.7333e-1 (1.13e-2) -      & 5.5948e-1 (3.08e-5) -      & 5.2680e-1 (2.02e-3) -      & 5.2742e-1 (1.46e-3) -      & 5.2744e-1 (1.75e-3) -      & 3.6835e-1 (1.22e-2) -      & \hl{5.6260e-1 (1.08e-3)} \\
+      DTLZ3   & 0.0000e+0 (0.00e+0) -      & \hl{2.2734e-1 (2.28e-1) =} & 1.0455e-1 (1.89e-1) -      & 7.3842e-2 (1.55e-1) -      & 2.9014e-2 (1.12e-1) -      & 0.0000e+0 (0.00e+0) -      & 2.2500e-1 (2.18e-1)      \\
+      DTLZ4   & 5.1827e-1 (4.91e-3) -      & 4.0231e-1 (1.61e-1) -      & 5.1875e-1 (2.30e-2) -      & 5.0512e-1 (2.90e-2) -      & 4.7030e-1 (8.27e-2) -      & 4.7119e-1 (1.13e-2) -      & \hl{5.6242e-1 (1.55e-3)} \\
+      DTLZ5   & 1.8235e-1 (3.23e-3) -      & 1.8193e-1 (2.53e-5) -      & 1.9439e-1 (1.04e-4) +      & \hl{1.9447e-1 (6.85e-5) +} & 1.9437e-1 (1.32e-4) +      & 1.6757e-1 (5.95e-3) -      & 1.8605e-1 (3.54e-4)      \\
+      DTLZ6   & 0.0000e+0 (0.00e+0) -      & 1.8187e-1 (1.29e-5) -      & 1.9474e-1 (1.71e-5) +      & 1.9474e-1 (1.25e-5) +      & \hl{1.9484e-1 (2.91e-5) +} & 1.8193e-1 (2.74e-3) -      & 1.8459e-1 (3.71e-5)      \\
+      DTLZ7   & 1.4674e-1 (2.27e-2) -      & 2.5112e-1 (1.33e-2) -      & 2.0189e-1 (2.78e-2) -      & 1.9794e-1 (2.67e-2) -      & 1.7790e-1 (3.21e-2) -      & 4.5193e-2 (3.74e-2) -      & \hl{2.6054e-1 (9.41e-4)} \\
+      \hline
+      UF1     & 6.4347e-1 (1.62e-2) -      & 5.3359e-1 (6.56e-2) -      & 7.2001e-1 (3.98e-3) -      & 6.8333e-1 (1.15e-1) =      & 7.2111e-1 (1.38e-3) -      & 7.0455e-1 (6.88e-3) -      & \hl{7.2239e-1 (1.56e-4)} \\
+      UF2     & 7.0001e-1 (4.40e-3) -      & 6.8643e-1 (2.02e-2) -      & 7.2011e-1 (1.18e-3) -      & 7.2127e-1 (9.52e-4) =      & 7.1921e-1 (2.56e-3) -      & 7.1664e-1 (7.09e-4) -      & \hl{7.2149e-1 (7.63e-4)} \\
+      UF3     & 6.1260e-1 (1.46e-2) -      & 3.5078e-1 (2.73e-2) -      & 6.8973e-1 (2.88e-2) =      & 6.7574e-1 (3.78e-2) =      & 6.7501e-1 (7.48e-2) =      & \hl{6.9709e-1 (8.10e-3) =} & 6.8253e-1 (3.44e-2)      \\
+      UF4     & 3.6680e-1 (2.49e-3) -      & 3.6414e-1 (6.79e-3) -      & 3.7669e-1 (3.93e-3) -      & 3.7652e-1 (4.09e-3) -      & 3.5933e-1 (5.62e-3) -      & 3.8955e-1 (1.08e-3) -      & \hl{4.0228e-1 (1.70e-3)} \\
+      UF5     & 5.0899e-2 (4.69e-2) -      & 1.6864e-1 (8.66e-2) =      & 1.0720e-1 (4.80e-2) -      & 1.0232e-1 (4.34e-2) -      & 1.6883e-1 (7.02e-2) =      & \hl{1.6980e-1 (5.50e-2) =} & 1.6464e-1 (8.54e-2)      \\
+      UF6     & 3.2706e-1 (3.14e-2) +      & 1.8928e-1 (8.47e-2) =      & 1.1748e-1 (5.96e-2) =      & 8.5356e-2 (9.96e-3) -      & 1.8770e-1 (7.70e-2) =      & \hl{3.3665e-1 (2.34e-2) +} & 1.5061e-1 (7.33e-2)      \\
+      UF7     & 5.4336e-1 (4.89e-2) -      & 2.2130e-1 (1.23e-1) -      & 3.9157e-1 (2.04e-1) -      & 3.0724e-1 (2.17e-1) -      & 3.9266e-1 (2.02e-1) -      & \hl{5.7320e-1 (3.54e-3) +} & 5.5683e-1 (9.68e-2)      \\
+      UF8     & 3.9452e-1 (4.01e-2) -      & 3.3161e-1 (1.03e-1) -      & 4.7737e-1 (2.57e-2) +      & \hl{4.8312e-1 (3.45e-3) +} & 4.7104e-1 (4.43e-2) +      & 4.3191e-1 (1.88e-2) +      & 4.2908e-1 (5.75e-2)      \\
+      UF9     & 6.4132e-1 (5.41e-2) -      & 5.1114e-1 (3.09e-2) -      & 6.6877e-1 (3.70e-2) =      & 6.4829e-1 (8.11e-3) -      & 6.7034e-1 (3.06e-2) =      & 6.6850e-1 (3.63e-2) =      & \hl{6.7685e-1 (5.89e-2)} \\
+      UF10    & \hl{3.4044e-1 (7.76e-4) +} & 1.1289e-1 (6.11e-2) -      & 7.3765e-3 (1.80e-2) -      & 4.7815e-2 (2.86e-2) -      & 1.3150e-1 (6.41e-2) =      & 6.4038e-4 (3.37e-3) -      & 1.5583e-1 (7.11e-2)      \\
+      \hline
+      +/-/=   & 6/25/0                     & 6/20/5                     & 4/21/6                     & 4/20/7                     & 3/19/9                     & 4/23/4                     &                          \\
+      \bottomrule
+    \end{tabular}
+  }
   \label{tab:hv_all}
 \end{table*}
 
@@ -1000,19 +1071,19 @@ It can be seen that the first four algorithms have little difference, and MOEA/D
   \renewcommand{\arraystretch}{1.2}  % 行间距
   \centering
   \caption{The average ranks of the compared algorithms according to their IGD and HV on the 31 test instances.}
-  \begin{tabular}{cccccc}
+  \begin{tabular}{cccccccc}
     \toprule
-    Alg. & MOEA/D-FRRMAB & MOEA/D-DYTS & MOEA/D-DRA & MOEA/D-M2M & MOEA/D-DQN \\
+    Alg. & IM-MOEA & MOEA/D  & MOEA/D-FRRMAB & MOEA/D-DYTS & MOEA/D-DRA & MOEA/D-M2M & MOEA/D-DQN \\
     \midrule
-    IGD  & 3.0323        & 3.1613      & 3.3871     & 3.5806     & 1.8387     \\
-    HV   & 3.0645        & 3.1290      & 3.3226     & 3.4516     & 1.9032     \\
+    IGD  & 4.25806 & 3.64516 & 4.19355       & 4.29032     & 4.45161    & 4.77419    & 2.38710    \\
+    HV   & 4.54839 & 3.96774 & 4.09677       & 4.09677     & 4.19355    & 4.54839    & 2.38710    \\
     \bottomrule
   \end{tabular}
   \label{tab:rank_all}
 \end{table*}
 
 %%%%%% 和单个算子的对比，可能比不过，但排名或许能比得过
-% 通常来说，没有一个算子可以在所有问题上都有好的效果，为了研究不同算子在不同问题上的表现，我们比较了单个算子和.. 为了保证公平，除了算子外，其他部分与MOEA/D-DQN一致，
+% 通常来说，没有一个算子可以在所有问题上都有好的效果，为了研究不同算子在不同问题上的表现，我们比较了单个算子和.. 为了保证公平，除算子外，其他部分与MOEA/D-DQN一致，
 Generally speaking, no operator can achieve good results on all problems, in order to study the performance of different operators on different problems, MOEA/D-DQN is compared with four MOEA/D variants, each of them using only one operator from the operator pool to produce offspring. The other parts of the comparison algorithms are consistent with MOEA/D-DQN except for the operator.
 
 % 表格展示了单个了单个算子和MOEA/D-DQN在31个测试问题上的IGD值和HV值，以及算法在每个测试问题上的排名
@@ -1028,42 +1099,44 @@ From tables \ref{tab:igd_ops}, \ref{tab:hv_ops}, we can see that each operator h
     \toprule
     Problem         & MOEA/D-OP1 (rank)   & MOEA/D-OP2 (rank)   & MOEA/D-OP3 (rank) & MOEA/D-OP4 (rank)   & MOEA/D-DQN (rank)   \\
     \midrule
-    ZDT1            & 1.1554e-02 (2)      & 3.6240e-02 (3)      & 4.4362e-02 (4)    & 5.2718e-02 (5)      & \hl{6.9980e-03 (1)} \\
-    ZDT2            & \hl{2.0159e-02 (1)} & 6.0830e-02 (3)      & 1.0700e-01 (4)    & 1.4857e-01 (5)      & 2.4188e-02 (2)      \\
-    ZDT3            & 4.3307e-02 (2)      & 2.2010e-01 (4)      & 2.2983e-01 (5)    & 2.0123e-01 (3)      & \hl{1.7122e-02 (1)} \\
-    ZDT4            & \hl{1.2382e-01 (1)} & 6.2584e-01 (3)      & 1.2818e+00 (4)    & 1.7178e+01 (5)      & 2.5453e-01 (2)      \\
-    ZDT6            & 4.5689e-02 (5)      & \hl{3.1665e-03 (1)} & 1.0660e-02 (4)    & 9.2326e-03 (3)      & 3.8825e-03 (2)      \\
+    ZDT1            & 1.1554E-02 (2)      & 3.6240E-02 (3)      & 4.4362E-02 (4)    & 5.2718E-02 (5)      & \hl{6.9980E-03 (1)} \\
+    ZDT2            & \hl{2.0159E-02 (1)} & 6.0830E-02 (3)      & 1.0700E-01 (4)    & 1.4857E-01 (5)      & 2.4188E-02 (2)      \\
+    ZDT3            & 4.3307E-02 (2)      & 2.2010E-01 (4)      & 2.2983E-01 (5)    & 2.0123E-01 (3)      & \hl{1.7122E-02 (1)} \\
+    ZDT4            & \hl{1.2382E-01 (1)} & 6.2584E-01 (3)      & 1.2818E+00 (4)    & 1.7178E+01 (5)      & 2.5453E-01 (2)      \\
+    ZDT6            & 4.5689E-02 (5)      & \hl{3.1665E-03 (1)} & 1.0660E-02 (4)    & 9.2326E-03 (3)      & 3.8825E-03 (2)      \\
     \hline
-    DTLZ1           & 3.0622e-02 (2)      & 3.9651e-01 (3)      & 7.6483e-01 (4)    & 1.4942e+00 (5)      & \hl{1.8507e-02 (1)} \\
-    DTLZ2           & 7.5314e-02 (5)      & 7.4957e-02 (2)      & 7.5180e-02 (3)    & 7.5271e-02 (4)      & \hl{4.7007e-02 (1)} \\
-    DTLZ3           & \hl{2.7189e-01 (1)} & 1.1206e+01 (3)      & 2.3510e+01 (5)    & 1.9302e+01 (4)      & 1.2903e+00 (2)      \\
-    DTLZ4           & 4.8295e-01 (5)      & 1.2165e-01 (2)      & 2.2932e-01 (4)    & 1.4300e-01 (3)      & \hl{4.7086e-02 (1)} \\
-    DTLZ5           & 1.4594e-02 (4)      & 1.4395e-02 (3)      & 1.4333e-02 (2)    & \hl{1.4327e-02 (1)} & 2.6538e-02 (5)      \\
-    DTLZ6           & 1.4605e-02 (4)      & 1.4565e-02 (3)      & 1.4521e-02 (2)    & \hl{1.4517e-02 (1)} & 2.9008e-02 (5)      \\
-    DTLZ7           & 2.1389e-01 (5)      & 1.9859e-01 (2)      & 2.0422e-01 (4)    & 1.9953e-01 (3)      & \hl{1.1006e-01 (1)} \\
+    DTLZ1           & 2.0782E-02 (2)      & 1.0673E+00 (4)      & 2.9318E-01 (3)    & 1.3359E+00 (5)      & \hl{1.8507E-02 (1)} \\
+    DTLZ2           & 5.4495E-02 (2)      & 7.5482E-02 (4)      & 6.8332E-02 (3)    & 8.1626E-02 (5)      & \hl{4.7007E-02 (1)} \\
+    DTLZ3           & \hl{6.7471E-01 (1)} & 3.4119E+01 (4)      & 3.6550E+01 (5)    & 2.2049E+01 (3)      & 1.2903E+00 (2)      \\
+    DTLZ4           & 3.0991E-01 (5)      & 7.2420E-02 (2)      & 1.5007E-01 (4)    & 1.0033E-01 (3)      & \hl{4.7086E-02 (1)} \\
+    DTLZ5           & 3.3019E-02 (5)      & 3.0277E-02 (4)      & 2.9569E-02 (3)    & 2.7432E-02 (2)      & \hl{2.6538E-02 (1)} \\
+    DTLZ6           & 3.3856E-02 (5)      & 3.3576E-02 (4)      & 3.3299E-02 (3)    & 3.3060E-02 (2)      & \hl{2.9008E-02 (1)} \\
+    DTLZ7           & 1.5409E-01 (3)      & 1.5373E-01 (2)      & 5.2182E-01 (5)    & 5.0073E-01 (4)      & \hl{1.1006E-01 (1)} \\
     \hline
-    WFG1            & \hl{3.1491e-01 (1)} & 7.2333e-01 (3)      & 1.3045e+00 (4)    & 1.5719e+00 (5)      & 7.1675e-01 (2)      \\
-    WFG2            & 3.2499e-01 (3)      & 3.1654e-01 (2)      & 3.4742e-01 (4)    & 3.6405e-01 (5)      & \hl{2.0742e-01 (1)} \\
-    WFG3            & \hl{1.1023e-01 (1)} & 1.9606e-01 (4)      & 1.9143e-01 (3)    & 2.1869e-01 (5)      & 1.2825e-01 (2)      \\
-    WFG4            & 3.6323e-01 (2)      & 3.9103e-01 (4)      & 3.9770e-01 (5)    & 3.8302e-01 (3)      & \hl{2.3703e-01 (1)} \\
-    WFG5            & 3.5804e-01 (4)      & 3.5895e-01 (5)      & 3.4197e-01 (3)    & 3.3582e-01 (2)      & \hl{2.2353e-01 (1)} \\
-    WFG6            & \hl{3.7771e-01 (1)} & 4.3557e-01 (5)      & 4.1647e-01 (3)    & 4.1171e-01 (2)      & 4.2542e-01 (4)      \\
-    WFG7            & \hl{3.5699e-01 (1)} & 3.7839e-01 (5)      & 3.6778e-01 (3)    & 3.6413e-01 (2)      & 3.6882e-01 (4)      \\
-    WFG8            & \hl{4.1146e-01 (1)} & 5.2766e-01 (5)      & 4.6258e-01 (3)    & 4.4173e-01 (2)      & 4.8352e-01 (4)      \\
-    WFG9            & 3.7346e-01 (4)      & 3.9139e-01 (5)      & 3.5906e-01 (3)    & \hl{3.4276e-01 (1)} & 3.5458e-01 (2)      \\
+    WFG1            & \hl{2.5873E-01 (1)} & 6.8505E-01 (2)      & 1.1416E+00 (4)    & 1.4677E+00 (5)      & 7.1675E-01 (3)      \\
+    WFG2            & 2.3869E-01 (2)      & 2.9602E-01 (5)      & 2.8355E-01 (3)    & 2.8629E-01 (4)      & \hl{2.0742E-01 (1)} \\
+    WFG3            & 1.5931E-01 (2)      & 1.6717E-01 (3)      & 1.8733E-01 (4)    & 2.2936E-01 (5)      & \hl{1.2825E-01 (1)} \\
+    WFG4            & 2.6389E-01 (2)      & 3.4070E-01 (4)      & 3.2749E-01 (3)    & 3.6940E-01 (5)      & \hl{2.3703E-01 (1)} \\
+    WFG5            & 2.5097E-01 (2)      & 2.7192E-01 (5)      & 2.5955E-01 (3)    & 2.6298E-01 (4)      & \hl{2.2353E-01 (1)} \\
+    WFG6            & \hl{2.9117E-01 (1)} & 3.9338E-01 (4)      & 3.7678E-01 (3)    & 3.6522E-01 (2)      & 4.2542E-01 (5)      \\
+    WFG7            & \hl{2.8538E-01 (1)} & 3.7268E-01 (4)      & 3.3623E-01 (2)    & 3.7822E-01 (5)      & 3.6882E-01 (3)      \\
+    WFG8            & \hl{3.3973E-01 (1)} & 5.0260E-01 (5)      & 4.5396E-01 (2)    & 4.8381E-01 (4)      & 4.8352E-01 (3)      \\
+    WFG9            & \hl{3.0634E-01 (1)} & 3.5093E-01 (4)      & 3.2316E-01 (2)    & 3.4944E-01 (3)      & 3.5458E-01 (5)      \\
     \hline
-    UF1             & 1.3930e-01 (5)      & 1.4971e-02 (3)      & 2.9363e-02 (4)    & 1.7860e-03 (2)      & \hl{1.3666e-03 (1)} \\
-    UF2             & 1.7842e-02 (5)      & 2.5884e-03 (2)      & 2.6555e-03 (3)    & 2.8186e-03 (4)      & \hl{2.0228e-03 (1)} \\
-    UF3             & 3.4550e-01 (5)      & 1.5582e-01 (4)      & 8.3464e-02 (3)    & \hl{1.6469e-02 (1)} & 2.1607e-02 (2)      \\
-    UF4             & 4.8002e-02 (2)      & 5.4258e-02 (5)      & 5.3660e-02 (4)    & 5.2840e-02 (3)      & \hl{3.3923e-02 (1)} \\
-    UF5             & 5.1969e-01 (3)      & 5.0021e-01 (2)      & 5.3475e-01 (5)    & \hl{4.7151e-01 (1)} & 5.2563e-01 (4)      \\
-    UF6             & 4.3553e-01 (4)      & 4.1098e-01 (3)      & 4.0028e-01 (2)    & 4.3869e-01 (5)      & \hl{3.7661e-01 (1)} \\
-    UF7             & 5.3382e-01 (5)      & 2.3914e-01 (3)      & 3.8103e-01 (4)    & 1.7435e-01 (2)      & \hl{3.1031e-02 (1)} \\
-    UF8             & 2.1644e-01 (5)      & 1.8533e-01 (4)      & 1.1518e-01 (2)    & \hl{8.5514e-02 (1)} & 1.2196e-01 (3)      \\
-    UF9             & 1.7807e-01 (4)      & 2.1211e-01 (5)      & 1.6876e-01 (3)    & \hl{1.3883e-01 (1)} & 1.5445e-01 (2)      \\
-    UF10            & \hl{4.4170e-01 (1)} & 5.2621e-01 (2)      & 6.5396e-01 (4)    & 1.0753e+00 (5)      & 5.3962e-01 (3)      \\
+    UF1             & 1.3930E-01 (5)      & 1.4971E-02 (3)      & 2.9363E-02 (4)    & 1.7860E-03 (2)      & \hl{1.3666E-03 (1)} \\
+    UF2             & 1.7842E-02 (5)      & 2.5884E-03 (2)      & 2.6555E-03 (3)    & 2.8186E-03 (4)      & \hl{2.0228E-03 (1)} \\
+    UF3             & 3.4550E-01 (5)      & 1.5582E-01 (4)      & 8.3464E-02 (3)    & \hl{1.6469E-02 (1)} & 2.1607E-02 (2)      \\
+    UF4             & 4.8002E-02 (2)      & 5.4258E-02 (5)      & 5.3660E-02 (4)    & 5.2840E-02 (3)      & \hl{3.3923E-02 (1)} \\
+    UF5             & 5.1969E-01 (3)      & 5.0021E-01 (2)      & 5.3475E-01 (5)    & \hl{4.7151E-01 (1)} & 5.2563E-01 (4)      \\
+    UF6             & 4.3553E-01 (4)      & 4.1098E-01 (3)      & 4.0028E-01 (2)    & 4.3869E-01 (5)      & \hl{3.7661E-01 (1)} \\
+    UF7             & 5.3382E-01 (5)      & 2.3914E-01 (3)      & 3.8103E-01 (4)    & 1.7435E-01 (2)      & \hl{3.1031E-02 (1)} \\
+    UF8             & 2.5450E-01 (4)      & 2.3313E-01 (3)      & 2.2645E-01 (2)    & 2.9513E-01 (5)      & \hl{1.2196E-01 (1)} \\
+    UF9             & 2.2444E-01 (5)      & 1.9439E-01 (4)      & 1.6755E-01 (2)    & 1.8379E-01 (3)      & \hl{1.5445E-01 (1)} \\
+    UF10            & 7.6045E-01 (5)      & 6.5741E-01 (2)      & 7.0186E-01 (4)    & 6.9640E-01 (3)      & \hl{5.3962E-01 (1)} \\
     \hline
-    rank statistics & 3.0322581 (2)       & 3.3225806 (4)       & 3.5483871 (5)     & 3.0322581 (2)       & \hl{2.0645161 (1)}  \\
+    rank statistics & 2.90322581 (2)      & 3.38709677 (3)      & 3.41935484 (4)    & 3.58064516 (5)      & 1.70967742 (1)      \\
+    \hline
+    +/-/=           & 6/22/3              & 1/24/6              & 3/22/6            & 1/24/6              &                     \\
     \bottomrule
     \label{tab:igd_ops}
   \end{tabular}
@@ -1076,44 +1149,46 @@ From tables \ref{tab:igd_ops}, \ref{tab:hv_ops}, we can see that each operator h
   \caption{HV values obtained by MOEA/D-DQN and MOEA/D-DRA with single operator on ZDT, DTLZ, WFG and UF over 30 runs and the ranks}
   \begin{tabular}{cccccc}
     \toprule
-    Problem         & MOeA/D-OP1 (rank)   & MOeA/D-OP2 (rank)   & MOeA/D-OP3 (rank) & MOeA/D-OP4 (rank)   & MOeA/D-DQN (rank)   \\
+    Problem         & MOEA/D-OP1 (rank)   & MOEA/D-OP2 (rank)   & MOEA/D-OP3 (rank) & MOEA/D-OP4 (rank)   & MOEA/D-DQN (rank)   \\
     \midrule
-    ZDT1            & 7.0742e-01 (2)      & 6.5708e-01 (3)      & 6.3983e-01 (4)    & 6.2583e-01 (5)      & \hl{7.1383e-01 (1)} \\
-    ZDT2            & \hl{4.2606e-01 (1)} & 3.9024e-01 (3)      & 3.5377e-01 (4)    & 3.1372e-01 (5)      & 4.2482e-01 (2)      \\
-    ZDT3            & 5.6112e-01 (2)      & 3.7786e-01 (4)      & 3.6753e-01 (5)    & 3.9834e-01 (3)      & \hl{5.7176e-01 (1)} \\
-    ZDT4            & \hl{5.3410e-01 (1)} & 1.3076e-01 (3)      & 9.1378e-02 (4)    & 0.0000e+00 (5)      & 3.6640e-01 (2)      \\
-    ZDT6            & 3.5829e-01 (5)      & \hl{3.8833e-01 (1)} & 3.8234e-01 (3)    & 3.8215e-01 (4)      & 3.8782e-01 (2)      \\
+    ZDT1            & 7.0742E-01 (2)      & 6.5708E-01 (3)      & 6.3983E-01 (4)    & 6.2583E-01 (5)      & \hl{7.1383E-01 (1)} \\
+    ZDT2            & \hl{4.2606E-01 (1)} & 3.9024E-01 (3)      & 3.5377E-01 (4)    & 3.1372E-01 (5)      & 4.2482E-01 (2)      \\
+    ZDT3            & 5.6112E-01 (2)      & 3.7786E-01 (4)      & 3.6753E-01 (5)    & 3.9834E-01 (3)      & \hl{5.7176E-01 (1)} \\
+    ZDT4            & \hl{5.3410E-01 (1)} & 1.3076E-01 (3)      & 9.1378E-02 (4)    & 0.0000E+00 (5)      & 3.6640E-01 (2)      \\
+    ZDT6            & 3.5829E-01 (5)      & \hl{3.8833E-01 (1)} & 3.8234E-01 (3)    & 3.8215E-01 (4)      & 3.8782E-01 (2)      \\
     \hline
-    DTLZ1           & 8.0439e-01 (2)      & 4.7802e-01 (3)      & 3.5536e-01 (4)    & 1.4404e-01 (5)      & \hl{8.4290e-01 (1)} \\
-    DTLZ2           & 5.2850e-01 (2)      & 5.2587e-01 (4)      & 5.2715e-01 (3)    & 5.2392e-01 (5)      & \hl{5.6260e-01 (1)} \\
-    DTLZ3           & \hl{3.9864e-01 (1)} & 6.3222e-02 (4)      & 6.6517e-02 (3)    & 3.4538e-02 (5)      & 2.2500e-01 (2)      \\
-    DTLZ4           & 3.4554e-01 (5)      & 5.1975e-01 (2)      & 4.7145e-01 (4)    & 5.1261e-01 (3)      & \hl{5.6242e-01 (1)} \\
-    DTLZ5           & \hl{1.9470e-01 (1)} & 1.9449e-01 (3)      & 1.9452e-01 (2)    & 1.9415e-01 (4)      & 1.8605e-01 (5)      \\
-    DTLZ6           & 1.9471e-01 (4)      & 1.9472e-01 (3)      & 1.9475e-01 (2)    & \hl{1.9476e-01 (1)} & 1.8459e-01 (5)      \\
-    DTLZ7           & 2.3352e-01 (2)      & 2.2809e-01 (3)      & 2.0545e-01 (4)    & 1.8258e-01 (5)      & \hl{2.6054e-01 (1)} \\
+    DTLZ1           & 8.3983E-01 (2)      & 2.3695E-01 (5)      & 5.5256E-01 (3)    & 3.7481E-01 (4)      & \hl{8.4290E-01 (1)} \\
+    DTLZ2           & 5.5922E-01 (2)      & 5.1634E-01 (4)      & 5.2125E-01 (3)    & 4.9772E-01 (5)      & \hl{5.6260E-01 (1)} \\
+    DTLZ3           & \hl{3.3765E-01 (1)} & 0.0000E+00 (5)      & 6.5129E-02 (4)    & 8.4448E-02 (3)      & 2.2500E-01 (2)      \\
+    DTLZ4           & 4.3961E-01 (5)      & 5.2919E-01 (2)      & 4.9652E-01 (3)    & 4.9390E-01 (4)      & \hl{5.6242E-01 (1)} \\
+    DTLZ5           & 1.8254E-01 (5)      & 1.8379E-01 (4)      & 1.8421E-01 (3)    & 1.8449E-01 (2)      & \hl{1.8605E-01 (1)} \\
+    DTLZ6           & 1.8189E-01 (5)      & 1.8208E-01 (4)      & 1.8220E-01 (3)    & 1.8240E-01 (2)      & \hl{1.8459E-01 (1)} \\
+    DTLZ7           & 2.5673E-01 (2)      & 2.4631E-01 (3)      & 2.1990E-01 (5)    & 2.2032E-01 (4)      & \hl{2.6054E-01 (1)} \\
     \hline
-    WFG1            & \hl{9.0433e-01 (1)} & 7.3401e-01 (2)      & 3.9703e-01 (4)    & 2.4776e-01 (5)      & 5.9691e-01 (3)      \\
-    WFG2            & 8.7480e-01 (5)      & 8.8278e-01 (4)      & 8.8844e-01 (2)    & 8.8690e-01 (3)      & \hl{9.0955e-01 (1)} \\
-    WFG3            & \hl{3.7880e-01 (1)} & 3.2560e-01 (5)      & 3.3607e-01 (3)    & 3.2673e-01 (4)      & 3.7149e-01 (2)      \\
-    WFG4            & \hl{5.1565e-01 (1)} & 4.9819e-01 (3)      & 4.7183e-01 (4)    & 4.5914e-01 (5)      & 5.1279e-01 (2)      \\
-    WFG5            & 4.7010e-01 (3)      & 4.7052e-01 (2)      & 4.6062e-01 (4)    & 4.5732e-01 (5)      & \hl{4.9979e-01 (1)} \\
-    WFG6            & \hl{4.5676e-01 (1)} & 3.9750e-01 (5)      & 4.1894e-01 (3)    & 4.2413e-01 (2)      & 4.0557e-01 (4)      \\
-    WFG7            & \hl{5.1595e-01 (1)} & 5.0229e-01 (2)      & 4.9977e-01 (3)    & 4.9302e-01 (5)      & 4.9322e-01 (4)      \\
-    WFG8            & \hl{4.3187e-01 (1)} & 3.6014e-01 (5)      & 3.7638e-01 (3)    & 3.8037e-01 (2)      & 3.6046e-01 (4)      \\
-    WFG9            & 4.6367e-01 (2)      & 4.4771e-01 (5)      & 4.5096e-01 (4)    & \hl{4.6722e-01 (1)} & 4.5656e-01 (3)      \\
+    WFG1            & \hl{8.8790E-01 (1)} & 6.1793E-01 (2)      & 4.0338E-01 (4)    & 2.6701E-01 (5)      & 5.9691E-01 (3)      \\
+    WFG2            & 9.0887E-01 (2)      & 8.6707E-01 (4)      & 8.7622E-01 (3)    & 8.5809E-01 (5)      & \hl{9.0955E-01 (1)} \\
+    WFG3            & 3.6093E-01 (2)      & 3.5152E-01 (3)      & 3.3407E-01 (4)    & 3.0240E-01 (5)      & \hl{3.7149E-01 (1)} \\
+    WFG4            & \hl{5.3476E-01 (1)} & 4.6698E-01 (3)      & 4.5633E-01 (4)    & 4.3455E-01 (5)      & 5.1279E-01 (2)      \\
+    WFG5            & \hl{5.0157E-01 (1)} & 4.8776E-01 (3)      & 4.8414E-01 (4)    & 4.8185E-01 (5)      & 4.9979E-01 (2)      \\
+    WFG6            & \hl{4.7851E-01 (1)} & 3.9699E-01 (5)      & 4.1200E-01 (3)    & 4.3301E-01 (2)      & 4.0557E-01 (4)      \\
+    WFG7            & \hl{5.3309E-01 (1)} & 4.7850E-01 (3)      & 4.5065E-01 (4)    & 4.2561E-01 (5)      & 4.9322E-01 (2)      \\
+    WFG8            & \hl{4.4909E-01 (1)} & 3.5974E-01 (4)      & 3.6106E-01 (2)    & 3.4601E-01 (5)      & 3.6046E-01 (3)      \\
+    WFG9            & 4.5616E-01 (2)      & 4.2021E-01 (4)      & 4.3248E-01 (3)    & 4.1466E-01 (5)      & \hl{4.5656E-01 (1)} \\
     \hline
-    UF1             & 5.3534e-01 (5)      & 6.9251e-01 (3)      & 6.7636e-01 (4)    & 7.2134e-01 (2)      & \hl{7.2239e-01 (1)} \\
-    UF2             & 7.0612e-01 (5)      & 7.2041e-01 (3)      & 7.2025e-01 (4)    & 7.2053e-01 (2)      & \hl{7.2149e-01 (1)} \\
-    UF3             & 3.0682e-01 (5)      & 4.8089e-01 (4)      & 5.8544e-01 (3)    & \hl{6.9277e-01 (1)} & 6.8253e-01 (2)      \\
-    UF4             & 3.8530e-01 (2)      & 3.7258e-01 (4)      & 3.7166e-01 (5)    & 3.7413e-01 (3)      & \hl{4.0228e-01 (1)} \\
-    UF5             & 1.5003e-01 (3)      & 1.6368e-01 (2)      & 1.2867e-01 (4)    & 9.9957e-02 (5)      & \hl{1.6464e-01 (1)} \\
-    UF6             & 1.5683e-01 (2)      & \hl{1.7700e-01 (1)} & 1.3239e-01 (4)    & 1.2928e-01 (5)      & 1.5061e-01 (3)      \\
-    UF7             & 1.9419e-01 (5)      & 3.8387e-01 (3)      & 2.6289e-01 (4)    & 4.4318e-01 (2)      & \hl{5.5683e-01 (1)} \\
-    UF8             & 3.9928e-01 (5)      & 4.2579e-01 (4)      & 4.7403e-01 (2)    & \hl{4.8215e-01 (1)} & 4.2908e-01 (3)      \\
-    UF9             & 6.4602e-01 (4)      & 6.3983e-01 (5)      & 6.6986e-01 (3)    & \hl{6.8912e-01 (1)} & 6.7685e-01 (2)      \\
-    UF10            & \hl{1.7226e-01 (1)} & 1.0879e-01 (3)      & 4.9183e-02 (4)    & 7.9704e-04 (5)      & 1.5583e-01 (2)      \\
+    UF1             & 5.3534E-01 (5)      & 6.9251E-01 (3)      & 6.7636E-01 (4)    & 7.2134E-01 (2)      & \hl{7.2239E-01 (1)} \\
+    UF2             & 7.0612E-01 (5)      & 7.2041E-01 (3)      & 7.2025E-01 (4)    & 7.2053E-01 (2)      & \hl{7.2149E-01 (1)} \\
+    UF3             & 3.0682E-01 (5)      & 4.8089E-01 (4)      & 5.8544E-01 (3)    & \hl{6.9277E-01 (1)} & 6.8253E-01 (2)      \\
+    UF4             & 3.8530E-01 (2)      & 3.7258E-01 (4)      & 3.7166E-01 (5)    & 3.7413E-01 (3)      & \hl{4.0228E-01 (1)} \\
+    UF5             & 1.5003E-01 (3)      & 1.6368E-01 (2)      & 1.2867E-01 (4)    & 9.9957E-02 (5)      & \hl{1.6464E-01 (1)} \\
+    UF6             & 1.5683E-01 (2)      & \hl{1.7700E-01 (1)} & 1.3239E-01 (4)    & 1.2928E-01 (5)      & 1.5061E-01 (3)      \\
+    UF7             & 1.9419E-01 (5)      & 3.8387E-01 (3)      & 2.6289E-01 (4)    & 4.4318E-01 (2)      & \hl{5.5683E-01 (1)} \\
+    UF8             & 3.5324E-01 (2)      & 3.4650E-01 (4)      & 3.4743E-01 (3)    & 3.0758E-01 (5)      & \hl{4.2908E-01 (1)} \\
+    UF9             & 5.7005E-01 (5)      & 6.5218E-01 (4)      & 6.7096E-01 (2)    & 6.5345E-01 (3)      & \hl{6.7685E-01 (1)} \\
+    UF10            & 1.1614E-01 (2)      & 1.1128E-01 (3)      & 1.0724E-01 (4)    & 8.6882E-02 (5)      & \hl{1.5583E-01 (1)} \\
     \hline
-    rank statistics & 2.6129032 (5)       & 3.2580645 (2)       & 3.5161290 (3)     & 3.5161290 (3)       & \hl{2.0967742 (1)}  \\
+    rank statistics & 2.6129032 (2)       & 3.3225806 (3)       & 3.6129032 (4)     & 3.9032258 (5)       & 1.5483871 (1)       \\
+    \hline
+    +/-/=           & 7/17/7              & 0/24/7              & 0/25/6            & 1/27/3              &                     \\
     \bottomrule
     \label{tab:hv_ops}
   \end{tabular}
@@ -1123,25 +1198,80 @@ From tables \ref{tab:igd_ops}, \ref{tab:hv_ops}, we can see that each operator h
 % 我们已经证明了基于DQN的算子选择方法比应用单个算子有更好的效果，但我们仍不知道算子选择只是选择最佳的单个算子，亦或是在不同阶段有不同的算子处于支配地位。为了研究算子的应用轨迹，我们调查了在搜索过程中每个算子应用比例的变化。
 We have proved that the operator selection based on DQN has a better effect than a single operator, but we still do not understand that operator selection is only to select the best single operator, or there are different operators in different states. In order to study the application trajectories of operators, we investigate the change of the application proportion of each operator in the search process.
 % 为了使得不同阶段区别更加明显，我们每隔10代统计一次算子的应用数量，并在图中画出了算子在整个进化阶段的应用比例，
-In order to make the distinction between different stages more obvious, we count the number of operators applied every 10 generations and draw the proportion of operators applied in the whole evolution stage in Fig. \ref{fig:tra}.
+In order to make the distinction between different stages more obvious, we count the number of operators applied every 10 generations and draw the proportion of operators applied in the whole evolution stage in Fig. \ref{fig:ops_tra}.
 
 % 从图可以我们看出，在任何测试实例上，没有一个操作员能够主宰整个搜索过程。在开始阶段，由于RL的探索特性，算子选择的策略类似于随机选择, 之后的每个阶段都有单个算子处于支配地位，在不同搜索阶段，支配算子会逐渐从一个算子切换为另一个。
-As we can see from Fig. \ref{fig:tra}, no operator can dominate the whole search process on any of the test instances. In the initial stage, due to the exploration characteristics of RL, the mechanism of operator selection is similar to random selection, after which a single operator is dominant at each stage, and the dominant operator gradually switches from one operator to another at different search stages.
+As we can see from Fig. \ref{fig:ops_tra}, no operator can dominate the whole search process on any of the test instances. In the initial stage, due to the exploration characteristics of RL, the mechanism of operator selection is similar to random selection, after which a single operator is dominant at each stage, and the dominant operator gradually switches from one to another at different search stages.
 
 
-\begin{figure*}[t]
+\begin{figure*}[]
   \centering
-  \subfloat[Operator selection trajectory on UF2.]{\includegraphics[width=0.33\linewidth]{figs/ops_uf2.pdf}}\hfil
-  \subfloat[Operator selection trajectory on UF6.]{\includegraphics[width=0.33\linewidth]{figs/ops_uf6.pdf}}\hfil
-  \subfloat[Operator selection trajectory on UF7.]{\includegraphics[width=0.33\linewidth]{figs/ops_uf7.pdf}}\hfil
-  \subfloat[Operator selection trajectory on UF8.]{\includegraphics[width=0.33\linewidth]{figs/ops_uf8.pdf}}\hfil
-  \subfloat[Operator selection trajectory on UF9.]{\includegraphics[width=0.33\linewidth]{figs/ops_uf9.pdf}}\hfil
-  \subfloat[Operator selection trajectory on UF10.]{\includegraphics[width=0.33\linewidth]{figs/ops_uf10.pdf}}\\
+  \subfloat[Operator selection trajectory on ZDT1.]{\includegraphics[width=0.5\linewidth]{figs/ops_zdt1.pdf}}\hfil
+  \subfloat[Operator selection trajectory on UF1.]{\includegraphics[width=0.5\linewidth]{figs/ops_uf1.pdf}}\\
   \caption{Operator selection trajectories of MOEA/D-DQN}
-  \label{fig:tra}
+  \label{fig:ops_tra}
 \end{figure*}
 
-%%%%% IGD值的下降，或许降得更快
+%%%%% IGD值的下降
+% 为了验证我们的算子选择效果，我们在ZDT1和UF1测试问题上画出了MOEA/D-DQN和6个对比算法的IGD下降曲线
+In order to verify the effect of AOS method, we draw the IGD descent trajectories of MOEA/D-DQN and 6 comparison algorithms on ZDT1 and UF1, and the results are shown in the Fig. \ref{fig:igd_tra}.
+% 我们将整个进化过程分成20个阶段，每个阶段计算一次种群的IGD值
+We divide the whole evolutionary process into 20 phases, and calculate the IGD value at each phase.
+
+% 从图中我们可以看出, MOEA/D-DQN不仅在最终的结果上有优势，而且有更快的下降速度
+From the Fig. \ref{fig:igd_tra}, we can see that the MOEA/D-DQN not only has an advantage in the final result, but also has a faster descent rate.
+
+\begin{figure*}[]
+  \centering
+  \subfloat[IGD descent trajectories on ZDT1.]{\includegraphics[width=0.5\linewidth]{figs/igd_desc_zdt1.pdf}}\hfil
+  \subfloat[IGD descent trajectories on UF1.]{\includegraphics[width=0.5\linewidth]{figs/igd_desc_uf1.pdf}}\\
+  \caption{IGD descent trajectories of all algorithms}
+  \label{fig:igd_tra}
+\end{figure*}
+
+
+%%%%%%%% PF的图
+% ZDT1是相对简单的测试问题，在足够的评价次数下所有算法都能收敛到PF，为了展示不同算法的差距，我们设置了一个相对较小的评价次数10000，
+ZDT1 is a simple test problem, and all algorithms can converge to PF with enough function evaluations. In order to show the differences of algorithms, we set a relatively small evaluation number of 10000.
+% 可以看到MOEA/D-DQN在有限评价次数下可以得到最好的近似, moead的多样性不好，其他的算法还未收敛
+As shown in Fig. \ref{fig:zdt1_pf}, MOEA/D-DQN can get the best approximation under the limited function evaluations. MOEA/D did not get good diversity and other algorithms have not yet converged.
+
+\begin{figure*}[]
+  \centering
+  \subfloat[MOEA/D-DQN]{\includegraphics[width=0.25\linewidth]{figs/moeaddqn_pf_zdt1.pdf}}\hfil
+  \subfloat[IM-MOEA]{\includegraphics[width=0.25\linewidth]{figs/immoea_pf_zdt1.pdf}}\hfil
+  \subfloat[MOEA/D]{\includegraphics[width=0.25\linewidth]{figs/moead_pf_zdt1.pdf}}\hfil
+  \subfloat[MOEA/D-DRA]{\includegraphics[width=0.25\linewidth]{figs/moeaddra_pf_zdt1.pdf}}\hfil
+  \subfloat[MOEA/D-FRRMAB]{\includegraphics[width=0.25\linewidth]{figs/moeadfrrmab_pf_zdt1.pdf}}\hfil
+  \subfloat[MOEA/D-M2M]{\includegraphics[width=0.25\linewidth]{figs/moeadm2m_pf_zdt1.pdf}}\hfil
+  \subfloat[MOEA/D-DYTS]{\includegraphics[width=0.25\linewidth]{figs/moeaddyts_pf_zdt1.pdf}}\\
+  \caption{Final solutions obtained by 7 algorithms on ZDT1}
+  \label{fig:zdt1_pf}
+\end{figure*}
+
+
+% UF1问题受算子影响较大，使用DE算子的..都获得了较好的效果，而使用GA算子的MOEA/D已经陷入了局部最优，。。其他几个算法不太了解，留给师兄补充
+The UF1 problem is greatly affected by the operator, and the MOEA/D-DQN, MOEA/D-DRA, MOEA/D-FRRMAB and MOEA/D-DYTS with DE operator have achieved good results, while the MOEA/D using GA operator has fallen into local optimum.
+
+
+
+\begin{figure*}[]
+  \centering
+  \subfloat[MOEA/D-DQN]{\includegraphics[width=0.25\linewidth]{figs/moeaddqn_pf_uf1.pdf}}\hfil
+  \subfloat[IM-MOEA]{\includegraphics[width=0.25\linewidth]{figs/immoea_pf_uf1.pdf}}\hfil
+  \subfloat[MOEA/D]{\includegraphics[width=0.25\linewidth]{figs/moead_pf_uf1.pdf}}\hfil
+  \subfloat[MOEA/D-DRA]{\includegraphics[width=0.25\linewidth]{figs/moeaddra_pf_uf1.pdf}}\hfil
+  \subfloat[MOEA/D-FRRMAB]{\includegraphics[width=0.25\linewidth]{figs/moeadfrrmab_pf_uf1.pdf}}\hfil
+  \subfloat[MOEA/D-M2M]{\includegraphics[width=0.25\linewidth]{figs/moeadm2m_pf_uf1.pdf}}\hfil
+  \subfloat[MOEA/D-DYTS]{\includegraphics[width=0.25\linewidth]{figs/moeaddyts_pf_uf1.pdf}}\\
+  \caption{Final solutions obtained by 7 algorithms on UF1}
+  \label{fig:uf1_pf}
+\end{figure*}
+
+
+
+
+
 
 
 \section{Conclusions}
@@ -1149,16 +1279,16 @@ In this paper, an adaptive operator selection based on a Deep Q network (MOEA/D-
 % 建模成MDP，使用深度神经网络作为算子选择器，同时也是强化学习的策略。
 The adaptive operator selection problem was modeled MDP, we use the deep neural network as an operator selector, which is also a reinforcement learning strategy.
 % 我们将适应度提高率作为RL的reward，适应度提高率由生成的子代和被替换的父代个体决定
-We take the fitness improvement rate as the RL's reward, and the FIR is determined by the generated offspring and the replaced parent.
-% ，由于进化过程的不稳定性，我们设计了一个固定长度的队列用来store the FIR values of the recently used operators, 为了更好的表示算子的效果，我们取队列中的最大值FIR作为算子的reward反馈给RL
-Due to the instability of the evolutionary process, we design a fixed-length queue to store the FIR values of the recently used operators, and to better represent the effect of the operator, we take the maximum value of FIR of the corresponding operator in the queue as the reward feedback to RL.
+We take the fitness improvement rate as the RL's reward, and the NFI is determined by the generated offspring and the replaced parent.
+% ，由于进化过程的不稳定性，我们设计了一个固定长度的队列用来store the NFI values of the recently used operators, 为了更好的表示算子的效果，我们取队列中的最大值FIR作为算子的reward反馈给RL
+Due to the instability of the evolutionary process, we design a fixed-length queue to store the NFI values of the recently used operators, and to better represent the effect of the operator, we take the maximum value of NFI of the corresponding operator in the queue as the reward feedback to RL.
 % MOEA/D-DQN通过在线控制的方法，一边对环境采样，一边通过采样得到的数据学习，节省了训练时间，而且比起预训练的方法, MOEA/D-DQN在新的问题上有更好的表现。
 MOEA/D-DQN can save the training time by online control and learning from the sampled data. Moreover, compared with the pre-training method, MOEA/D-DQN has better performance on new problems.
 % 实验结果表明，该算法具有较强的竞争力，说明了该控制器的有效性。
 The experimental results showed that the AOS based on RL was very competitive to the compared algorithms, which shows the effectiveness of the proposed controller.
 
 % 图x显示不同的算子适用于不同的问题，并且在同一个问题的不同阶段，最佳算子也是不同的。这说明算子选择不光能够减少人工设计参数的复杂性，而且对提升算法的性能是有必要的。
-Fig. \ref{fig:tra} shows that different operators are suitable for different problems and that the optimal operator is different in different stages of the same problem, this shows that operator selection not only reduces the complexity of manually designed parameters but is also necessary to improve the performance of the algorithm.
+Fig. \ref{fig:ops_tra} shows that different operators are suitable for different problems and that the optimal operator is different in different stages of the same problem, this shows that operator selection not only reduces the complexity of manually designed parameters but is also necessary to improve the performance of the algorithm.
 This is well illustrated by the results in Table \ref{tab:igd_ops} and Table \ref{tab:hv_ops}.
 
 % 之后的工作, 我们希望设计更有效的state来充分说明当前种群的信息，MOEA/D-DQN中的state只和当前个体有关，而忽略了种群中不同个体之间的联系，并且仅以当前个体的fitness improvement作为reward有可能导致陷入局部最优，虽然基于群体智能的进化算法在一定程度上可以避免局部最优，但维护种群的多样性也是有必要的，因此在之后的工作中，我们计划在state和reward同时考虑种群的收敛性和分布性的，根据种群的状态确定当前应该偏向探索或是利用。

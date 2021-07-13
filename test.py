@@ -1,8 +1,15 @@
+# %%
+import scipy.io
 import numpy as np
-import matplotlib.pyplot as plt
-x = range(1, 13, 1)
-y = range(1, 13, 1)
-plt.plot(x, y)
-plt.xticks(range(1, 13), ('Tom', 'Dick', 'Harry', 'Sally', 'Sue', 'Lily', 'Ava', 'Isla', 'Rose', 'Jack', 'Leo', 'Charlie'))
-# plt.xticks(x, ('Tom', 'Dick', 'Harry', 'Sally', 'Sue', 'Lily', 'Ava', 'Isla', 'Rose', 'Jack', 'Leo', 'Charlie'))
-plt.show()
+
+a = np.array([[1, 2, 3]])
+scipy.io.savemat('a.mat', {'igd_desc': a})
+print(a.shape)
+
+# %%
+import numpy as np
+a = np.random.randint(0, 100, 147)
+print(a.shape)
+idx = np.linspace(0, 146, num=99, dtype='int32')
+print(idx)
+print(a[idx])

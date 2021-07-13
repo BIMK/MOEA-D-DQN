@@ -179,7 +179,7 @@ Parallel: False
 
 class Recsbx:
     def __init__(self, XOVR=0.9, Half=True, n=20, Parallel=False):
-        self.name = "Recsbx"
+        self.name = "OP1"
         self.XOVR = XOVR
         self.Half = Half
         self.n = n
@@ -220,7 +220,7 @@ class RecM2m:
     """
 
     def __init__(self, maxgen: int) -> None:
-        self.name = 'RecM2m'
+        self.name = 'OP2'
         self.MaxGen = maxgen
 
     def do(self, OldChrom, r0, neighbourVector, currentGen: int):
@@ -243,7 +243,7 @@ class DE_rand_1:
     """
 
     def __init__(self, F=0.5):
-        self.name = "DE_rand_1"
+        self.name = "OP3"
         self.F = F  # 差分变异缩放因子
 
     def do(self, OldChrom, r0, neighbourVector):  # 执行变异
@@ -267,7 +267,7 @@ class DE_rand_2:
     """
 
     def __init__(self, F=0.5):
-        self.name = 'DE_rand_2'
+        self.name = 'OP4'
         self.F = F  # 差分变异缩放因子
 
     def do(self, OldChrom, r0, neighbourVector):  # 执行变异

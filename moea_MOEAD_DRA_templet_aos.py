@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import random
+import scipy.io
 import numpy as np
 import geatpy as ea  # 导入geatpy库
 from scipy.spatial.distance import cdist
@@ -41,7 +42,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
             self.processBound = ProcessBound(population.Field)
         else:
             raise RuntimeError('编码方式必须为''RI''.')
-        if self.problem.M <= 2:
+        if self.problem.M <= 20:
             self.decomposition = ea.tcheby  # 采用切比雪夫权重聚合法
         else:
             self.decomposition = ea.pbi  # 采用pbi权重聚合法
@@ -131,6 +132,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         pi = np.ones((NIND, 1))  # 初始化pi作为子问题选择基准
         oldObj = self.decomposition(population.ObjV, uniformPoint, idealPoint, None, self.problem.maxormins)
         PopCountOpers = []  # 统计不同进化阶段算子选择的结果
+        PF = self.problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
+        # igd_desc = []
         # CountOpers = np.zeros((self.NIND,self.mutDE.n))  # 统计不同子问题算子选择结果
         # ===========================开始进化============================
         while not self.terminated(population):
@@ -165,6 +168,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 # PopCountOpers.append(self.countOper.countOpers)
                 # self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
 
+            # IGD = ea.indicator.IGD(population.ObjV, PF)     # 计算IGD指标
+            # igd_desc.append(IGD)
             """每10代更新一次pi值"""
             if self.currentGen % 10 == 0:
                 newObj = self.decomposition(population.ObjV, uniformPoint, idealPoint, None, self.problem.maxormins)
@@ -177,26 +182,41 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 PopCountOpers.append(self.countOper.countOpers / sum(self.countOper.countOpers))
                 self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
 
+        """
         # 画出不同进化阶段算子选择的结果
         BestSelection = np.array(PopCountOpers[:30])
         N, D = BestSelection.shape
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
         # matplotlib.use('agg')
-        # """
         markers = ['o', '^', 's', 'p']
         for i in range(self.countOper.n):
             plt.plot(BestSelection[:, i], '.', label=self.countOper.Opers[i].name, marker=markers[i])
         plt.legend(loc='upper left', prop={'family': 'Times New Roman'})
         # 坐标轴刻度
         # xticks = list(map(str, np.linspace(1, D, D)))
-        xticks = list(map(str, np.arange(1, N + 1, 2)))
-        plt.xticks(range(0, N, 2), xticks, fontsize=12)
+        xticks = list(map(str, np.arange(1, N + 1, 1)))
+        plt.xticks(range(0, N, 1), xticks, fontsize=12)
         plt.yticks(fontsize=12)
         # 坐标轴名称
         plt.xlabel('Generation (×10)', fontdict={'family': 'Times New Roman', 'fontsize': 14})
         plt.ylabel('Percentage of operators applied', fontdict={'family': 'Times New Roman', 'fontsize': 14})
         plt.savefig('C:/Users/lxp/Desktop/pic/' + self.problem.name + str(int(time.time())) + '.pdf')
         plt.show()
-        # """
+        """
+        """画出PF"""
+        IGD = ea.indicator.IGD(population.ObjV, PF)     # 计算IGD指标
+        x = population.ObjV[:, 0]
+        y = population.ObjV[:, 1]
+        objs = population.ObjV
+        scipy.io.savemat('moeaddqn_objs_' + self.problem.name + '_' + str(IGD) + '_.mat', {'objs': objs})
+        plt.plot(x, y, 'o', markerfacecolor='none')
+        plt.plot(PF[:, 0], PF[:, 1])
+        plt.show()
+
+        """画出IGD下降曲线"""
+        # igd = np.array([igd_desc])
+        # scipy.io.savemat('moeaddqn_' + self.problem.name + '_' + str(igd_desc[-1]) + '_.mat', {'igd_desc': igd})
+        # plt.plot(igd_desc)
+        # plt.show()
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果
