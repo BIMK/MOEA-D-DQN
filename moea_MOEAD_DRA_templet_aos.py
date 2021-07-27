@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+import torch
 import random
 import scipy.io
 import numpy as np
@@ -54,7 +55,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         self.nr = 2
         self.learn_interval = 5  # 每5代更新DQN网络
         # self.SW = np.zeros((2, self.NIND // 2))  # 滑动窗口，可以记录算子的情况
-        # self.a = 0
+        self.run_times = 0
 
     def tournamentSelection(self, K, N, pi):
         """
@@ -105,14 +106,16 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         r = FIR.sum()
         # print(r)
         # if self.currentGen % self.learn_interval == 0:
-        if random.random() < 0.2:
-            self.countOper.learn(r)
+        # if random.random() < 0.06:
+        self.countOper.learn(r)
         # self.xovOper.learn(r)
         # self.mutOper.learn(r)
 
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
+        self.run_times += 1
         # ==========================初始化配置===========================
         self.countOper = RecRL(self.problem, self.uniformPoint, self.MAXGEN, self.NIND)
+        # self.countOper.dqn.eval_net.load_state_dict(torch.load('./igd_desc/UF1_model.pth'))
         self.initialization()
         population = self.population
         # NOTE: 在使用crtup生成单位目标维度均匀分布的参考点集时NIND可能不是种群大小。
@@ -133,7 +136,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         oldObj = self.decomposition(population.ObjV, uniformPoint, idealPoint, None, self.problem.maxormins)
         PopCountOpers = []  # 统计不同进化阶段算子选择的结果
         PF = self.problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
-        # igd_desc = []
+        igd_desc = []
         # CountOpers = np.zeros((self.NIND,self.mutDE.n))  # 统计不同子问题算子选择结果
         # ===========================开始进化============================
         while not self.terminated(population):
@@ -168,8 +171,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 # PopCountOpers.append(self.countOper.countOpers)
                 # self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
 
-            # IGD = ea.indicator.IGD(population.ObjV, PF)     # 计算IGD指标
-            # igd_desc.append(IGD)
+            IGD = ea.indicator.IGD(population.ObjV, PF)     # 计算IGD指标
+            igd_desc.append(IGD)
             """每10代更新一次pi值"""
             if self.currentGen % 10 == 0:
                 newObj = self.decomposition(population.ObjV, uniformPoint, idealPoint, None, self.problem.maxormins)
@@ -181,8 +184,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 """统计不同进化阶段算子选择的结果"""
                 PopCountOpers.append(self.countOper.countOpers / sum(self.countOper.countOpers))
                 self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
-
-        """
+            """
         # 画出不同进化阶段算子选择的结果
         BestSelection = np.array(PopCountOpers[:30])
         N, D = BestSelection.shape
@@ -205,6 +207,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         plt.show()
         """
         """画出PF"""
+        """
         IGD = ea.indicator.IGD(population.ObjV, PF)     # 计算IGD指标
         x = population.ObjV[:, 0]
         y = population.ObjV[:, 1]
@@ -213,10 +216,14 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         plt.plot(x, y, 'o', markerfacecolor='none')
         plt.plot(PF[:, 0], PF[:, 1])
         plt.show()
+        """
 
         """画出IGD下降曲线"""
-        # igd = np.array([igd_desc])
-        # scipy.io.savemat('moeaddqn_' + self.problem.name + '_' + str(igd_desc[-1]) + '_.mat', {'igd_desc': igd})
+        igd = np.array([igd_desc])
+        # scipy.io.savemat('igd_desc/moeaddqn_' + self.problem.name + '_' + str(self.run_times) + '_.mat', {'igd_desc': igd})
+        np.save('./igd_desc/moeaddqn_1.0_' + self.problem.name + '_' + str(self.run_times), igd)
         # plt.plot(igd_desc)
         # plt.show()
+        # 保存网络模型
+        # torch.save(obj=self.countOper.dqn.eval_net.state_dict(), f="igd_desc/" + self.problem.name + "_model_" + str(igd_desc[-1]) + ".pth")
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果

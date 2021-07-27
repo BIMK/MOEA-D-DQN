@@ -22,7 +22,7 @@ LR = 0.01                   # learning rate
 EPSILON = 0.9               # greedy policy
 GAMMA = 0.4                 # reward discount
 TARGET_REPLACE_ITER = 7   # target update frequency
-MEMORY_CAPACITY = 500
+MEMORY_CAPACITY = 512
 DEVICE = 3   # 指定GPU
 # env = gym.make('CartPole-v0')
 # env = env.unwrapped
@@ -61,9 +61,10 @@ class DQN(object):
         self.N_ACTIONS = outDim
         self.learn_step_counter = 0                                     # for target updating
         self.memory_counter = 0                                         # for storing memory
+        # self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
         # memory是一个np数组，每一行代表一个记录，状态 动作 奖励 新的状态
         self.memory = np.zeros((MEMORY_CAPACITY, self.N_STATES * 2 + 2))     # initialize memory
-        self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=LR)
+        self.optimizer = torch.optim.SGD(self.eval_net.parameters(), lr=LR)
         self.loss_func = nn.MSELoss()
         if use_gpu:
             self.eval_net, self.target_net = self.eval_net.cuda(DEVICE), self.target_net.cuda(DEVICE)

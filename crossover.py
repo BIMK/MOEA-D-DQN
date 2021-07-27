@@ -157,7 +157,7 @@ class RecRL:
         # print(reward1, reward)
         self.dqn.store_transition(self.state, self.a, reward, self.state_)
         # 学习,更新DQN
-        if self.dqn.memory_counter > 200:
+        if self.dqn.memory_counter > 200 and random.random() < 1.8:
             self.dqn.learn()
 
 
