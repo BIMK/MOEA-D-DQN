@@ -184,9 +184,11 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 """统计不同进化阶段算子选择的结果"""
                 PopCountOpers.append(self.countOper.countOpers / sum(self.countOper.countOpers))
                 self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
-            """
+
+        """
         # 画出不同进化阶段算子选择的结果
-        BestSelection = np.array(PopCountOpers[:30])
+        BestSelection = np.array(PopCountOpers[:])
+        np.save('./ops_/ops_moeaddqn_' + self.problem.name + '_' + str(IGD), BestSelection)
         N, D = BestSelection.shape
         # 画出不同子问题算子选择的结果
         # BestSelection = CountOpers
@@ -206,7 +208,9 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         plt.savefig('C:/Users/lxp/Desktop/pic/' + self.problem.name + str(int(time.time())) + '.pdf')
         plt.show()
         """
+
         """画出PF"""
+
         """
         IGD = ea.indicator.IGD(population.ObjV, PF)     # 计算IGD指标
         x = population.ObjV[:, 0]
@@ -219,6 +223,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         """
 
         """画出IGD下降曲线"""
+        """
         igd = np.array([igd_desc])
         # scipy.io.savemat('igd_desc/moeaddqn_' + self.problem.name + '_' + str(self.run_times) + '_.mat', {'igd_desc': igd})
         np.save('./igd_desc/moeaddqn_1.0_' + self.problem.name + '_' + str(self.run_times), igd)
@@ -226,4 +231,5 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # plt.show()
         # 保存网络模型
         # torch.save(obj=self.countOper.dqn.eval_net.state_dict(), f="igd_desc/" + self.problem.name + "_model_" + str(igd_desc[-1]) + ".pth")
+        """
         return self.finishing(population), population, plt  # 调用finishing完成后续工作并返回结果
