@@ -34,7 +34,7 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         if population.Encoding == 'RI':
             # self.xovOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
             # self.countOper = RecRL(problem, self.uniformPoint, MAXGEN, self.NIND)
-            # self.de_rand_1 = DE_rand_1()
+            self.de_rand_1 = DE_rand_1()
             # self.countOper = Best_cro(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
             # self.xovSbx = Recsbx()
             # self.countOper = Best_mut(problem, self.uniformPoint, MAXGEN, population.Encoding, population.Field)
@@ -107,14 +107,14 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
         # print(r)
         # if self.currentGen % self.learn_interval == 0:
         # if random.random() < 0.06:
-        self.countOper.learn(r)
+        # self.countOper.learn(r)
         # self.xovOper.learn(r)
         # self.mutOper.learn(r)
 
     def run(self, prophetPop=None):  # prophetPop为先知种群（即包含先验知识的种群）
         self.run_times += 1
         # ==========================初始化配置===========================
-        self.countOper = RecRL(self.problem, self.uniformPoint, self.MAXGEN, self.NIND)
+        # self.countOper = RecRL(self.problem, self.uniformPoint, self.MAXGEN, self.NIND)
         # self.countOper.dqn.eval_net.load_state_dict(torch.load('./igd_desc/UF1_model.pth'))
         self.initialization()
         population = self.population
@@ -155,8 +155,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                     # 实例化一个种群对象用于存储进化的后代（这里只进化生成一个后代）
                     offspring = ea.Population(population.Encoding, population.Field, 1)
                     # offspring.Chrom = self.countOper.do(population.Chrom, i, indices, idealPoint, self.currentGen)  # Best_cro
-                    offspring.Chrom = self.countOper.do(population.Chrom, i, indices, self.currentGen)  # RL
-                    # offspring.Chrom = self.de_rand_1.do(population.Chrom, i, indices)
+                    # offspring.Chrom = self.countOper.do(population.Chrom, i, indices, self.currentGen)  # RL
+                    offspring.Chrom = self.de_rand_1.do(population.Chrom, i, indices)  # de rand 1
                     # offspring.Chrom = self.xovSbx.do(population.Chrom, i, indices)  # sbx模拟二进制交叉
                     offspring.Chrom = self.mutPolyn.do(offspring.Encoding, offspring.Chrom, offspring.Field)  # 多项式变异
                     # offspring.Chrom = self.mutOper.do(population.Chrom, offspring.Chrom, i, self.currentGen)
@@ -182,8 +182,8 @@ class moea_MOEAD_DRA_templet(ea.MoeaAlgorithm):
                 pi[temp] = (0.95 + 0.05 * delta[temp] / 0.001) * pi[temp]
                 oldObj = newObj
                 """统计不同进化阶段算子选择的结果"""
-                PopCountOpers.append(self.countOper.countOpers / sum(self.countOper.countOpers))
-                self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
+                # PopCountOpers.append(self.countOper.countOpers / sum(self.countOper.countOpers))
+                # self.countOper.countOpers = np.zeros(self.countOper.n)  # 清空算子选择记录器
 
         """
         # 画出不同进化阶段算子选择的结果

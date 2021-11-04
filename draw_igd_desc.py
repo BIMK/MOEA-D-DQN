@@ -21,7 +21,7 @@ for i in range(len(igds)):
     igd = scipy.io.loadmat(igds[i] + '_zdt1.mat')['igd_desc'][0]
     igd = np.r_[igd, igd[-1]]
     D = igd.shape[0]
-    idx = np.linspace(0, D - 1, num=50, dtype='int32')
+    idx = np.linspace(0, D - 1, num=10, dtype='int32')
     igd = igd[idx]
     plt.plot(igd, styles[i], label=labels[i], markevery=3)
 
@@ -29,8 +29,10 @@ for i in range(len(igds)):
 # exit()
 
 # 坐标轴刻度
-xticks = list(map(str, np.arange(0, 51, 5)))
-plt.xticks(range(0, 51, 5), xticks)
+# xticks = list(map(str, np.arange(0, 51, 5)))
+# plt.xticks(range(0, 51, 5), xticks)
+xticks = list(map(str, np.arange(1, 11)))
+plt.xticks(range(0, 10), xticks)
 
 # 坐标轴名称
 plt.xlabel('Generation (×10)', fontdict={'family': 'Times New Roman', 'fontsize': 14})

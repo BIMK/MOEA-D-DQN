@@ -36,20 +36,17 @@ def get_time():
 
 
 if __name__ == '__main__':
-
     # problems = ['UF1', 'UF2', 'UF3', 'UF4', 'UF5', 'UF6', 'UF7']
     # problems = ['UF8', 'UF9', 'UF10']
-    # problems = ['DTLZ1', 'DTLZ2', 'DTLZ3', 'DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7', ]
+    # problems = ['DTLZ1', 'DTLZ2', 'DTLZ3', 'DTLZ4', 'DTLZ5', 'DTLZ6', 'DTLZ7']
     # problems = ['ZDT1', 'ZDT2', 'ZDT3', 'ZDT4', 'ZDT6']
-    # problems = ['WFG1', 'WFG2', 'WFG3', 'WFG4', 'WFG5', 'WFG6', 'WFG7', 'WFG8', 'WFG9', ]
-    # problems = ['UF1_100', 'UF1_150']
-    # problems = ['ZDT1_30', 'ZDT1_50', 'ZDT1_100', 'ZDT1_150']
-    problems = ['ZDT1_80', 'UF1_80']
-    ninds = [100, 600]
-    gens = [270, 1340]
+    # problems = ['WFG1', 'WFG2', 'WFG3', 'WFG4', 'WFG5', 'WFG6', 'WFG7', 'WFG8', 'WFG9']
+    # problems = ['ZDT1', 'ZDT1', 'ZDT1', 'ZDT1']
+    problems = ['NN']
+
+    # nrs = [5, 10, 15, 20]
     N = 1   # 独立运行N次，取中值
     results = list()
-    # mat_res = list()
     for idx in range(len(problems)):
         # for problemName in problems:
         problemName = problems[idx]
@@ -62,17 +59,14 @@ if __name__ == '__main__':
         PF = problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
         """======================种群设置==============================="""
         Encoding = 'RI'             # 编码方式
-        # NIND = 100                  # 种群规模
-        NIND = ninds[idx]
+        NIND = 100                  # 种群规模
         Field = ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)  # 创建区域描述器
         # 实例化种群对象（此时种群还没被初始化，仅仅是完成种群对象的实例化）
         population = ea.Population(Encoding, Field, NIND)
         """======================算法参数设置=========================="""
         # myAlgorithm = moea_MOEAD_DE_templet(problem, population)
-        # MAXGEN = 120
-        MAXGEN = gens[idx]
+        MAXGEN = 100
         myAlgorithm = moea_MOEAD_DRA_templet(problem, population, MAXGEN)
-        # myAlgorithm.MAXGEN = MAXGEN    # 最大进化代数
         myAlgorithm.drawing = 0  # 设置绘图方式（0：不绘图；1：绘制结果图；2：绘制目标空间过程动画；3：绘制决策空间过程动画）
         myAlgorithm.verbose = False
         igd = np.empty(N)
@@ -94,14 +88,17 @@ if __name__ == '__main__':
         """
         # """
         for i in range(N):
+            start_time = time.time()
             NDSet, pop, plt = myAlgorithm.run()  # 每次run都是独立的，会重新初始化模版的一些动态参数
+            end_time = time.time()
+            print("running time %.4f" % (end_time - start_time))
             IGD = ea.indicator.IGD(pop.ObjV, PF)     # 计算IGD指标
             HV = ea.indicator.HV(NDSet.ObjV, PF)       # 计算HV指标
             logging.info('time: %s,  round %d/%d, IGD = %.7f, HV = %.7f' % (get_time(), i + 1, N, IGD, HV))
             igd[i] = IGD
             hv[i] = HV
             res_mat = {'result': [NIND * MAXGEN, 123], 'metric': {'runtime': 4, 'IGD': IGD, 'HV': HV}}
-            mat_name = './Data/MOEADDQN_' + str(problem.name) + '_M' + str(problem.M) + '_D' + str(problem.Dim) + '_' + str(i + 1) + '.mat'
+            mat_name = './Data/MOEADDQN_nr_' + str(problem.name) + '_M' + str(problem.M) + '_D' + str(problem.Dim) + '_' + str(i + 1) + '.mat'
             scipy.io.savemat(mat_name, mdict=res_mat)
         # """
         # 保留xx个最好数据

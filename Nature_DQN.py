@@ -7,6 +7,7 @@ DQN步骤：
 # %%
 from abc import ABC
 from numpy.lib.function_base import _quantile_dispatcher
+# from thop import profile
 
 import torch
 import torch.nn as nn
@@ -77,6 +78,8 @@ class DQN(object):
         x = torch.unsqueeze(torch.FloatTensor(x), 0)
         if use_gpu:
             x = x.cuda(DEVICE)
+        # flops, params = profile(self.eval_net, inputs=x)
+        # print(flops, params)
         # input only one sample
         # if np.random.uniform() < EPSILON:   # greedy
         if np.random.uniform() < 2:   # greedy
