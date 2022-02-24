@@ -42,10 +42,10 @@ if __name__ == '__main__':
     # problems = ['ZDT1', 'ZDT2', 'ZDT3', 'ZDT4', 'ZDT6']
     # problems = ['WFG1', 'WFG2', 'WFG3', 'WFG4', 'WFG5', 'WFG6', 'WFG7', 'WFG8', 'WFG9']
     # problems = ['ZDT1', 'ZDT1', 'ZDT1', 'ZDT1']
-    problems = ['UF1', 'UF1', 'UF1', 'UF1', 'UF1', 'UF1', 'UF1', 'UF1', ]
+    problems = ['ZDT1', 'ZDT1', 'ZDT1', 'ZDT1', 'ZDT1', 'ZDT1', 'ZDT1', 'ZDT1', ]
 
     nrs = [5, 10, 15, 20, 25, 30, 35, 40]
-    N = 5   # 独立运行N次，取中值
+    N = 30   # 独立运行N次，取中值
     results = list()
     for idx in range(len(problems)):
         # for problemName in problems:
@@ -59,13 +59,13 @@ if __name__ == '__main__':
         PF = problem.getReferObjV()  # 获取真实前沿，详见Problem.py中关于Problem类的定义
         """======================种群设置==============================="""
         Encoding = 'RI'             # 编码方式
-        NIND = 600                  # 种群规模
+        NIND = 100                  # 种群规模
         Field = ea.crtfld(Encoding, problem.varTypes, problem.ranges, problem.borders)  # 创建区域描述器
         # 实例化种群对象（此时种群还没被初始化，仅仅是完成种群对象的实例化）
         population = ea.Population(Encoding, Field, NIND)
         """======================算法参数设置=========================="""
         # myAlgorithm = moea_MOEAD_DE_templet(problem, population)
-        MAXGEN = 500
+        MAXGEN = 100
         myAlgorithm = moea_MOEAD_DRA_templet(problem, population, MAXGEN)
         myAlgorithm.drawing = 0  # 设置绘图方式（0：不绘图；1：绘制结果图；2：绘制目标空间过程动画；3：绘制决策空间过程动画）
         myAlgorithm.verbose = False
@@ -100,8 +100,8 @@ if __name__ == '__main__':
             scipy.io.savemat(mat_name, mdict=res_mat)
         # """
         # 保留xx个最好数据
-        igd = np.sort(igd)[:10]  # igd取前xx
-        hv = np.sort(hv)[-10:]  # hv取后xx
+        igd = np.sort(igd)[:20]  # igd取前xx
+        hv = np.sort(hv)[-20:]  # hv取后xx
         res = "median --- IGD={:.7f}, IGD.std={:.7f}, HV={:.7f}, HV.std={:.7f}".format(np.mean(igd), np.std(igd), np.mean(hv), np.std(hv))
         results.append(res)
         logging.info(res)

@@ -23,16 +23,16 @@ for i in range(len(igds)):
     D = igd.shape[0]
     idx = np.linspace(0, D - 1, num=10, dtype='int32')
     igd = igd[idx]
-    plt.plot(igd, styles[i], label=labels[i], markevery=3)
+    plt.plot(igd, styles[i], label=labels[i], markevery=0.001)
 
 # plt.show()
 # exit()
 
 # 坐标轴刻度
-# xticks = list(map(str, np.arange(0, 51, 5)))
-# plt.xticks(range(0, 51, 5), xticks)
-xticks = list(map(str, np.arange(1, 11)))
-plt.xticks(range(0, 10), xticks)
+xticks = list(map(str, np.arange(1, 11, 1)))
+plt.xticks(range(0, 10, 1), xticks)
+# xticks = list(map(str, np.arange(1, 5, 30)))
+# plt.xticks(range(0, 30), xticks)
 
 # 坐标轴名称
 plt.xlabel('Generation (×10)', fontdict={'family': 'Times New Roman', 'fontsize': 14})
