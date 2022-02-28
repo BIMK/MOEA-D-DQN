@@ -85,7 +85,7 @@ class DQN(object):
         if np.random.uniform() < 2:   # greedy
             actions_value = self.eval_net.forward(x)  # shape=(1,action)
             if use_gpu:
-                actions_value = actions_value.cpu()
+                actions_value = actions_value.cuda(DEVICE)
             actions_value = actions_value.detach().numpy()
             # print(actions_value)
             # action = np.argmax(actions_value[0])  # 选择回报最大的动作
